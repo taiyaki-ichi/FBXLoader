@@ -9,6 +9,7 @@
 #include<iostream>
 #include<fstream>
 #include<optional>
+#include<stdexcept>
 
 #pragma comment(lib,"zlibstat.lib")
 
@@ -16,6 +17,8 @@
 namespace FBXL
 {
 	namespace {
+
+		constexpr std::size_t CHUNK = 16384;
 
 		template<typename T>
 		T ReadPrimitiveType(std::istream& is) 
@@ -39,8 +42,6 @@ namespace FBXL
 
 			if (inflateInit(&strm) != Z_OK)
 				return;
-
-			constexpr std::size_t CHUNK = 16384;
 
 			std::vector<unsigned char> tmp(CHUNK);
 
@@ -257,17 +258,18 @@ namespace FBXL
 	}
 
 
-	std::vector<Node> LoadFBX(const char* fileName)
+	std::vector<Node> LoadFBX(const std::string& fileName)
 	{
 		std::ifstream is(fileName, std::ios::in | std::ios::binary);
 
-		if (!is) {
-			std::cout << "FBXL::load is failed (filename : " << fileName << " )\n";
-			return {};
-		}
+		if (!is) 
+			throw std::invalid_argument("FBXL::LoadFBX   file is not found : " + fileName);
 
 		char magic[21];
 		is.read(magic, 21);
+
+		if (strcmp(magic, "Kaydara FBX Binary  \x00\x1a\x00") != 0)
+			throw std::invalid_argument("FBXL::LoadFBX   file is not FBX : " + fileName);
 
 		//0xa1‚Ü‚½‚Í0x00‚Ì•”•ª‚ð”ò‚Î‚·
 		is.seekg(2, std::ios::cur);
