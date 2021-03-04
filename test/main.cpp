@@ -23,7 +23,7 @@ std::vector<FBXL::Node> findNode(const FBXL::Node& n, const std::string& s)
 	if (n.mName == s)
 		result.push_back(n);
 
-	for (auto& tmpNode : n.mNestedNode)
+	for (auto& tmpNode : n.mChildren)
 	{
 		auto ns = findNode(tmpNode, s);
 		result.reserve(result.size() + ns.size());
@@ -55,9 +55,11 @@ int main()
 
 
 	//auto rootNode = FBXL::LoadFBX("../../Assets/Fox.FBX");
-	auto rootNode = FBXL::LoadFBX("../../Assets/Handgun/Handgun_fbx_7.4_binary.fbx");
+	//auto rootNode = FBXL::LoadFBX("../../Assets/Handgun/Handgun_fbx_7.4_binary.fbx");
 	//auto rootNode = FBXL::LoadFBX("../../Assets/Dragon/Dragon_Baked_Actions_fbx_7.4_binary.fbx");
+	auto rootNode = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
 
+	/*
 	FBXL::Node object;
 	for (auto& n : rootNode)
 		if (n.mName == "Objects")
@@ -67,11 +69,14 @@ int main()
 	
 	auto m = findNode(rootNode, "Material");
 
-	auto d = findNode(rootNode, "Diffuse");
+	auto d = findNode(rootNode, "DiffuseColor");
 
 	auto mm = findNode(rootNode, "Mesh");
 
 	auto t = findNode(rootNode, "Texture");
+
+	auto l = findNode(rootNode, "LimbNode");
+	*/
 
 	return 0;
 }

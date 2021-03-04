@@ -24,11 +24,15 @@ namespace FBXL
 
 	struct Node {
 		std::string mName{};
-		std::vector<DataVariant> mDatas{};
-		std::vector<Node> mNestedNode{};
+		std::vector<DataVariant> mProperties{};
+		std::vector<Node> mChildren{};
 	};
 
 
-
+	struct Data {
+		std::string mFilePath{};
+		std::uint32_t mVersion{};
+		std::vector<Node> mNodes{};
+	};
 
 }
