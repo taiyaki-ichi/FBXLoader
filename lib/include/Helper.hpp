@@ -19,8 +19,10 @@ namespace FBXL
 
 
 
+	std::optional<NodeAttribute> GetNodeAttribute(const Node* node);
+	void Print(const NodeAttribute& na);
 
-	//std::vector<std::int32_t> GetConnectionToDestination(const Node* node, std::int32_t src);
+	
 
 
 

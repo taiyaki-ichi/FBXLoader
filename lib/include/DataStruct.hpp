@@ -2,6 +2,7 @@
 #include<variant>
 #include<vector>
 #include<string>
+#include<optional>
 
 namespace FBXL
 {
@@ -34,5 +35,38 @@ namespace FBXL
 		std::uint32_t mVersion{};
 		std::vector<Node> mNodes{};
 	};
+
+
+
+	//
+	//à»â∫ÅAObjectsì‡ÇÃç\ë¢ëÃ
+	//Ç«ÇÍÇ‡âºÇÃép
+	//
+
+	struct NodeAttributeOption
+	{
+		std::string mProp70Strings[3]{};
+		double mProp70Double;
+	};
+	
+	struct NodeAttribute
+	{
+		//prop
+		std::int64_t mIndex{};
+		std::string mMagic{};
+		std::string mName{};
+
+
+		//à»â∫ÅAchildren
+
+		//prop70
+		std::optional<NodeAttributeOption> mOption{};
+
+		//TypeFlag
+		std::string mTypeFlag{};
+	};
+	
+
+
 
 }
