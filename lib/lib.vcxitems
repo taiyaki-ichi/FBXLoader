@@ -15,9 +15,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DataStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\Helper.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Loader.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)include\Helper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)include\Loader.cpp" />
   </ItemGroup>
 </Project>

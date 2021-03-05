@@ -1,82 +1,77 @@
 #include"include/Loader.hpp"
+#include"include/Helper.hpp"
 
 #include<iostream>
 
-template<typename T>
-void printFunc(std::vector<T>& v)
-{
-	for (auto& tmp : v)
-		std::cout << v << " ";
-	std::cout << "\n";
-}
-
-template<typename T>
-void ptintFunc(T& t)
-{
-	std::cout << t << "\n";
-}
-
-std::vector<FBXL::Node> findNode(const FBXL::Node& n, const std::string& s)
-{
-	std::vector<FBXL::Node> result{};
-
-	if (n.mName == s)
-		result.push_back(n);
-
-	for (auto& tmpNode : n.mChildren)
-	{
-		auto ns = findNode(tmpNode, s);
-		result.reserve(result.size() + ns.size());
-		for (auto& tmp : ns)
-			result.push_back(tmp);
-	}
-
-	if (result.size() > 0)
-		std::cout << n.mName << "\n";
-	return result;
-}
-
-std::vector<FBXL::Node> findNode(const std::vector<FBXL::Node>& ns, const std::string& s)
-{
-	std::vector<FBXL::Node> result{};
-
-	for (auto& n : ns)
-	{
-		auto tmp = findNode(n, s);
-		for (auto& t : tmp)
-			result.push_back(t);
-	}
-
-	return result;
-}
 
 int main()
 {
 
 
-	//auto rootNode = FBXL::LoadFBX("../../Assets/Fox.FBX");
-	//auto rootNode = FBXL::LoadFBX("../../Assets/Handgun/Handgun_fbx_7.4_binary.fbx");
-	//auto rootNode = FBXL::LoadFBX("../../Assets/Dragon/Dragon_Baked_Actions_fbx_7.4_binary.fbx");
-	auto rootNode = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
+	//auto data = FBXL::LoadFBX("../../Assets/Fox.FBX");
+	//auto data = FBXL::LoadFBX("../../Assets/Handgun/Handgun_fbx_7.4_binary.fbx");
+	//auto data = FBXL::LoadFBX("../../Assets/Dragon/Dragon_Baked_Actions_fbx_7.4_binary.fbx");
+	auto data = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
+	auto data2 = FBXL::LoadFBX("../../Assets/unitychan/BoxUnityChan.fbx");
+
+	auto c = FBXL::GetNode(&data, "Connections");
 
 	/*
-	FBXL::Node object;
-	for (auto& n : rootNode)
-		if (n.mName == "Objects")
-			object = n;
+	for (auto& n : c[0]->mChildren)
+	{
 
-	auto v = findNode(object, "Vertices");
+		auto type = FBXL::GetProperty<std::string>(&n, 0);
+		//std::cout << type << " ";
+
+		std::size_t offset = 1;
+		for (std::size_t i = 0; i < 2; i++)
+		{
+			if (type[i] == 'O')
+			{
+				//std::cout << FBXL::GetProperty<std::int64_t>(&n, offset) << " ";
+				auto index = FBXL::GetProperty<std::int64_t>(&n, offset);
+				try
+				{
+					FBXL::GetNodeObject(&data, index);
+				}
+				catch (std::exception& e)
+				{
+					//std::cout << "type : " << type << "      " << e.what() << " : " << index << "\n";
+					//std::cout << index << "\n";
+
+					
+					try {
+						FBXL::GetNodeObject(&data2, index);
+					}
+					catch (std::exception& e)
+					{
+						std::cout << index << "\n";
+					}
+					
+
+					//std::cout << n.mName << "\n";
+
+					std::cout << " invailed P ->  ";
+				}
+				
+				offset += 1;
+			}
+			else if (type[i] == 'P')
+			{
+				std::cout << FBXL::GetProperty<std::int64_t>(&n, offset) << " " << FBXL::GetProperty<std::string>(&n, offset + 1) << " ";
+				offset += 2;
+			}
+			else {
+				//std::cout << type[i] << " <- ?    ";
+			}
+		}
+		std::cout << "\n";
+	}
 	
-	auto m = findNode(rootNode, "Material");
-
-	auto d = findNode(rootNode, "DiffuseColor");
-
-	auto mm = findNode(rootNode, "Mesh");
-
-	auto t = findNode(rootNode, "Texture");
-
-	auto l = findNode(rootNode, "LimbNode");
 	*/
+	//auto hoge = FBXL::GetNodeObject(&data, 5360957968);
+	//auto hoge = FBXL::GetNodeObject(&data, std::int64_t{ 5442126640 });
 
+	//105553121979200
 	return 0;
 }
