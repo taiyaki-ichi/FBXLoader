@@ -27,6 +27,45 @@ namespace FBXL
 		return result;
 	}
 
+	std::vector<std::int64_t> GetConnectionObjectByDestination(const Node* connection, std::int64_t index)
+	{
+		assert(connection->mName == "Connections");
+
+		std::vector<std::int64_t> result{};
+		std::int64_t src;
+		std::int64_t dst;
+		for (auto& n : connection->mChildren)
+		{
+			auto type = GetProperty<std::string>(&n, 0);
+			
+			src = GetProperty<std::int64_t>(&n, 1).value();
+
+			if (type.value()[0] == 'O')
+			{
+				dst = GetProperty<std::int64_t>(&n, 2).value();
+				if (dst == index)
+					result.push_back(src);
+			}
+			
+		}
+
+		return result;
+	}
+
+	std::optional<const Node*> GetNodeByIndex(const Node* object, std::int64_t index)
+	{
+		assert(object->mName == "Objects");
+
+		for (auto& n : object->mChildren)
+		{
+			auto i = GetProperty<std::int64_t>(&n, 0).value();
+			if (i == index)
+				return &n;
+		}
+
+		return std::nullopt;
+	}
+
 	std::optional<NodeAttribute> GetNodeAttribute(const Node* node)
 	{
 		if (node->mName != "NodeAttribute")

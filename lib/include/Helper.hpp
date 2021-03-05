@@ -17,6 +17,17 @@ namespace FBXL
 	template<typename T>
 	std::optional<T> GetProperty(const Node* node, std::size_t index);
 
+	//Connectionの目的地からインデックスを取得
+	std::vector<std::int64_t> GetConnectionObjectByDestination(const Node* connection, std::int64_t index);
+
+	std::optional<const Node*> GetNodeByIndex(const Node* object, std::int64_t index);
+
+
+
+
+
+
+
 
 
 	std::optional<NodeAttribute> GetNodeAttribute(const Node* node);

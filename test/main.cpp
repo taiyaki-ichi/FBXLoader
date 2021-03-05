@@ -3,6 +3,31 @@
 
 #include<iostream>
 
+void printBlank(std::size_t n)
+{
+	for (int i = 0; i < n; i++)
+		std::cout << " ";
+}
+
+void print(const FBXL::Node* cn, const FBXL::Node* obj, std::int64_t index,std::size_t nestSize)
+{
+	auto n = FBXL::GetNodeByIndex(obj, index);
+	printBlank(nestSize * 2);
+
+	//•ª‚©‚è‚É‚­‚¢‚Ì‚ÅDeformer‚Ê‚©‚·
+	if (n && n.value()->mName != "Deformer")
+	{
+		if (n)
+			std::cout << n.value()->mName << " (" << FBXL::GetProperty<std::string>(n.value(), 2).value() << ")\n";
+		else
+			std::cout << index << " is nod found\n";
+
+		auto is = FBXL::GetConnectionObjectByDestination(cn, index);
+		for (auto i : is)
+			print(cn, obj, i, nestSize + 1);
+	}
+}
+
 
 int main()
 {
@@ -14,17 +39,204 @@ int main()
 	auto data = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
 	//auto data2 = FBXL::LoadFBX("../../Assets/unitychan/BoxUnityChan.fbx");
 
+	
 	auto objects = FBXL::GetNode(&data, "Objects");
 
-	auto atttributes = FBXL::GetChildrenNode(objects[0], "NodeAttribute");
+	auto cn = FBXL::GetNode(&data, "Connections");
 
-	FBXL::NodeAttribute tmp;
-	for (auto attri : atttributes)
-	{
-		tmp = FBXL::GetNodeAttribute(attri).value();
-		FBXL::Print(tmp);
-	}
+	auto is = FBXL::GetConnectionObjectByDestination(cn[0], 0);
+
+	print(cn[0], objects[0], is[1], 0);
 
 
 	return 0;
 }
+
+
+/*
+Model (Null)
+  NodeAttribute (Null)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+  Model (Mesh)
+    Geometry (Mesh)
+          Material ()
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+      Texture ()
+        Video (Clip)
+*/
