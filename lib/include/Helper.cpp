@@ -11,46 +11,64 @@ namespace FBXL
 
 	std::vector<const Node*> GetChildrenNode(const Node* node, const std::string& name)
 	{
-		std::vector<const Node*> result{};
+		std::vector<const Node*> object{};
 		std::for_each(node->mChildren.begin(), node->mChildren.end(),
-			[&name, &result](const Node& n) {if (n.mName == name)result.push_back(&n); }
+			[&name, &object](const Node& n) {if (n.mName == name)object.push_back(&n); }
 		);
-		return result;
+		return object;
 	}
 
 	std::vector<const Node*> GetNode(const Data* data, const std::string& name)
 	{
-		std::vector<const Node*> result{};
+		std::vector<const Node*> object{};
 		std::for_each(data->mNodes.begin(), data->mNodes.end(),
-			[&result, &name](const Node& n) {if (n.mName == name)result.push_back(&n); }
+			[&object, &name](const Node& n) {if (n.mName == name)object.push_back(&n); }
 		);
-		return result;
+		return object;
 	}
 
-	std::vector<std::int64_t> GetConnectionObjectByDestination(const Node* connection, std::int64_t index)
+	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
+		GetConnectionByDestination(const Node* connection, std::int64_t index)
 	{
 		assert(connection->mName == "Connections");
 
-		std::vector<std::int64_t> result{};
+		std::vector<std::int64_t> object{};
+		std::vector<std::pair<std::int64_t, std::string>> prop{};
+
 		std::int64_t src;
+		std::string srcStr;
 		std::int64_t dst;
+		std::size_t offset{};
 		for (auto& n : connection->mChildren)
 		{
 			auto type = GetProperty<std::string>(&n, 0);
-			
+
 			src = GetProperty<std::int64_t>(&n, 1).value();
 
 			if (type.value()[0] == 'O')
+				offset = 2;
+			else if (type.value()[0] == 'P')
+				offset = 3;
+
+			if (type.value()[1] == 'O')
 			{
-				dst = GetProperty<std::int64_t>(&n, 2).value();
+				dst = GetProperty<std::int64_t>(&n, offset).value();
 				if (dst == index)
-					result.push_back(src);
+					object.push_back(src);
 			}
-			
+			else if (type.value()[1] == 'P')
+			{
+				dst = GetProperty<std::int64_t>(&n, offset).value();
+				srcStr = GetProperty<std::string>(&n, offset + 1).value();
+
+				if (dst == index)
+					prop.push_back(std::make_pair(src, srcStr));
+			}
 		}
 
-		return result;
+		return std::make_pair(object, prop);
 	}
+
 
 	std::optional<const Node*> GetNodeByIndex(const Node* object, std::int64_t index)
 	{
@@ -71,24 +89,24 @@ namespace FBXL
 		if (node->mName != "NodeAttribute")
 			return std::nullopt;
 
-		NodeAttribute result{};
+		NodeAttribute object{};
 
 		{
 			auto r = GetProperty<std::int64_t>(node, 0);
 			if (r)
-				result.mIndex = r.value();
+				object.mIndex = r.value();
 		}
 
 		{
 			auto r = GetProperty<std::string>(node, 1);
 			if (r)
-				result.mMagic = r.value();
+				object.mMagic = r.value();
 		}
 
 		{
 			auto r = GetProperty<std::string>(node, 2);
 			if (r)
-				result.mName = r.value();
+				object.mName = r.value();
 		}
 
 		auto prop70 = GetChildrenNode(node, "Properties70");
@@ -114,7 +132,7 @@ namespace FBXL
 					option.mProp70Double = r.value();
 			}
 
-			result.mOption = std::move(option);
+			object.mOption = std::move(option);
 		}
 
 		auto typeFlag = GetChildrenNode(node, "TypeFlags");
@@ -123,10 +141,10 @@ namespace FBXL
 		{
 			auto r = GetProperty<std::string>(typeFlag[0], 0);
 			if (r)
-				result.mTypeFlag = r.value();
+				object.mTypeFlag = r.value();
 		}
 
-		return result;
+		return object;
 	}
 
 	void Print(const NodeAttribute& na)

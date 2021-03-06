@@ -67,7 +67,8 @@ namespace FBXL
 					
 					auto nowPos = result.size();
 					result.resize(result.size() + have / sizeof(T));
-					std::memcpy(&result[nowPos], tmp.data(), have);
+					if (have > 0)
+						std::memcpy(&result[nowPos], tmp.data(), have);
 
 				} while (strm.avail_out == 0);
 
