@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DataStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)include\DefaultPolicyTraits.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Helper.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Loader.hpp" />
   </ItemGroup>

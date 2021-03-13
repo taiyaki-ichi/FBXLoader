@@ -2,270 +2,67 @@
 #include"include/Helper.hpp"
 
 #include<iostream>
+#include<fstream>
 
-void printBlank(std::size_t n)
+
+struct Vector3
 {
-	for (int i = 0; i < n; i++)
-		std::cout << " ";
-}
+	double x{};
+	double y{};
+	double z{};
 
-void print(const FBXL::Node* cn, const FBXL::Node* obj, std::int64_t index,std::size_t nestSize)
-{
-	auto n = FBXL::GetNodeByIndex(obj, index);
-
-	//分かりにくいのでDeformerぬかす
-    if (!n || n.value()->mName != "Deformer")
-    {
-        printBlank(nestSize * 2);
-        if (n)
-            std::cout << n.value()->mName << " (" << FBXL::GetProperty<std::string>(n.value(), 2).value() << ")\n";
-        else
-            std::cout << index << " is nod found\n";
-
-        auto [o, p] = FBXL::GetConnectionByDestination(cn, index);
-        for (auto i : o)
-            print(cn, obj, i, nestSize + 1);
-
-        for (auto& [i, str] : p)
-        {
-            auto a = FBXL::GetNodeByIndex(obj, i);
-            //
-            if (a && a.value()->mName != "AnimationCurveNode")
-            {
-                printBlank(nestSize * 2 + 1);
-                std::cout << a.value()->mName << "  " << str << "\n";
-            }
-        }
-
-    }
-}
+	Vector3(double inX, double inY, double inZ)
+	{
+		x = inX;
+		y = inY;
+		z = inZ;
+	}
+};
 
 
 int main()
 {
 
-
 	//auto data = FBXL::LoadFBX("../../Assets/Fox.FBX");
 	//auto data = FBXL::LoadFBX("../../Assets/Handgun/Handgun_fbx_7.4_binary.fbx");
 	//auto data = FBXL::LoadFBX("../../Assets/Dragon/Dragon_Baked_Actions_fbx_7.4_binary.fbx");
-	auto data = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
-	//auto data2 = FBXL::LoadFBX("../../Assets/unitychan/BoxUnityChan.fbx");
+	//auto data = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
+	//auto data = FBXL::LoadFBX("../../Assets/unitychan/BoxUnityChan.fbx");
     //auto data = FBXL::LoadFBX("../../Assets/Yuno_ver1.01/Mesh/CS_girl_MasterFile_Sock.fbx");
+    //auto data = FBXL::LoadFBX("../../Assets/test_body.fbx");
+    //auto data = FBXL::LoadFBX("../../Assets/test_dog_003.fbx");
+
+    //Roundnessによって値が変わるはず
+    //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r50.fbx");
+    //auto data2 = FBXL::LoadFBX("../../Assets/test_dog_004_r10.fbx");
+
+	auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
 
 
-	
+    //モディファイアの情報は頂点として保存されてそう
+
+
 	auto objects = FBXL::GetNode(&data, "Objects");
 
-    
-	auto cn = FBXL::GetNode(&data, "Connections");
-    
-    
-	//auto [a,b] = FBXL::GetConnectionByDestination(cn[0], 0);
+	assert(objects.size() == 1);
 
-    print(cn[0], objects[0], 0, 0);
-    
+	auto geometry = FBXL::GetChildrenNode(objects[0], "Geometry");
 
-    /*
-    for (auto& n : cn[0]->mChildren)
-    {
-        auto type = FBXL::GetProperty<std::string>(&n, 0);
-        if (type)
-            std::cout << type.value() << "\n";
-        else
-            std::cout << "not found\n";
-    }
-    */
-    
+	std::ofstream file("hoge.txt");
+
+	for (auto g : geometry)
+	{
+		auto hoge = FBXL::GetGeometryMesh<std::vector<Vector3>, std::vector<std::int32_t>>(g);
+
+		if (hoge)
+		{
+			for (auto v : hoge.value().vertices)
+				file << v.x << " " << v.y << " " << v.z << "\n";
+		}
+	}
 
 
 	return 0;
 }
 
 
-/*
-Model (Null)
-  NodeAttribute (Null)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-  Model (Mesh)
-    Geometry (Mesh)
-          Material ()
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-      Texture ()
-        Video (Clip)
-*/

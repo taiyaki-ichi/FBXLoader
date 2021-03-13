@@ -3,6 +3,7 @@
 #include<vector>
 #include<string>
 #include<optional>
+#include<type_traits>
 
 namespace FBXL
 {
@@ -24,16 +25,16 @@ namespace FBXL
 
 
 	struct Node {
-		std::string mName{};
-		std::vector<DataVariant> mProperties{};
-		std::vector<Node> mChildren{};
+		std::string name{};
+		std::vector<DataVariant> properties{};
+		std::vector<Node> children{};
 	};
 
 
 	struct Data {
-		std::string mFilePath{};
-		std::uint32_t mVersion{};
-		std::vector<Node> mNodes{};
+		std::string filePath{};
+		std::uint32_t version{};
+		std::vector<Node> nodes{};
 	};
 
 
@@ -43,29 +44,50 @@ namespace FBXL
 	//Ç«ÇÍÇ‡âºÇÃép
 	//
 
+	//Ç±ÇÍégÇÌÇ»Ç¢Ç©Ç‡
 	struct NodeAttributeOption
 	{
-		std::string mProp70Strings[3]{};
-		double mProp70Double;
+		std::string prop70Strings[3]{};
+		double prop70Double;
 	};
 	
 	struct NodeAttribute
 	{
 		//prop
-		std::int64_t mIndex{};
-		std::string mMagic{};
-		std::string mName{};
+		std::int64_t index{};
+		std::string magic{};
+		std::string name{};
 
 
 		//à»â∫ÅAchildren
 
 		//prop70
-		std::optional<NodeAttributeOption> mOption{};
+		std::optional<NodeAttributeOption> option{};
 
 		//TypeFlag
-		std::string mTypeFlag{};
+		std::string typeFlag{};
 	};
 	
+
+
+	template<
+		typename VertexContainer,
+		typename IndexContainer
+	>
+		struct GeometryMesh
+	{
+
+		std::string name{};
+
+		VertexContainer vertices{};
+		IndexContainer indeces{};
+
+		//UVÇ»Ç«Ç™í«â¡Ç≥ÇÍÇÈó\íË
+
+	};
+
+
+
 
 
 

@@ -137,16 +137,16 @@ namespace FBXL
 
 			auto numProperties = ReadPrimitiveType<UintType>(is);
 
-			result.mProperties.resize(static_cast<std::size_t>(numProperties));
+			result.properties.resize(static_cast<std::size_t>(numProperties));
 
 			//égÇÌÇ»Ç¢ÅH
 			auto propertyListLen = ReadPrimitiveType<UintType>(is);
 
 			auto nameLen = ReadPrimitiveType<std::uint8_t>(is);
 
-			result.mName.resize(nameLen);
+			result.name.resize(nameLen);
 
-			is.read(result.mName.data(), nameLen * sizeof(char));
+			is.read(result.name.data(), nameLen * sizeof(char));
 
 			char typeCode;
 			for (std::size_t i = 0; i < numProperties; i++)
@@ -156,55 +156,55 @@ namespace FBXL
 				switch (typeCode)
 				{
 				case 'Y' :
-					result.mProperties[i] = ReadPrimitiveType<std::int16_t>(is);
+					result.properties[i] = ReadPrimitiveType<std::int16_t>(is);
 					break;
 
 				case 'C' :
-					result.mProperties[i] = ReadPrimitiveType<bool>(is);
+					result.properties[i] = ReadPrimitiveType<bool>(is);
 					break;
 
 				case 'I' :
-					result.mProperties[i] = ReadPrimitiveType<std::int32_t>(is);
+					result.properties[i] = ReadPrimitiveType<std::int32_t>(is);
 					break;
 
 				case 'F' : 
-					result.mProperties[i] = ReadPrimitiveType<float>(is);
+					result.properties[i] = ReadPrimitiveType<float>(is);
 					break;
 
 				case 'D' :
-					result.mProperties[i] = ReadPrimitiveType<double>(is);
+					result.properties[i] = ReadPrimitiveType<double>(is);
 					break;
 
 				case 'L' :
-					result.mProperties[i] = ReadPrimitiveType<std::int64_t>(is);
+					result.properties[i] = ReadPrimitiveType<std::int64_t>(is);
 					break;
 
 				case 'f' :
-					result.mProperties[i] = ReadArrayType<float>(is);
+					result.properties[i] = ReadArrayType<float>(is);
 					break;
 
 				case 'd' :
-					result.mProperties[i] = ReadArrayType<double>(is);
+					result.properties[i] = ReadArrayType<double>(is);
 					break;
 
 				case 'l' :
-					result.mProperties[i] = ReadArrayType<std::int64_t>(is);
+					result.properties[i] = ReadArrayType<std::int64_t>(is);
 					break;
 
 				case 'i' :
-					result.mProperties[i] = ReadArrayType<std::int32_t>(is);
+					result.properties[i] = ReadArrayType<std::int32_t>(is);
 					break;
 
 				case 'b' :
-					result.mProperties[i] = ReadArrayType<unsigned char>(is);
+					result.properties[i] = ReadArrayType<unsigned char>(is);
 					break;
 
 				case 'S' :
-					result.mProperties[i] = ReadStringType(is);
+					result.properties[i] = ReadStringType(is);
 					break;
 
 				case 'R' : 
-					result.mProperties[i] = ReadRawBinaryType(is);
+					result.properties[i] = ReadRawBinaryType(is);
 					break;
 
 				default:
@@ -221,7 +221,7 @@ namespace FBXL
 				while (is.tellg() + std::streampos{ 13 } < endPos) {
 					nestedNode = LoadNodeImpl<UintType>(is);
 					if (nestedNode)
-						result.mChildren.push_back(nestedNode.value());
+						result.children.push_back(nestedNode.value());
 				}
 			}
 
@@ -262,9 +262,9 @@ namespace FBXL
 	Data LoadFBX(const std::string& filePath)
 	{
 		Data result{};
-		result.mFilePath = filePath;
+		result.filePath = filePath;
 
-		std::ifstream is(result.mFilePath, std::ios::in | std::ios::binary);
+		std::ifstream is(result.filePath, std::ios::in | std::ios::binary);
 
 		if (!is) 
 			throw std::invalid_argument("FBXL::LoadFBX   file is not found : " + filePath);
@@ -278,12 +278,12 @@ namespace FBXL
 		//0xa1Ç‹ÇΩÇÕ0x00ÇÃïîï™ÇîÚÇŒÇ∑
 		is.seekg(2, std::ios::cur);
 
-		result.mVersion = ReadPrimitiveType<std::uint32_t>(is);
+		result.version = ReadPrimitiveType<std::uint32_t>(is);
 
-		if (result.mVersion <= 7400)
-			result.mNodes = LoadNode<std::uint32_t, 13>(is);
+		if (result.version <= 7400)
+			result.nodes = LoadNode<std::uint32_t, 13>(is);
 		else
-			result.mNodes = LoadNode<std::uint64_t, 25>(is);
+			result.nodes = LoadNode<std::uint64_t, 25>(is);
 
 		return result;
 	}

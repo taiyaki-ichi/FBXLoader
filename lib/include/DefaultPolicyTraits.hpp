@@ -1,0 +1,24 @@
+#pragma once
+
+namespace FBXL
+{
+
+	template<typename VertexContainer>
+	struct DefaultVertexContainerPushBack
+	{
+		static void PushBack(VertexContainer& c,double x, double y, double z)
+		{
+			c.emplace_back(x, y, z);
+		}
+	};
+
+	template<typename IndexContainer>
+	struct DefaultIndexContainerPushBack
+	{
+		static void PushBack(IndexContainer& c, std::int32_t i)
+		{
+			c.push_back(i);
+		}
+	};
+
+}

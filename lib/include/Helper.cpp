@@ -12,8 +12,8 @@ namespace FBXL
 	std::vector<const Node*> GetChildrenNode(const Node* node, const std::string& name)
 	{
 		std::vector<const Node*> object{};
-		std::for_each(node->mChildren.begin(), node->mChildren.end(),
-			[&name, &object](const Node& n) {if (n.mName == name)object.push_back(&n); }
+		std::for_each(node->children.begin(), node->children.end(),
+			[&name, &object](const Node& n) {if (n.name == name)object.push_back(&n); }
 		);
 		return object;
 	}
@@ -21,8 +21,8 @@ namespace FBXL
 	std::vector<const Node*> GetNode(const Data* data, const std::string& name)
 	{
 		std::vector<const Node*> object{};
-		std::for_each(data->mNodes.begin(), data->mNodes.end(),
-			[&object, &name](const Node& n) {if (n.mName == name)object.push_back(&n); }
+		std::for_each(data->nodes.begin(), data->nodes.end(),
+			[&object, &name](const Node& n) {if (n.name == name)object.push_back(&n); }
 		);
 		return object;
 	}
@@ -30,7 +30,7 @@ namespace FBXL
 	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
 		GetConnectionByDestination(const Node* connection, std::int64_t index)
 	{
-		assert(connection->mName == "Connections");
+		assert(connection->name == "Connections");
 
 		std::vector<std::int64_t> object{};
 		std::vector<std::pair<std::int64_t, std::string>> prop{};
@@ -39,7 +39,7 @@ namespace FBXL
 		std::string srcStr;
 		std::int64_t dst;
 		std::size_t offset{};
-		for (auto& n : connection->mChildren)
+		for (auto& n : connection->children)
 		{
 			auto type = GetProperty<std::string>(&n, 0);
 
@@ -72,9 +72,9 @@ namespace FBXL
 
 	std::optional<const Node*> GetNodeByIndex(const Node* object, std::int64_t index)
 	{
-		assert(object->mName == "Objects");
+		assert(object->name == "Objects");
 
-		for (auto& n : object->mChildren)
+		for (auto& n : object->children)
 		{
 			auto i = GetProperty<std::int64_t>(&n, 0).value();
 			if (i == index)
@@ -86,7 +86,7 @@ namespace FBXL
 
 	std::optional<NodeAttribute> GetNodeAttribute(const Node* node)
 	{
-		if (node->mName != "NodeAttribute")
+		if (node->name != "NodeAttribute")
 			return std::nullopt;
 
 		NodeAttribute object{};
@@ -94,19 +94,19 @@ namespace FBXL
 		{
 			auto r = GetProperty<std::int64_t>(node, 0);
 			if (r)
-				object.mIndex = r.value();
+				object.index = r.value();
 		}
 
 		{
 			auto r = GetProperty<std::string>(node, 1);
 			if (r)
-				object.mMagic = r.value();
+				object.magic = r.value();
 		}
 
 		{
 			auto r = GetProperty<std::string>(node, 2);
 			if (r)
-				object.mName = r.value();
+				object.name = r.value();
 		}
 
 		auto prop70 = GetChildrenNode(node, "Properties70");
@@ -123,16 +123,16 @@ namespace FBXL
 			{
 				auto r = GetProperty<std::string>(p[0], i);
 				if (r)
-					option.mProp70Strings[i] = r.value();
+					option.prop70Strings[i] = r.value();
 			}
 			
 			{
 				auto r = GetProperty<double>(p[0], 4);
 				if (r)
-					option.mProp70Double = r.value();
+					option.prop70Double = r.value();
 			}
 
-			object.mOption = std::move(option);
+			object.option = std::move(option);
 		}
 
 		auto typeFlag = GetChildrenNode(node, "TypeFlags");
@@ -141,7 +141,7 @@ namespace FBXL
 		{
 			auto r = GetProperty<std::string>(typeFlag[0], 0);
 			if (r)
-				object.mTypeFlag = r.value();
+				object.typeFlag = r.value();
 		}
 
 		return object;
@@ -150,16 +150,16 @@ namespace FBXL
 	void Print(const NodeAttribute& na)
 	{
 		std::cout << "NodeAttribute\n";
-		std::cout << "index : " << na.mIndex << "\n";
-		std::cout << "magic : " << na.mMagic << "\n";
-		std::cout << "name : " << na.mName << "\n";
-		if (na.mOption)
+		std::cout << "index : " << na.index << "\n";
+		std::cout << "magic : " << na.magic << "\n";
+		std::cout << "name : " << na.name << "\n";
+		if (na.option)
 		{
 			for (int i = 0; i < 3; i++)
-				std::cout << "prop70 " << i << " : " << na.mOption.value().mProp70Strings[i] << "\n";
-			std::cout << "prop70D : " << na.mOption.value().mProp70Double << "\n";
+				std::cout << "prop70 " << i << " : " << na.option.value().prop70Strings[i] << "\n";
+			std::cout << "prop70D : " << na.option.value().prop70Double << "\n";
 		}
-		std::cout << "typeflag : " << na.mTypeFlag << "\n";
+		std::cout << "typeflag : " << na.typeFlag << "\n";
 
 		std::cout << "\n";
 	}
