@@ -44,32 +44,6 @@ namespace FBXL
 	//Ç«ÇÍÇ‡âºÇÃép
 	//
 
-	//Ç±ÇÍégÇÌÇ»Ç¢Ç©Ç‡
-	struct NodeAttributeOption
-	{
-		std::string prop70Strings[3]{};
-		double prop70Double;
-	};
-	
-	struct NodeAttribute
-	{
-		//prop
-		std::int64_t index{};
-		std::string magic{};
-		std::string name{};
-
-
-		//à»â∫ÅAchildren
-
-		//prop70
-		std::optional<NodeAttributeOption> option{};
-
-		//TypeFlag
-		std::string typeFlag{};
-	};
-	
-
-
 	template<
 		typename VertexContainer,
 		typename IndexContainer

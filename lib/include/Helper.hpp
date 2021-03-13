@@ -29,17 +29,6 @@ namespace FBXL
 	std::optional<const Node*> GetNodeByIndex(const Node* object, std::int64_t index);
 
 
-
-
-
-
-
-
-
-	std::optional<NodeAttribute> GetNodeAttribute(const Node* node);
-	void Print(const NodeAttribute& na);
-
-
 	//node‚Ìindex‚à•Ô‚³‚Ë‚Î
 	template<
 		typename VertexContainer,
