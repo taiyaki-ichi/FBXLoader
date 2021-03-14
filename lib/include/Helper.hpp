@@ -21,6 +21,8 @@ namespace FBXL
 	template<typename T>
 	std::optional<T> GetProperty(const Node* node, std::size_t index);
 
+	std::optional<const Node*> GetProperties70Component(const Node* prop70, const std::string& name);
+
 	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
 		GetConnectionByDestination(const Node* connection, std::int64_t index);
 
@@ -121,33 +123,46 @@ namespace FBXL
 		if (node->name != "Model" || GetProperty<std::string>(node, 2) != "Mesh")
 			return std::nullopt;
 
-		ModelMesh<Vector3D> result{};
+		ModelMesh<Vector3D> result;
+
+		result.name = GetProperty<std::string>(node, 1).value();
 
 		auto prop70 = GetChildrenNode(node, "Properties70");
-		auto ps = GetChildrenNode(prop70[0], "P");
-
-		for (auto p : ps)
+		
 		{
-			auto name = GetProperty<std::string>(p, 0).value();
-
-			if (name == "Lcl Transration")
+			auto p = GetProperties70Component(prop70[0], "Lcl Transration");
+			if (p)
 				result.localTranslation = CreateVector3DPolicy::Create(
-					GetProperty<double>(p, 4).value(),
-					GetProperty<double>(p, 5).value(),
-					GetProperty<double>(p, 6).value()
+					GetProperty<double>(p.value(), 4).value(),
+					GetProperty<double>(p.value(), 5).value(),
+					GetProperty<double>(p.value(), 6).value()
 				);
-			else if (name == "Lcl Rotation")
+			else
+				result.localTranslation = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
+		}
+
+		{
+			auto p = GetProperties70Component(prop70[0], "Lcl Rotation");
+			if (p)
 				result.localRotation = CreateVector3DPolicy::Create(
-					GetProperty<double>(p, 4).value(),
-					GetProperty<double>(p, 5).value(),
-					GetProperty<double>(p, 6).value()
+					GetProperty<double>(p.value(), 4).value(),
+					GetProperty<double>(p.value(), 5).value(),
+					GetProperty<double>(p.value(), 6).value()
 				);
-			else if(name=="Lcl Scaling")
+			else
+				result.localRotation = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
+		}
+
+		{
+			auto p = GetProperties70Component(prop70[0], "Lcl Scaling");
+			if (p)
 				result.localScaling = CreateVector3DPolicy::Create(
-					GetProperty<double>(p, 4).value(),
-					GetProperty<double>(p, 5).value(),
-					GetProperty<double>(p, 6).value()
+					GetProperty<double>(p.value(), 4).value(),
+					GetProperty<double>(p.value(), 5).value(),
+					GetProperty<double>(p.value(), 6).value()
 				);
+			else
+				result.localScaling = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		return result;

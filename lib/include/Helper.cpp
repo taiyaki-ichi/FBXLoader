@@ -27,6 +27,21 @@ namespace FBXL
 		return object;
 	}
 
+	std::optional<const Node*> GetProperties70Component(const Node* prop70, const std::string& name)
+	{
+		assert(prop70->name == "Properties70");
+
+		auto ps = GetChildrenNode(prop70, "P");
+
+		for (auto p : ps)
+		{
+			if (GetProperty<std::string>(p, 0).value() == name)
+				return p;
+		}
+
+		return std::nullopt;
+	}
+
 	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
 		GetConnectionByDestination(const Node* connection, std::int64_t index)
 	{
