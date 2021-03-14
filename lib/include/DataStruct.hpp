@@ -51,6 +51,9 @@ namespace FBXL
 		struct GeometryMesh
 	{
 
+		static_assert(std::is_default_constructible_v<VertexContainer>);
+		static_assert(std::is_default_constructible_v<IndexContainer>);
+
 		std::string name{};
 
 		VertexContainer vertices{};
@@ -61,7 +64,18 @@ namespace FBXL
 	};
 
 
+	template<typename Vector3D>
+	struct ModelMesh
+	{
+		static_assert(std::is_default_constructible_v<Vector3D>);
 
+		//name‚¢‚ç‚È‚¢‚©‚à
+		std::string name{};
+
+		Vector3D localTranslation{};
+		Vector3D localRotation{};
+		Vector3D localScaling{};
+	};
 
 
 

@@ -104,16 +104,54 @@ namespace FBXL
 					IndexContainerPushBackPolicy::PushBack(result.indeces, -indeces[j + 1] - 1);
 				}
 
-				i = j + 2;	
+				i = j + 2;
 			}
 		}
 
-	
 		return result;
-
 	}
 
 
+	template<typename Vector3D,typename CreateVector3DPolicy=DefaultCreateVector3D<Vector3D>>
+	std::optional<ModelMesh<Vector3D>> GetModelMesh(const Node* node)
+	{
+		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
+			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
+
+		if (node->name != "Model" || GetProperty<std::string>(node, 2) != "Mesh")
+			return std::nullopt;
+
+		ModelMesh<Vector3D> result{};
+
+		auto prop70 = GetChildrenNode(node, "Properties70");
+		auto ps = GetChildrenNode(prop70[0], "P");
+
+		for (auto p : ps)
+		{
+			auto name = GetProperty<std::string>(p, 0).value();
+
+			if (name == "Lcl Transration")
+				result.localTranslation = CreateVector3DPolicy::Create(
+					GetProperty<double>(p, 4).value(),
+					GetProperty<double>(p, 5).value(),
+					GetProperty<double>(p, 6).value()
+				);
+			else if (name == "Lcl Rotation")
+				result.localRotation = CreateVector3DPolicy::Create(
+					GetProperty<double>(p, 4).value(),
+					GetProperty<double>(p, 5).value(),
+					GetProperty<double>(p, 6).value()
+				);
+			else if(name=="Lcl Scaling")
+				result.localScaling = CreateVector3DPolicy::Create(
+					GetProperty<double>(p, 4).value(),
+					GetProperty<double>(p, 5).value(),
+					GetProperty<double>(p, 6).value()
+				);
+		}
+
+		return result;
+	}
 
 
 

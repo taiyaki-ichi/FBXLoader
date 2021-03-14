@@ -21,4 +21,14 @@ namespace FBXL
 		}
 	};
 
+	template<typename Vector3D>
+	struct DefaultCreateVector3D
+	{
+		static Vector3D Create(double x, double y, double z)
+		{
+			return Vector3D{ x,y,z };
+		}
+		
+	};
+
 }
