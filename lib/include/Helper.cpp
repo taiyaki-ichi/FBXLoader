@@ -27,7 +27,7 @@ namespace FBXL
 		return object;
 	}
 
-	std::optional<const Node*> GetProperties70Component(const Node* prop70, const std::string& name)
+	std::optional<const Node*> GetProperties70ComponentNode(const Node* prop70, const std::string& name)
 	{
 		assert(prop70->name == "Properties70");
 

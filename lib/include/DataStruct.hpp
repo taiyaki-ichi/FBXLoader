@@ -54,7 +54,7 @@ namespace FBXL
 		static_assert(std::is_default_constructible_v<VertexContainer>);
 		static_assert(std::is_default_constructible_v<IndexContainer>);
 
-		std::string name{};
+		std::string name;
 
 		VertexContainer vertices{};
 		IndexContainer indeces{};
@@ -68,11 +68,48 @@ namespace FBXL
 	struct ModelMesh
 	{
 		//nameいらないかも
-		std::string name{};
+		std::string name;
 
-		Vector3D localTranslation{};
-		Vector3D localRotation{};
-		Vector3D localScaling{};
+		Vector3D localTranslation;
+		Vector3D localRotation;
+		Vector3D localScaling;
+	};
+
+
+	template<typename Vector3D>
+	struct Material
+	{
+		//
+		std::string name;
+
+		Vector3D diffuseColor;
+		double diffuseFactor;
+
+		Vector3D ambientColor;
+		double ambientFactor;
+
+		Vector3D specularColor;
+		double specularFactor;
+
+		//Phongの反射モデル参照
+		//影つけるやつ
+		double shininess;
+		double shininessFactor;
+
+		//自身が放つ光
+		Vector3D emissive;
+		double emissiveFactor;
+
+		//透過度
+		//alpha成分のみ作用
+		double transparent;
+		double transparentFactor;
+
+		Vector3D reflectionColor;
+		double reflectionFactor;
+
+		//BumpMap,NormapMapとか追加するかも
+
 	};
 
 }

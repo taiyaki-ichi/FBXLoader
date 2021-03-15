@@ -48,22 +48,13 @@ int main()
 
 	assert(objects.size() == 1);
 
-	auto model = FBXL::GetChildrenNode(objects[0], "Model");
+	auto material = FBXL::GetChildrenNode(objects[0], "Material");
 
 	//std::ofstream file("hoge.txt");
 
-	for (auto m : model)
+	for (auto m : material)
 	{
-		auto hoge = FBXL::GetModelMesh<Vector3>(m);
-
-		if (hoge)
-		{
-			std::cout << hoge.value().name << "\n";
-			std::cout << hoge.value().localRotation.x << " , " << hoge.value().localRotation.y << " , " << hoge.value().localRotation.z << "\n";
-			std::cout << hoge.value().localScaling.x << " , " << hoge.value().localScaling.y << " , " << hoge.value().localScaling.z << "\n";
-			std::cout << hoge.value().localTranslation.x << " , " << hoge.value().localTranslation.y << " , " << hoge.value().localTranslation.z << "\n";
-			std::cout << "\n";
-		}
+		auto hoge = FBXL::GetMaterial<Vector3>(m);
 	}
 
 
