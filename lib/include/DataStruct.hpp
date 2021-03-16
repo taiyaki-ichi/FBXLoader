@@ -109,6 +109,24 @@ namespace FBXL
 		double reflectionFactor;
 
 		//BumpMap,NormapMapとか追加するかも
+	};
+
+
+	//最終的な目標
+	template<typename Vector3D>
+	struct Model3D
+	{
+
+		std::vector<Vector3D> vertices;
+		std::vector<std::int32_t> indeces;
+
+		std::vector<Material<Vector3D>> material;
+
+		//マテリアルの適用範囲
+		std::vector<std::int32_t> materialRange;
+
+
+		//std::vector<Texture> textures
 
 	};
 

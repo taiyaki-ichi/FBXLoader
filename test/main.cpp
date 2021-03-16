@@ -35,20 +35,22 @@ int main()
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_003.fbx");
 
     //Roundnessによって値が変わるはず
-    auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r50.fbx");
+    //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r50.fbx");
     //auto data2 = FBXL::LoadFBX("../../Assets/test_dog_004_r10.fbx");
 
 	//auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
+
+	auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
 
 
     //モディファイアの情報は頂点として保存されてそう
 
 
-	auto objects = FBXL::GetNode(&data, "Objects");
+	auto objects = FBXL::GetNodes(&data, "Objects");
 
 	assert(objects.size() == 1);
 
-	auto material = FBXL::GetChildrenNode(objects[0], "Material");
+	auto material = FBXL::GetChildrenNodes(objects[0], "Material");
 
 	//std::ofstream file("hoge.txt");
 

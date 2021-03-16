@@ -12,10 +12,17 @@ namespace FBXL
 {
 
 	//node.mChildrenのノードのうちnameが一致するノードの参照の取得
-	std::vector<const Node*> GetChildrenNode(const Node* node, const std::string& name);
+	std::vector<const Node*> GetChildrenNodes(const Node* node, const std::string& name);
+
+	//単一の子ノードの取得
+	//複数ある場合はnullopt
+	std::optional<const Node*> GetSingleChildrenNode(const Node* node, const std::string& name);
 
 	//Data.mNodesのノードのうちnameが一致するノードの参照の取得
-	std::vector<const Node*> GetNode(const Data* data, const std::string& name);
+	std::vector<const Node*> GetNodes(const Data* data, const std::string& name);
+
+	//二つ以上ある場合もnullopt
+	std::optional<const Node*> GetSingleNode(const Data* data, const std::string& name);
 
 	//Node.mPropertiesの情報を取得
 	template<typename T>
@@ -27,12 +34,16 @@ namespace FBXL
 
 	std::optional<const Node*> GetProperties70ComponentNode(const Node* prop70, const std::string& name);
 
+	template<typename T>
+	std::optional<T> GetProperities70Data(const Node* prop70, const std::string& name, std::int32_t index);
+
+	template<typename Vector3D,typename CreateVector3DPolicy>
+	std::optional<Vector3D> GetProperities70Vector3DData(const Node* prop70, const std::string& name, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex);
+
 	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
 		GetConnectionByDestination(const Node* connection, std::int64_t index);
 
 
-
-	std::optional<const Node*> GetNodeByIndex(const Node* object, std::int64_t index);
 
 
 	//nodeのindexも返さねば
@@ -65,8 +76,8 @@ namespace FBXL
 
 		//vertex
 		{
-			auto verticesNode = GetChildrenNode(node, "Vertices");
-			auto vertices = GetProperty<std::vector<double>>(verticesNode[0], 0).value();
+			auto verticesNode = GetSingleChildrenNode(node, "Verticse").value();
+			auto vertices = GetProperty<std::vector<double>>(verticesNode, 0).value();
 
 			vetexSize = vertices.size() / 3;
 
@@ -76,8 +87,8 @@ namespace FBXL
 
 		//index
 		{
-			auto indexNode = GetChildrenNode(node, "PolygonVertexIndex");
-			auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode[0], 0).value();
+			auto indexNode = GetSingleChildrenNode(node, "PolygonVertexIndex").value();
+			auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode, 0).value();
 
 			std::size_t i = 0;
 			std::size_t j = 0;
@@ -131,31 +142,28 @@ namespace FBXL
 
 		result.name = GetProperty<std::string>(node, 1).value();
 
-		auto prop70 = GetChildrenNode(node, "Properties70");
+		auto prop70 = GetSingleChildrenNode(node, "Properties70").value();
 		
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "Lcl Transration");
-
-			if (p)
-				result.localTranslation = GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), 4, 5, 6).value();
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Transration", 4, 5, 6);
+			if (vec)
+				result.localTranslation = vec.value();
 			else
 				result.localTranslation = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "Lcl Rotation");
-			
-			if (p)
-				result.localRotation = GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), 4, 5, 6).value();
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Rotation", 4, 5, 6);
+			if (vec)
+				result.localRotation(vec.value());
 			else
 				result.localRotation = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "Lcl Scaling");
-
-			if (p)
-				result.localScaling = GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), 4, 5, 6).value();
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Scaling", 4, 5, 6);
+			if (vec)
+				result.localScaling = vec.value();
 			else
 				result.localScaling = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
@@ -177,128 +185,149 @@ namespace FBXL
 
 		result.name = GetProperty<std::string>(node, 1).value();
 
-		auto prop70 = GetChildrenNode(node, "Properties70");
+		auto prop70 = GetSingleChildrenNode(node, "Properties70").value();
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "DiffuseColor");
-
-			if (p)
-				result.diffuseColor = GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), 4, 5, 6).value();
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "DiffuseColor", 4, 5, 6);
+			if (vec)
+				result.diffuseColor = vec.value();
 			else
 				result.diffuseColor = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "DiffuseFactor");
-
-			if (p)
-				result.diffuseFactor = GetProperty<double>(p.value(), 4).value();
+			auto fac = GetProperities70Data<double>(prop70, "DiffuseFactor", 4);
+			if (fac)
+				result.diffuseFactor = fac.value();
 			else
 				result.diffuseFactor = 0.0;
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "AmbientColor");
-			if (p)
-				result.ambientColor = GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), 4, 5, 6).value();
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "AmbientColor", 4, 5, 6);
+			if (vec)
+				result.ambientColor = vec.value();
 			else
 				result.ambientColor = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "AmbientFactor");
-			if (p)
-				result.ambientFactor = GetProperty<double>(p.value(), 4).value();
+			auto fac = GetProperities70Data<double>(prop70, "AmbientFactor", 4);
+			if (fac)
+				result.ambientFactor = fac.value();
 			else
 				result.ambientFactor = 0.0;
 		}
 		
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "SpecularColor");
-			if (p)
-				result.specularColor = GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), 4, 5, 6).value();
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "SpecularColor", 4, 5, 6);
+			if (vec)
+				result.specularColor = vec.value();
 			else
 				result.specularColor = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "SpecularFactor");
-			if (p)
-				result.specularFactor = GetProperty<double>(p.value(), 4).value();
+			auto fac = GetProperities70Data<double>(prop70, "SpecularFactor", 4);
+			if (fac)
+				result.specularFactor = fac.value();
 			else
 				result.specularFactor = 0.0;
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "Shininess");
-			if (p)
-				result.shininess = GetProperty<double>(p.value(), 4).value();
+			auto shi = GetProperities70Data<double>(prop70, "Shininess", 4);
+			if (shi)
+				result.shininess = shi.value();
 			else
 				result.shininess = 0.0;
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "ShininessFactor");
-			if (p)
-				result.shininessFactor = GetProperty<double>(p.value(), 4).value();
+			auto shiFac = GetProperities70Data<double>(prop70, "ShininessFactor", 4);
+			if (shiFac)
+				result.shininessFactor = shiFac.value();
 			else
 				result.shininessFactor = 0.0;
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "Emissive");
-			if (p)
-				result.emissive = GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), 4, 5, 6).value();
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Emissive", 4, 5, 6);
+			if (vec)
+				result.emissive = vec.value();
 			else
 				result.emissive = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "EmissiveFactor");
-			if (p)
-				result.emissiveFactor = GetProperty<double>(p.value(), 4).value();
+			auto f = GetProperities70Data<double>(prop70, "EmissiveFactor", 4);
+			if (f)
+				result.emissiveFactor = f.value();
 			else
 				result.emissiveFactor = 0.0;
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "Transparent");
-			if (p)
-				result.transparent = GetProperty<double>(p.value(), 4).value();
-			else
-				result.transparent = 0.0;
-		}
-
-		{
-			auto p = GetProperties70ComponentNode(prop70[0], "TransparentFactor");
-			if (p)
-				result.transparentFactor = GetProperty<double>(p.value(), 4).value();
+			auto t = GetProperities70Data<double>(prop70, "Transparent", 4);
+			if (t)
+				result.transparent = t.value();
 			else
 				result.transparentFactor = 0.0;
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "ReflectionColor");
-			if (p)
-				result.reflectionColor = GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), 4, 5, 6).value();
+			auto tf = GetProperities70Data<double>(prop70, "TransparentFactor", 4);
+			if (tf)
+				result.transparentFactor = tf.value();
+			else
+				result.transparentFactor = 0.0;
+		}
+
+		{
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "ReflectionColor", 4, 5, 6);
+			if (vec)
+				result.reflectionColor = vec.value();
 			else
 				result.reflectionColor = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
-			auto p = GetProperties70ComponentNode(prop70[0], "ReflectionFactor");
-			if (p)
-				result.reflectionFactor = GetProperty<double>(p.value(), 4).value();
+			auto rf = GetProperities70Data<double>(prop70, "ReflectionFactor", 4);
+			if (rf)
+				result.reflectionFactor = rf.value();
 			else
 				result.reflectionFactor = 0.0;
-
 		}
 
 		return result;
 	}
 
 
+	template<typename T>
+	std::optional<T> GetProperities70Data(const Node* prop70, const std::string& name, std::int32_t index)
+	{
+		assert(prop70->name == "Properties70");
 
+		auto p = GetProperties70ComponentNode(prop70, name);
+
+		if (p)
+			return GetProperty<T>(p.value(), index);
+		else
+			return std::nullopt;
+	}
+
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	std::optional<Vector3D> GetProperities70Vector3DData(const Node* prop70, const std::string& name, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex)
+	{
+		assert(prop70->name == "Properties70");
+
+		auto p = GetProperties70ComponentNode(prop70, name);
+
+		if (p)
+			return GetVector3DProperty<Vector3D, CreateVector3DPolicy>(p.value(), xIndex, yIndex, zIndex);
+		else
+			return std::nullopt;
+	}
 
 
 	//
@@ -329,6 +358,7 @@ namespace FBXL
 		else
 			return std::nullopt;
 	}
+
 
 
 

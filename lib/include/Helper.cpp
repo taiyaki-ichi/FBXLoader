@@ -9,7 +9,7 @@
 namespace FBXL
 {
 
-	std::vector<const Node*> GetChildrenNode(const Node* node, const std::string& name)
+	std::vector<const Node*> GetChildrenNodes(const Node* node, const std::string& name)
 	{
 		std::vector<const Node*> object{};
 		std::for_each(node->children.begin(), node->children.end(),
@@ -18,7 +18,22 @@ namespace FBXL
 		return object;
 	}
 
-	std::vector<const Node*> GetNode(const Data* data, const std::string& name)
+	std::optional<const Node*> GetSingleChildrenNode(const Node* node, const std::string& name)
+	{
+		std::optional<const Node*> result = std::nullopt;
+		for (std::size_t i = 0; i < node->children.size(); i++)
+		{
+			if (!result && node->children[i].name == name)
+				result = &node->children[i];
+			else if (result && node->children[i].name == name) {
+				result = std::nullopt;
+				break;
+			}
+		}
+		return result;
+	}
+
+	std::vector<const Node*> GetNodes(const Data* data, const std::string& name)
 	{
 		std::vector<const Node*> object{};
 		std::for_each(data->nodes.begin(), data->nodes.end(),
@@ -27,11 +42,26 @@ namespace FBXL
 		return object;
 	}
 
+	std::optional<const Node*> GetSingleNode(const Data* data, const std::string& name)
+	{
+		std::optional<const Node*> result = std::nullopt;
+		for (std::size_t i = 0; i < data->nodes.size(); i++)
+		{
+			if (!result && data->nodes[i].name == name)
+				result = &data->nodes[i];
+			else if (result && data->nodes[i].name == name) {
+				result = std::nullopt;
+				break;
+			}
+		}
+		return result;
+	}
+
 	std::optional<const Node*> GetProperties70ComponentNode(const Node* prop70, const std::string& name)
 	{
 		assert(prop70->name == "Properties70");
 
-		auto ps = GetChildrenNode(prop70, "P");
+		auto ps = GetChildrenNodes(prop70, "P");
 
 		for (auto p : ps)
 		{
@@ -83,20 +113,4 @@ namespace FBXL
 
 		return std::make_pair(object, prop);
 	}
-
-
-	std::optional<const Node*> GetNodeByIndex(const Node* object, std::int64_t index)
-	{
-		assert(object->name == "Objects");
-
-		for (auto& n : object->children)
-		{
-			auto i = GetProperty<std::int64_t>(&n, 0).value();
-			if (i == index)
-				return &n;
-		}
-
-		return std::nullopt;
-	}
-
 }
