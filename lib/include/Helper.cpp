@@ -20,20 +20,20 @@ namespace FBXL
 
 	std::optional<const Node*> GetSingleChildrenNode(const Node* node, const std::string& name)
 	{
-		std::optional<const Node*> result = std::nullopt;
+		std::optional<const Node*> resultIndex = std::nullopt;
 		for (std::size_t i = 0; i < node->children.size(); i++)
 		{
-			if (!result && node->children[i].name == name)
-				result = &node->children[i];
-			else if (result && node->children[i].name == name) {
-				result = std::nullopt;
+			if (!resultIndex && node->children[i].name == name)
+				resultIndex = &node->children[i];
+			else if (resultIndex && node->children[i].name == name) {
+				resultIndex = std::nullopt;
 				break;
 			}
 		}
-		return result;
+		return resultIndex;
 	}
 
-	std::vector<const Node*> GetNodes(const Data* data, const std::string& name)
+	std::vector<const Node*> GetNodes(const PrimitiveData* data, const std::string& name)
 	{
 		std::vector<const Node*> object{};
 		std::for_each(data->nodes.begin(), data->nodes.end(),
@@ -42,19 +42,19 @@ namespace FBXL
 		return object;
 	}
 
-	std::optional<const Node*> GetSingleNode(const Data* data, const std::string& name)
+	std::optional<const Node*> GetSingleNode(const PrimitiveData* data, const std::string& name)
 	{
-		std::optional<const Node*> result = std::nullopt;
+		std::optional<const Node*> resultIndex = std::nullopt;
 		for (std::size_t i = 0; i < data->nodes.size(); i++)
 		{
-			if (!result && data->nodes[i].name == name)
-				result = &data->nodes[i];
-			else if (result && data->nodes[i].name == name) {
-				result = std::nullopt;
+			if (!resultIndex && data->nodes[i].name == name)
+				resultIndex = &data->nodes[i];
+			else if (resultIndex && data->nodes[i].name == name) {
+				resultIndex = std::nullopt;
 				break;
 			}
 		}
-		return result;
+		return resultIndex;
 	}
 
 	std::optional<const Node*> GetProperties70ComponentNode(const Node* prop70, const std::string& name)
@@ -112,5 +112,64 @@ namespace FBXL
 		}
 
 		return std::make_pair(object, prop);
+	}
+
+	namespace {
+
+		std::vector<std::pair<std::tuple<std::int32_t,std::int32_t,std::int32_t>,std::int32_t>> 
+			GetTrianglePolygon(const std::vector<std::int32_t>& indecse, const std::vector<std::int32_t>& material)
+		{
+			std::vector<std::pair<std::tuple<std::int32_t, std::int32_t, std::int32_t>, std::int32_t>> resultIndex{};
+
+			std::size_t materialOffset = 0;
+			std::size_t i = 0;
+			std::size_t j = 0;
+			while (i < indecse.size())
+			{
+				j = i + 1;
+
+				while (indecse[j + 1] >= 0)
+				{
+					resultIndex.emplace_back(std::make_tuple(indecse[i], indecse[j], indecse[j + 1]), material[materialOffset]);
+					j++;
+				}
+
+				resultIndex.emplace_back(std::make_tuple(indecse[i], indecse[j], -indecse[j + 1] - 1), material[materialOffset]);
+
+				i = j + 2;
+				materialOffset++;
+			}
+
+			return resultIndex;
+		}
+
+		std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>>
+			GetIndexArray(std::vector<std::pair<std::tuple<std::int32_t, std::int32_t, std::int32_t>, std::int32_t>>&& a,std::int32_t materialSize)
+		{
+			std::vector<std::int32_t> resultIndex{};
+			std::vector<std::int32_t> materialRangeArray(materialSize);
+
+		
+			resultIndex.reserve(a.size() * 3);
+			for (auto& [vec,i] : a)
+			{
+				resultIndex.push_back(std::get<0>(vec));
+				resultIndex.push_back(std::get<1>(vec));
+				resultIndex.push_back(std::get<2>(vec));
+
+				materialRangeArray[i]++;
+			}
+			return std::make_pair(std::move(resultIndex), std::move(materialRangeArray));
+		}
+	}
+
+	std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>> GetIndeces(const std::vector<std::int32_t>& indecse,const  std::vector<std::int32_t>& material)
+	{
+		auto i = GetTrianglePolygon(indecse, material);
+		std::sort(i.begin(), i.end(), [](auto& a,auto& b) {
+			return a.second < b.second;
+			});
+
+		return GetIndexArray(std::move(i), i.end()->second);
 	}
 }

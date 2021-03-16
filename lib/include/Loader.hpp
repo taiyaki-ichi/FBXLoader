@@ -3,5 +3,5 @@
 
 namespace FBXL
 {
-	 Data LoadFBX(const std::string& filePath);
+	 PrimitiveData LoadFBX(const std::string& filePath);
 }

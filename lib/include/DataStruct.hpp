@@ -31,7 +31,7 @@ namespace FBXL
 	};
 
 
-	struct Data {
+	struct PrimitiveData {
 		std::string filePath{};
 		std::uint32_t version{};
 		std::vector<Node> nodes{};
@@ -58,6 +58,8 @@ namespace FBXL
 
 		VertexContainer vertices{};
 		IndexContainer indeces{};
+
+		std::vector<std::int32_t> materialRange{};
 
 		//UV‚È‚Ç‚ª’Ç‰Á‚³‚ê‚é—\’è
 

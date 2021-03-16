@@ -19,10 +19,10 @@ namespace FBXL
 	std::optional<const Node*> GetSingleChildrenNode(const Node* node, const std::string& name);
 
 	//Data.mNodesのノードのうちnameが一致するノードの参照の取得
-	std::vector<const Node*> GetNodes(const Data* data, const std::string& name);
+	std::vector<const Node*> GetNodes(const PrimitiveData* data, const std::string& name);
 
 	//二つ以上ある場合もnullopt
-	std::optional<const Node*> GetSingleNode(const Data* data, const std::string& name);
+	std::optional<const Node*> GetSingleNode(const PrimitiveData* data, const std::string& name);
 
 	//Node.mPropertiesの情報を取得
 	template<typename T>
@@ -43,7 +43,10 @@ namespace FBXL
 	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
 		GetConnectionByDestination(const Node* connection, std::int64_t index);
 
-
+	//インデックスの配列と対応するマテリアルの配列を受け取り
+	//マテリアル順に並べ替えたインデックスの配列とそれぞれのマテリアルの適用する長さを返す
+	std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>> 
+		GetIndeces(const std::vector<std::int32_t>& indecse, const std::vector<std::int32_t>& material);
 
 
 	//nodeのindexも返さねば
@@ -89,6 +92,8 @@ namespace FBXL
 		{
 			auto indexNode = GetSingleChildrenNode(node, "PolygonVertexIndex").value();
 			auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode, 0).value();
+
+			
 
 			std::size_t i = 0;
 			std::size_t j = 0;
