@@ -117,7 +117,7 @@ namespace FBXL
 	namespace {
 
 		std::vector<std::pair<std::tuple<std::int32_t,std::int32_t,std::int32_t>,std::int32_t>> 
-			GetTrianglePolygon(const std::vector<std::int32_t>& indecse, const std::vector<std::int32_t>& material)
+			GetTrianglePolygon(std::vector<std::int32_t>&& indecse, std::vector<std::int32_t>&& material)
 		{
 			std::vector<std::pair<std::tuple<std::int32_t, std::int32_t, std::int32_t>, std::int32_t>> resultIndex{};
 
@@ -144,10 +144,10 @@ namespace FBXL
 		}
 
 		std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>>
-			GetIndexArray(std::vector<std::pair<std::tuple<std::int32_t, std::int32_t, std::int32_t>, std::int32_t>>&& a,std::int32_t materialSize)
+			GetIndexArray(std::vector<std::pair<std::tuple<std::int32_t, std::int32_t, std::int32_t>, std::int32_t>>&& a)
 		{
 			std::vector<std::int32_t> resultIndex{};
-			std::vector<std::int32_t> materialRangeArray(materialSize);
+			std::vector<std::int32_t> materialRangeArray(a[a.size() - 1].second + 1);
 
 		
 			resultIndex.reserve(a.size() * 3);
@@ -161,15 +161,52 @@ namespace FBXL
 			}
 			return std::make_pair(std::move(resultIndex), std::move(materialRangeArray));
 		}
+
+		std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>>
+			GetSingleMaterialIndeces(std::vector<std::int32_t>&& indecse)
+		{
+			std::vector<std::int32_t> resultIndex{};
+
+			std::size_t i = 0;
+			std::size_t j = 0;
+			while (i < indecse.size())
+			{
+				j = i + 1;
+
+				while (indecse[j + 1] >= 0)
+				{
+					resultIndex.push_back(indecse[i]);
+					resultIndex.push_back(indecse[j]);
+					resultIndex.push_back(indecse[j + 1]);
+					j++;
+				}
+
+				resultIndex.push_back(indecse[i]);
+				resultIndex.push_back(indecse[j]);
+				resultIndex.push_back(-indecse[j + 1] - 1);
+
+				i = j + 2;
+			}
+
+
+			std::vector<std::int32_t> resultMaterialRange{ static_cast<std::int32_t>(resultIndex.size()) };
+
+			return { resultIndex,resultMaterialRange };
+		}
 	}
 
-	std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>> GetIndeces(const std::vector<std::int32_t>& indecse,const  std::vector<std::int32_t>& material)
+	std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>> GetIndecesAndMAterialRange(std::vector<std::int32_t>&& indecse,std::vector<std::int32_t>&& material)
 	{
-		auto i = GetTrianglePolygon(indecse, material);
-		std::sort(i.begin(), i.end(), [](auto& a,auto& b) {
-			return a.second < b.second;
-			});
+		if (material.size() == 1)
+			return GetSingleMaterialIndeces(std::move(indecse));
+		else
+		{
+			auto i = GetTrianglePolygon(std::move(indecse), std::move(material));
+			std::sort(i.begin(), i.end(), [](auto& a, auto& b) {
+				return a.second < b.second;
+				});
 
-		return GetIndexArray(std::move(i), i.end()->second);
+			return GetIndexArray(std::move(i));
+		}
 	}
 }

@@ -44,20 +44,13 @@ namespace FBXL
 	//‚Ç‚ê‚à‰¼‚ÌŽp
 	//
 
-	template<
-		typename VertexContainer,
-		typename IndexContainer
-	>
-		struct GeometryMesh
+	template<typename Vector3D> 
+	struct GeometryMesh
 	{
-
-		static_assert(std::is_default_constructible_v<VertexContainer>);
-		static_assert(std::is_default_constructible_v<IndexContainer>);
-
 		std::string name;
 
-		VertexContainer vertices{};
-		IndexContainer indeces{};
+		std::vector<Vector3D> vertices{};
+		std::vector<std::int32_t> indeces{};
 
 		std::vector<std::int32_t> materialRange{};
 
@@ -119,8 +112,9 @@ namespace FBXL
 	struct Model3D
 	{
 
-		std::vector<Vector3D> vertices;
-		std::vector<std::int32_t> indeces;
+		//std::vector<Vector3D> vertices;
+		//std::vector<std::int32_t> indeces;
+		//std::vector<ModelMesh<>>
 
 		std::vector<Material<Vector3D>> material;
 
