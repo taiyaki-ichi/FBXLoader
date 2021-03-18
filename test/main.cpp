@@ -21,6 +21,20 @@ struct Vector3
 	}
 };
 
+struct Vector2
+{
+	double x{};
+	double y{};
+
+	Vector2() = default;
+
+	Vector2(double inX, double inY)
+	{
+		x = inX;
+		y = inY;
+	}
+};
+
 
 int main()
 {
@@ -35,10 +49,10 @@ int main()
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_003.fbx");
 
     //Roundness‚É‚æ‚Á‚Ä’l‚ª•Ï‚í‚é‚Í‚¸
-    auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r50.fbx");
+    //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r50.fbx");
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r10.fbx");
 
-	//auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
+	auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
 
 	//auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
 
@@ -56,7 +70,7 @@ int main()
 
 	for (auto g : geo)
 	{
-		auto hoge = FBXL::GetGeometryMesh<Vector3>(g);
+		auto hoge = FBXL::GetGeometryMesh<Vector2,Vector3>(g);
 	}
 
 

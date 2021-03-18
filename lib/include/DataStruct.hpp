@@ -44,19 +44,23 @@ namespace FBXL
 	//‚Ç‚ê‚à‰¼‚ÌŽp
 	//
 
-	template<typename Vector3D> 
+	
+	template<typename Vector2D,typename Vector3D>
+	struct Vertex
+	{
+		Vector3D position;
+		Vector3D normal;
+		Vector2D uv;
+	};
+	
+	template<typename Vector2D,typename Vector3D>
 	struct GeometryMesh
 	{
 		std::string name;
-
-		std::vector<Vector3D> vertices{};
-		std::vector<std::int32_t> indeces{};
-
+		std::vector<Vertex<Vector2D,Vector3D>> verteces;
 		std::vector<std::int32_t> materialRange{};
-
-		//UV‚È‚Ç‚ª’Ç‰Á‚³‚ê‚é—\’è
-
 	};
+
 
 
 	template<typename Vector3D>

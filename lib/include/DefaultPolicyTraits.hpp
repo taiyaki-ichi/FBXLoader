@@ -31,4 +31,11 @@ namespace FBXL
 		
 	};
 
+	template<typename Vector2D>
+	struct DefaultCreateVector2D
+	{
+		static Vector2D Create(double x, double y) {
+			return Vector2D{ x,y };
+		}
+	};
 }

@@ -114,99 +114,17 @@ namespace FBXL
 		return std::make_pair(object, prop);
 	}
 
-	namespace {
-
-		std::vector<std::pair<std::tuple<std::int32_t,std::int32_t,std::int32_t>,std::int32_t>> 
-			GetTrianglePolygon(std::vector<std::int32_t>&& indecse, std::vector<std::int32_t>&& material)
-		{
-			std::vector<std::pair<std::tuple<std::int32_t, std::int32_t, std::int32_t>, std::int32_t>> resultIndex{};
-
-			std::size_t materialOffset = 0;
-			std::size_t i = 0;
-			std::size_t j = 0;
-			while (i < indecse.size())
-			{
-				j = i + 1;
-
-				while (indecse[j + 1] >= 0)
-				{
-					resultIndex.emplace_back(std::make_tuple(indecse[i], indecse[j], indecse[j + 1]), material[materialOffset]);
-					j++;
-				}
-
-				resultIndex.emplace_back(std::make_tuple(indecse[i], indecse[j], -indecse[j + 1] - 1), material[materialOffset]);
-
-				i = j + 2;
-				materialOffset++;
-			}
-
-			return resultIndex;
-		}
-
-		std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>>
-			GetIndexArray(std::vector<std::pair<std::tuple<std::int32_t, std::int32_t, std::int32_t>, std::int32_t>>&& a)
-		{
-			std::vector<std::int32_t> resultIndex{};
-			std::vector<std::int32_t> materialRangeArray(a[a.size() - 1].second + 1);
-
-		
-			resultIndex.reserve(a.size() * 3);
-			for (auto& [vec,i] : a)
-			{
-				resultIndex.push_back(std::get<0>(vec));
-				resultIndex.push_back(std::get<1>(vec));
-				resultIndex.push_back(std::get<2>(vec));
-
-				materialRangeArray[i]++;
-			}
-			return std::make_pair(std::move(resultIndex), std::move(materialRangeArray));
-		}
-
-		std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>>
-			GetSingleMaterialIndeces(std::vector<std::int32_t>&& indecse)
-		{
-			std::vector<std::int32_t> resultIndex{};
-
-			std::size_t i = 0;
-			std::size_t j = 0;
-			while (i < indecse.size())
-			{
-				j = i + 1;
-
-				while (indecse[j + 1] >= 0)
-				{
-					resultIndex.push_back(indecse[i]);
-					resultIndex.push_back(indecse[j]);
-					resultIndex.push_back(indecse[j + 1]);
-					j++;
-				}
-
-				resultIndex.push_back(indecse[i]);
-				resultIndex.push_back(indecse[j]);
-				resultIndex.push_back(-indecse[j + 1] - 1);
-
-				i = j + 2;
-			}
-
-
-			std::vector<std::int32_t> resultMaterialRange{ static_cast<std::int32_t>(resultIndex.size()) };
-
-			return { resultIndex,resultMaterialRange };
-		}
-	}
-
-	std::pair<std::vector<std::int32_t>, std::vector<std::int32_t>> GetIndecesAndMAterialRange(std::vector<std::int32_t>&& indecse,std::vector<std::int32_t>&& material)
+	std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh)
 	{
-		if (material.size() == 1)
-			return GetSingleMaterialIndeces(std::move(indecse));
-		else
-		{
-			auto i = GetTrianglePolygon(std::move(indecse), std::move(material));
-			std::sort(i.begin(), i.end(), [](auto& a, auto& b) {
-				return a.second < b.second;
-				});
+		auto layerElementMaterialNode = GetSingleChildrenNode(geometyMesh, "LayerElementMaterial");
 
-			return GetIndexArray(std::move(i));
+		if (layerElementMaterialNode)
+		{
+			auto materialNode = GetSingleChildrenNode(layerElementMaterialNode.value(), "Materials").value();
+
+			return GetProperty<std::vector<std::int32_t>>(materialNode, 0).value();
 		}
+		else
+			return std::nullopt;
 	}
 }
