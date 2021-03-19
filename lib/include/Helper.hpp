@@ -38,7 +38,9 @@ namespace FBXL
 	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
 		GetConnectionByDestination(const Node* connection, std::int64_t index);
 
-
+	//geometryMeshにローカルの変換を適用し
+	template<typename Vector2D,typename Vector3D,typename TranslationVector3DPolicy,typename RotationVector3DPolicy,typename ScallingVector3DPolicy>
+	Model3DParts<Vector2D, Vector3D> GetModel3DParts();
 
 	//GeometyMeshNodeからマテリアルのインデックス配列を取得
 	std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh);
@@ -83,7 +85,8 @@ namespace FBXL
 		typename CreateVector3DPolicy = DefaultCreateVector3D<Vector3D>>
 		std::optional<Objects<Vector2D, Vector3D>> GetObjects(Node&& objects);
 	
-	
+	//connectiosの取得
+	Connections GetConnections(Node&& connections);
 
 
 	//
@@ -405,10 +408,15 @@ namespace FBXL
 		auto uv = GetProperty<std::vector<double>>(uvNode.value(), 0).value();
 		auto uvIndex = GetProperty<std::vector<std::int32_t>>(uvIndexNode.value(), 0).value();
 
+		auto isVailedIndex = [&uv](std::int32_t index) {
+			return 0 <= index && index < uv.size();
+		};
+
 		std::vector<Vector2D> result{};
 		result.reserve(uvIndex.size());
 		for (std::size_t i = 0; i < uvIndex.size(); i++)
-			result.push_back(CreateVector2DPolicy::Create(uv[uvIndex[i] * 2], uv[uvIndex[i] * 2 + 1]));
+			if (isVailedIndex(uvIndex[i] * 2) && isVailedIndex(uvIndex[i] * 2 + 1))
+				result.push_back(CreateVector2DPolicy::Create(uv[uvIndex[i] * 2], uv[uvIndex[i] * 2 + 1]));
 
 		return result;
 	}
@@ -450,15 +458,20 @@ namespace FBXL
 
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
 
+
+
 		auto pushBack = [&vertices, &normals, &uvs, &result, &materialIndeces](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset) {
-			Vertex<Vector2D, Vector3D> tmpVec;
-			tmpVec.position = CreateVector3DPolicy::Create(vertices[index1], vertices[index2], vertices[index3]);
-			tmpVec.normal = normals[offset];
-			tmpVec.uv = uvs[offset];
-			if (materialIndeces && materialIndeces.value().size() > 1)
-				result.emplace_back(std::make_pair(std::move(tmpVec), materialIndeces.value()[offset]));
-			else
-				result.emplace_back(std::make_pair(std::move(tmpVec), 0));
+			if (index1 < vertices.size() && index2 < vertices.size() && index3 < vertices.size())
+			{
+				Vertex<Vector2D, Vector3D> tmpVec;
+				tmpVec.position = CreateVector3DPolicy::Create(vertices[index1], vertices[index2], vertices[index3]);
+				tmpVec.normal = normals[offset];
+				tmpVec.uv = uvs[offset];
+				if (materialIndeces && materialIndeces.value().size() > 1)
+					result.emplace_back(std::make_pair(std::move(tmpVec), materialIndeces.value()[offset]));
+				else
+					result.emplace_back(std::make_pair(std::move(tmpVec), 0));
+			}
 		};
 
 		std::size_t offset = 0;

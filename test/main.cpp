@@ -39,7 +39,7 @@ struct Vector2
 int main()
 {
 
-	auto data = FBXL::LoadFBX("../../Assets/Fox.FBX");
+	//auto data = FBXL::LoadFBX("../../Assets/Fox.FBX");
 	//auto data = FBXL::LoadFBX("../../Assets/Handgun/Handgun_fbx_7.4_binary.fbx");
 	//auto data = FBXL::LoadFBX("../../Assets/Dragon/Dragon_Baked_Actions_fbx_7.4_binary.fbx");
 	//auto data = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
@@ -52,7 +52,7 @@ int main()
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r50.fbx");
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r10.fbx");
 
-	//auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
+	auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
 
 	//auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
 
@@ -63,6 +63,10 @@ int main()
 	{
 		if (node.name == "Objects") {
 			auto objects = FBXL::GetObjects<Vector2, Vector3>(std::move(node));
+		}
+		else if (node.name == "Connections")
+		{
+			auto connectios = FBXL::GetConnections(std::move(node));
 		}
 	}
 

@@ -104,4 +104,51 @@ namespace FBXL
 		else
 			return std::nullopt;
 	}
+	namespace
+	{
+		ObjectOrPropertyIndex GetObjectIndex(const Node* node, std::size_t offset)
+		{
+			return GetProperty<std::int64_t>(node, offset).value();
+		}
+
+		ObjectOrPropertyIndex GetPropertyIndex(const Node* node, std::size_t offset)
+		{
+			return std::make_pair(GetProperty<std::int64_t>(node, offset).value(), GetProperty<std::string>(node, offset + 1).value());
+		}
+	}
+	
+	Connections GetConnections(Node&& connections)
+	{
+		assert(connections.name == "Connections");
+
+		Connections result{};
+		result.reserve(connections.children.size());
+
+		std::size_t offset{};
+		ObjectOrPropertyIndex src{};
+		ObjectOrPropertyIndex dst{};
+		for (auto& node : connections.children)
+		{
+			auto type = GetProperty<std::string>(&node, 0);
+
+			if (type.value()[0] == 'O') {
+				src = GetObjectIndex(&node, 1);
+				offset = 2;
+			}
+			else if (type.value()[0] == 'P') {
+				offset = 3;
+				src = GetPropertyIndex(&node, 1);
+			}
+
+			if (type.value()[1] == 'O')
+				dst = GetObjectIndex(&node, offset);
+			else if (type.value()[1] == 'P')
+				dst = GetPropertyIndex(&node, offset);
+
+			result.emplace_back(std::make_pair(std::move(src), std::move(dst)));
+		}
+
+		return result;
+	}
+	
 }

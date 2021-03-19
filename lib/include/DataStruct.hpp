@@ -113,15 +113,16 @@ namespace FBXL
 		std::unordered_map<std::int64_t, Material<Vector3D>> materials{};
 	};
 
+	
+	//Connectionsの構造体
+	using ObjectOrPropertyIndex = std::variant<std::int64_t, std::pair<std::int64_t, std::string>>;
+	using Connections = std::vector<std::pair<ObjectOrPropertyIndex, ObjectOrPropertyIndex>>;
 
+
+	//GeometryMeshにModelMeshのローカルの変換を適用した
 	template<typename Vector2D,typename Vector3D>
-	struct Model3DParts
-	{
-		std::vector<Vertex<Vector2D, Vector3D>> verteces;
-		std::vector<std::int32_t> materialRange{};
+	using Model3DParts = std::pair<GeometryMesh<Vector2D, Vector3D>, std::vector<std::int64_t>>;
 
-		std::vector<std::int64_t> materialNumber{};
-	};
 
 	template<typename Vector2D,typename Vector3D>
 	struct Model3D
