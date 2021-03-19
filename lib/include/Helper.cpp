@@ -34,21 +34,6 @@ namespace FBXL
 	}
 
 
-	std::optional<const Node*> GetSingleNodeFromPrimitiveData(const PrimitiveData* data, const std::string& name)
-	{
-		std::optional<const Node*> resultIndex = std::nullopt;
-		for (std::size_t i = 0; i < data->nodes.size(); i++)
-		{
-			if (!resultIndex && data->nodes[i].name == name)
-				resultIndex = &data->nodes[i];
-			else if (resultIndex && data->nodes[i].name == name) {
-				resultIndex = std::nullopt;
-				break;
-			}
-		}
-		return resultIndex;
-	}
-
 	std::optional<const Node*> GetProperties70ComponentNode(const Node* prop70, const std::string& name)
 	{
 		assert(prop70->name == "Properties70");

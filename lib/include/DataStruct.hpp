@@ -113,23 +113,23 @@ namespace FBXL
 		std::unordered_map<std::int64_t, Material<Vector3D>> materials{};
 	};
 
-	//最終的な目標
-	template<typename Vector3D>
+
+	template<typename Vector2D,typename Vector3D>
+	struct Model3DParts
+	{
+		std::vector<Vertex<Vector2D, Vector3D>> verteces;
+		std::vector<std::int32_t> materialRange{};
+
+		std::vector<std::int64_t> materialNumber{};
+	};
+
+	template<typename Vector2D,typename Vector3D>
 	struct Model3D
 	{
+		std::vector<Vertex<Vector2D, Vector3D>> verteces;
+		std::vector<std::int32_t> materialRange{};
 
-		//std::vector<Vector3D> vertices;
-		//std::vector<std::int32_t> indeces;
-		//std::vector<ModelMesh<>>
-
-		std::vector<Material<Vector3D>> material;
-
-		//マテリアルの適用範囲
-		std::vector<std::int32_t> materialRange;
-
-
-		//std::vector<Texture> textures
-
+		std::vector<Material<Vector3D>> material{};
 	};
 
 }

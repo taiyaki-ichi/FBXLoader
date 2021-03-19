@@ -39,7 +39,7 @@ struct Vector2
 int main()
 {
 
-	//auto data = FBXL::LoadFBX("../../Assets/Fox.FBX");
+	auto data = FBXL::LoadFBX("../../Assets/Fox.FBX");
 	//auto data = FBXL::LoadFBX("../../Assets/Handgun/Handgun_fbx_7.4_binary.fbx");
 	//auto data = FBXL::LoadFBX("../../Assets/Dragon/Dragon_Baked_Actions_fbx_7.4_binary.fbx");
 	//auto data = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
@@ -54,13 +54,19 @@ int main()
 
 	//auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
 
-	auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
+	//auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
 
 
     //モディファイアの情報は頂点として保存されてそう
 
+	for (auto& node : data.nodes)
+	{
+		if (node.name == "Objects") {
+			auto objects = FBXL::GetObjects<Vector2, Vector3>(std::move(node));
+		}
+	}
 
-	auto objects = FBXL::GetObjects<Vector2,Vector3>(&data);
+
 
 	return 0;
 }
