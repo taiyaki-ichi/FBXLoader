@@ -52,27 +52,15 @@ int main()
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r50.fbx");
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r10.fbx");
 
-	auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
+	//auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
 
-	//auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
+	auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
 
 
     //モディファイアの情報は頂点として保存されてそう
 
 
-	auto objects = FBXL::GetNodes(&data, "Objects");
-
-	assert(objects.size() == 1);
-
-	auto geo = FBXL::GetChildrenNodes(objects[0], "Geometry");
-
-	//std::ofstream file("hoge.txt");
-
-	for (auto g : geo)
-	{
-		auto hoge = FBXL::GetGeometryMesh<Vector2,Vector3>(g);
-	}
-
+	auto objects = FBXL::GetObjects<Vector2,Vector3>(&data);
 
 	return 0;
 }

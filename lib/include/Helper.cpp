@@ -33,16 +33,8 @@ namespace FBXL
 		return resultIndex;
 	}
 
-	std::vector<const Node*> GetNodes(const PrimitiveData* data, const std::string& name)
-	{
-		std::vector<const Node*> object{};
-		std::for_each(data->nodes.begin(), data->nodes.end(),
-			[&object, &name](const Node& n) {if (n.name == name)object.push_back(&n); }
-		);
-		return object;
-	}
 
-	std::optional<const Node*> GetSingleNode(const PrimitiveData* data, const std::string& name)
+	std::optional<const Node*> GetSingleNodeFromPrimitiveData(const PrimitiveData* data, const std::string& name)
 	{
 		std::optional<const Node*> resultIndex = std::nullopt;
 		for (std::size_t i = 0; i < data->nodes.size(); i++)

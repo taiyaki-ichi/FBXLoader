@@ -4,6 +4,7 @@
 #include<string>
 #include<optional>
 #include<type_traits>
+#include<unordered_map>
 
 namespace FBXL
 {
@@ -56,7 +57,6 @@ namespace FBXL
 	template<typename Vector2D,typename Vector3D>
 	struct GeometryMesh
 	{
-		std::string name;
 		std::vector<Vertex<Vector2D,Vector3D>> verteces;
 		std::vector<std::int32_t> materialRange{};
 	};
@@ -66,9 +66,6 @@ namespace FBXL
 	template<typename Vector3D>
 	struct ModelMesh
 	{
-		//nameÇ¢ÇÁÇ»Ç¢Ç©Ç‡
-		std::string name;
-
 		Vector3D localTranslation;
 		Vector3D localRotation;
 		Vector3D localScaling;
@@ -78,9 +75,6 @@ namespace FBXL
 	template<typename Vector3D>
 	struct Material
 	{
-		//
-		std::string name;
-
 		Vector3D diffuseColor;
 		double diffuseFactor;
 
@@ -110,6 +104,14 @@ namespace FBXL
 		//BumpMap,NormapMapÇ∆Ç©í«â¡Ç∑ÇÈÇ©Ç‡
 	};
 
+
+	template<typename Vector2D,typename Vector3D>
+	struct Objects
+	{
+		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>> geometryMeshes{};
+		std::unordered_map<std::int64_t, ModelMesh<Vector3D>> modelMeshes{};
+		std::unordered_map<std::int64_t, Material<Vector3D>> materials{};
+	};
 
 	//ç≈èIìIÇ»ñ⁄ïW
 	template<typename Vector3D>

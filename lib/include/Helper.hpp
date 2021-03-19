@@ -13,25 +13,22 @@ namespace FBXL
 {
 
 	//node.mChildrenのノードのうちnameが一致するノードの参照の取得
-	std::vector<const Node*> GetChildrenNodes(const Node* node, const std::string& name);
+	std::vector<const Node*> GetChildrenNodes(const Node* modelMesh, const std::string& name);
 
 	//単一の子ノードの取得
 	//複数ある場合はnullopt
-	std::optional<const Node*> GetSingleChildrenNode(const Node* node, const std::string& name);
-
-	//Data.mNodesのノードのうちnameが一致するノードの参照の取得
-	std::vector<const Node*> GetNodes(const PrimitiveData* data, const std::string& name);
+	std::optional<const Node*> GetSingleChildrenNode(const Node* modelMesh, const std::string& name);
 
 	//二つ以上ある場合もnullopt
-	std::optional<const Node*> GetSingleNode(const PrimitiveData* data, const std::string& name);
+	std::optional<const Node*> GetSingleNodeFromPrimitiveData(const PrimitiveData* data, const std::string& name);
 
 	//Node.mPropertiesの情報を取得
 	template<typename T>
-	std::optional<T> GetProperty(const Node* node, std::size_t index);
+	std::optional<T> GetProperty(const Node* modelMesh, std::size_t index);
 
 	//propertyのインデックス3つを指定しVector３Dを生成
 	template<typename Vector3D, typename CreateVector3DPolicy = DefaultCreateVector3D<Vector3D>>
-	std::optional<Vector3D> GetVector3DProperty(const Node* node, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex);
+	std::optional<Vector3D> GetVector3DProperty(const Node* modelMesh, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex);
 
 	std::optional<const Node*> GetProperties70ComponentNode(const Node* prop70, const std::string& name);
 
@@ -62,28 +59,54 @@ namespace FBXL
 	std::vector<Vertex<Vector2D, Vector3D>> GetVertexStructArrayAndMaterialRange(
 		std::vector<Vector3D>&& positions, std::vector<Vector3D>&& normals, std::vector<Vector2D>&& uv);
 
+	//geometryMeshのノードからシンプルな頂点データなどを取得
 	template<typename Vector2D,typename Vector3D>
 	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh);
 
+	//geometryMeshから取得したシンプルなデータを加工
 	template<typename Vector2D,typename Vector3D>
 	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> 
 		GetVerticesAndMaterialRange(std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>>&& pair);
 
+	//modelMeshのノードからデータの取得
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	std::pair<ModelMesh<Vector3D>, std::int64_t> GetModelMesh(const Node* modelMesh);
 
-	template<typename Vector3D,typename CreateVector3DPolicy=DefaultCreateVector3D<Vector3D>>
-	std::optional<ModelMesh<Vector3D>> GetModelMesh(const Node* node)
+	//GeometryMeshのノードからデータを取得
+	template<typename Vector2D, typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
+	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(const Node* geormetryMesh);
+
+	//materialのノードからデータを取得
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	std::pair<Material<Vector3D>, std::int64_t> GetMaterial(const Node* modelMesh);
+
+	//PrimitiveDataからObjectsの取得
+	template<typename Vector2D, typename Vector3D,
+		typename CreateVector2DPolicy = DefaultCreateVector2D<Vector2D>,
+		typename CreateVector3DPolicy = DefaultCreateVector3D<Vector3D>>
+		std::optional<Objects<Vector2D, Vector3D>> GetObjects(const PrimitiveData* pd);
+	
+	
+
+
+	//
+	//以下、関数テンプレートの実装
+	//
+
+
+	template<typename Vector3D,typename CreateVector3DPolicy>
+	std::pair<ModelMesh<Vector3D>,std::int64_t> GetModelMesh(const Node* modelMesh)
 	{
 		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
 			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
 
-		if (node->name != "Model" || GetProperty<std::string>(node, 2) != "Mesh")
-			return std::nullopt;
+		assert(modelMesh->name == "Model" && GetProperty<std::string>(modelMesh, 2) == "Mesh");
 
 		ModelMesh<Vector3D> result;
 
-		result.name = GetProperty<std::string>(node, 1).value();
+		auto index = GetProperty<std::int64_t>(modelMesh, 0).value();
 
-		auto prop70 = GetSingleChildrenNode(node, "Properties70").value();
+		auto prop70 = GetSingleChildrenNode(modelMesh, "Properties70").value();
 		
 		{
 			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Transration", 4, 5, 6);
@@ -96,7 +119,7 @@ namespace FBXL
 		{
 			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Rotation", 4, 5, 6);
 			if (vec)
-				result.localRotation(vec.value());
+				result.localRotation = vec.value();
 			else
 				result.localRotation = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
@@ -109,15 +132,12 @@ namespace FBXL
 				result.localScaling = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
-		return result;
+		return std::make_pair(std::move(result), index);
 	}
 	
 
-	template<typename Vector2D,typename Vector3D,
-		typename CreateVector2DPolicy=DefaultCreateVector2D<Vector2D>,
-		typename CreateVector3DPolicy=DefaultCreateVector3D<Vector3D>
-	>
-	std::optional<GeometryMesh<Vector2D,Vector3D>> GetGeometryMesh(const Node* geormetryMesh)
+	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
+	std::pair<GeometryMesh<Vector2D,Vector3D>,std::int64_t> GetGeometryMesh(const Node* geormetryMesh)
 	{
 		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
 			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");
@@ -125,35 +145,33 @@ namespace FBXL
 		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
 			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
 
-		if (geormetryMesh->name != "Geometry" || GetProperty<std::string>(geormetryMesh, 2) != "Mesh")
-			return std::nullopt;
+		assert(geormetryMesh->name == "Geometry" && GetProperty<std::string>(geormetryMesh, 2) == "Mesh");
 
 		GeometryMesh<Vector2D, Vector3D> result{};
 
-		result.name = GetProperty<std::string>(geormetryMesh, 1).value();
+		auto index = GetProperty<std::int64_t>(geormetryMesh, 0).value();
 
 		auto vertexAndMaterialNumPairs = GetVertexAndMaterialNumberPairs<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(geormetryMesh);
 		auto [vertices, materialRange] = GetVerticesAndMaterialRange(std::move(vertexAndMaterialNumPairs));
 		result.verteces = std::move(vertices);
 		result.materialRange = std::move(materialRange);
 
-		return result;
+		return std::make_pair(std::move(result), index);
 	}
 
-	template<typename Vector3D, typename CreateVector3DPolicy = DefaultCreateVector3D<Vector3D>>
-	std::optional<Material<Vector3D>> GetMaterial(const Node* node)
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	std::pair<Material<Vector3D>,std::int64_t> GetMaterial(const Node* modelMesh)
 	{
 		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
 			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
 
-		if (node->name != "Material")
-			return std::nullopt;
+		assert(modelMesh->name == "Material");
 
 		Material<Vector3D> result;
 
-		result.name = GetProperty<std::string>(node, 1).value();
+		auto index = GetProperty<std::int64_t>(modelMesh, 0).value();
 
-		auto prop70 = GetSingleChildrenNode(node, "Properties70").value();
+		auto prop70 = GetSingleChildrenNode(modelMesh, "Properties70").value();
 
 		{
 			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "DiffuseColor", 4, 5, 6);
@@ -267,7 +285,7 @@ namespace FBXL
 				result.reflectionFactor = 0.0;
 		}
 
-		return result;
+		return std::make_pair(std::move(result), index);
 	}
 
 
@@ -298,29 +316,24 @@ namespace FBXL
 	}
 
 
-
-	//
-	//以下、関数テンプレートの実装
-	//
-
 	template<typename T>
-	std::optional<T> GetProperty(const Node* node,std::size_t index)
+	std::optional<T> GetProperty(const Node* modelMesh,std::size_t index)
 	{
-		if (std::holds_alternative<T>(node->properties[index]))
-			return std::get<T>(node->properties[index]);
+		if (std::holds_alternative<T>(modelMesh->properties[index]))
+			return std::get<T>(modelMesh->properties[index]);
 		else
 			return std::nullopt;
 	}
 
 	template<typename Vector3D, typename CreateVector3DPolicy>
-	std::optional<Vector3D> GetVector3DProperty(const Node* node, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex)
+	std::optional<Vector3D> GetVector3DProperty(const Node* modelMesh, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex)
 	{
 		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
 			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
 
-		auto x = GetProperty<double>(node, xIndex);
-		auto y = GetProperty<double>(node, yIndex);
-		auto z = GetProperty<double>(node, zIndex);
+		auto x = GetProperty<double>(modelMesh, xIndex);
+		auto y = GetProperty<double>(modelMesh, yIndex);
+		auto z = GetProperty<double>(modelMesh, zIndex);
 
 		if (x && y && z)
 			return CreateVector3DPolicy::Create(x.value(), y.value(), z.value());
@@ -373,9 +386,9 @@ namespace FBXL
 	{
 		auto layerElementNormalNode = GetSingleChildrenNode(geometryMesh, "LayerElementNormal");
 
-		auto node = GetSingleChildrenNode(layerElementNormalNode.value(), "Normals");
+		auto modelMesh = GetSingleChildrenNode(layerElementNormalNode.value(), "Normals");
 
-		auto vec = GetProperty<std::vector<double>>(node.value(), 0).value();
+		auto vec = GetProperty<std::vector<double>>(modelMesh.value(), 0).value();
 		std::vector<Vector3D> result{};
 		result.reserve(vec.size() / 3);
 		for (std::size_t i = 0; i < vec.size() / 3; i++)
@@ -500,6 +513,45 @@ namespace FBXL
 		for (std::size_t i = 0; i < pair.size(); i++) {
 			result.first[i] = std::move(pair[i].first);
 			result.second[pair[i].second]++;
+		}
+
+		return result;
+	}
+
+
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::optional<Objects<Vector2D, Vector3D>> GetObjects(const PrimitiveData* pd)
+	{
+		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
+			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");
+
+		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
+			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
+
+		auto objects = GetSingleNodeFromPrimitiveData(pd, "Objects");
+		
+		if (!objects)
+			return std::nullopt;
+
+		Objects<Vector2D, Vector3D> result{};
+
+		for (auto& node : objects.value()->children)
+		{
+			if (node.name == "Model" && GetProperty<std::string>(&node, 2) == "Mesh")
+			{
+				auto [modelMesh, index] = GetModelMesh<Vector3D, CreateVector3DPolicy>(&node);
+				result.modelMeshes.emplace(index, std::move(modelMesh));
+			}
+			else if (node.name == "Geometry" && GetProperty<std::string>(&node, 2) == "Mesh")
+			{
+				auto [geometryMesh, index] = GetGeometryMesh<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&node);
+				result.geometryMeshes.emplace(index, std::move(geometryMesh));
+			}
+			else if (node.name == "Material")
+			{
+				auto [material, index] = GetMaterial<Vector3D, CreateVector3DPolicy>(&node);
+				result.materials.emplace(index, std::move(material));
+			}
 		}
 
 		return result;
