@@ -458,20 +458,19 @@ namespace FBXL
 
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
 
-
+		assert(normals.size() == uvs.size());
 
 		auto pushBack = [&vertices, &normals, &uvs, &result, &materialIndeces](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset) {
-			if (index1 < vertices.size() && index2 < vertices.size() && index3 < vertices.size())
-			{
-				Vertex<Vector2D, Vector3D> tmpVec;
-				tmpVec.position = CreateVector3DPolicy::Create(vertices[index1], vertices[index2], vertices[index3]);
-				tmpVec.normal = normals[offset];
-				tmpVec.uv = uvs[offset];
-				if (materialIndeces && materialIndeces.value().size() > 1)
-					result.emplace_back(std::make_pair(std::move(tmpVec), materialIndeces.value()[offset]));
-				else
-					result.emplace_back(std::make_pair(std::move(tmpVec), 0));
-			}
+			
+			Vertex<Vector2D, Vector3D> tmpVec;
+			tmpVec.position = CreateVector3DPolicy::Create(vertices[index1], vertices[index2], vertices[index3]);
+			tmpVec.normal = normals[offset];
+			tmpVec.uv = uvs[offset];
+			if (materialIndeces && materialIndeces.value().size() > 1)
+				result.emplace_back(std::make_pair(std::move(tmpVec), materialIndeces.value()[offset]));
+			else
+				result.emplace_back(std::make_pair(std::move(tmpVec), 0));
+			
 		};
 
 		std::size_t offset = 0;

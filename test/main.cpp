@@ -52,9 +52,9 @@ int main()
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r50.fbx");
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_004_r10.fbx");
 
-	auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
+	//auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
 
-	//auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
+	auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
 
 
     //モディファイアの情報は頂点として保存されてそう
