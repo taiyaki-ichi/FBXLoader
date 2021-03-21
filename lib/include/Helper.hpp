@@ -59,13 +59,17 @@ namespace FBXL
 		std::vector<Vector3D>&& positions, std::vector<Vector3D>&& normals, std::vector<Vector2D>&& uv);
 
 	//geometryMeshのノードからシンプルな頂点データなどを取得
-	template<typename Vector2D,typename Vector3D>
+	template<typename Vector2D, typename Vector3D,
+		typename CreateVector2DPolicy = DefaultCreateVector2D<Vector2D>,
+		typename CreateVector3DPolicy = DefaultCreateVector3D<Vector3D>
+	>
 	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh);
 
 	//geometryMeshから取得したシンプルなデータを加工
 	template<typename Vector2D,typename Vector3D>
 	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> 
 		GetVerticesAndMaterialRange(std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>>&& pair);
+
 
 	//modelMeshのノードからデータの取得
 	template<typename Vector3D, typename CreateVector3DPolicy>
@@ -87,6 +91,25 @@ namespace FBXL
 	
 	//connectiosの取得
 	Connections GetConnections(Node&& connections);
+
+	//dstからインデックスを取得
+	std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections, std::int64_t index);
+
+	template<typename Vector2D,typename Vector3D>
+	Model3DParts<Vector2D, Vector3D> GetModel3DParts(
+		const ModelMesh<Vector3D>& modelMesh, const GeometryMesh<Vector2D, Vector3D>& geometryMesh, std::initializer_list<std::int64_t>&& materialIndex);
+
+	template<typename Vector2D,typename Vector3D>
+	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b);
+
+	//GeometryMEshにローカル座標を適用し変換
+	template<typename Vector2D,typename Vector3D>
+	GeometryMesh<Vector2D, Vector3D> Transform(ModelMesh<Vector3D>&& modelMesh, GeometryMesh<Vector2D, Vector3D>&& geometryMesh) {
+		return geometryMesh;
+	}
+
+	template<typename Vector2D,typename Vector3D>
+	std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> GetVertecesAndMaterialIndecsArray(Model3DParts<Vector2D, Vector3D>&& v);
 
 
 	//
@@ -153,7 +176,7 @@ namespace FBXL
 
 		auto vertexAndMaterialNumPairs = GetVertexAndMaterialNumberPairs<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh);
 		auto [vertices, materialRange] = GetVerticesAndMaterialRange(std::move(vertexAndMaterialNumPairs));
-		result.verteces = std::move(vertices);
+		result.vertices = std::move(vertices);
 		result.materialRange = std::move(materialRange);
 
 		return std::make_pair(std::move(result), index);
@@ -400,6 +423,7 @@ namespace FBXL
 	template<typename Vector2D, typename CreateVector2DPolicy>
 	std::vector<Vector2D> GetUVs(const Node* geometryMesh)
 	{
+		
 		auto layerElementUVNode = GetSingleChildrenNode(geometryMesh, "LayerElementUV");
 
 		auto uvNode = GetSingleChildrenNode(layerElementUVNode.value(), "UV");
@@ -412,13 +436,15 @@ namespace FBXL
 			return 0 <= index && index < uv.size();
 		};
 
+		
 		std::vector<Vector2D> result{};
 		result.reserve(uvIndex.size());
 		for (std::size_t i = 0; i < uvIndex.size(); i++)
 			if (isVailedIndex(uvIndex[i] * 2) && isVailedIndex(uvIndex[i] * 2 + 1))
 				result.push_back(CreateVector2DPolicy::Create(uv[uvIndex[i] * 2], uv[uvIndex[i] * 2 + 1]));
-
+				
 		return result;
+
 	}
 
 	template<typename Vector2D, typename Vector3D>
@@ -439,10 +465,7 @@ namespace FBXL
 	}
 
 
-	template<typename Vector2D, typename Vector3D,
-		typename CreateVector2DPolicy=DefaultCreateVector2D<Vector2D>,
-		typename CreateVector3DPolicy=DefaultCreateVector3D<Vector3D>
-	>
+	template<typename Vector2D, typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
 	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh)
 	{
 		std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> result{};
@@ -564,6 +587,107 @@ namespace FBXL
 	}
 
 
+	template<typename Vector2D,typename Vector3D>
+	Model3DParts<Vector2D,Vector3D> GetModel3D(const Connections& connections, Objects<Vector2D, Vector3D>& objects)
+	{
+		Model3DParts<Vector2D, Vector3D> result{};
+
+		for (auto&& modelMesh : objects.modelMeshes)
+		{
+			auto cs = GetConnectionByDestination(connections, modelMesh.first);
+
+			std::optional<GeometryMesh<Vector2D, Vector3D>> geometryMesh = std::nullopt;
+			std::vector<std::int64_t> materialIndex{};
+
+			for (auto&& c : cs)
+			{
+				if (c.index() == 0)
+				{
+					//geometryMeshを探す
+					//moveしてしまう
+					{
+						auto iter = objects.geometryMeshes.find(std::get<0>(c));
+						if (iter != objects.geometryMeshes.end())
+						{
+							geometryMesh = std::move(iter->second);
+							objects.geometryMeshes.erase(iter);
+						}
+					}
+
+					//Materialを探す
+					//そのインデックスだけメモ
+					//順番あっているか分からん
+					{
+						auto iter = objects.materials.find(std::get<0>(c));
+						if (iter != objects.materials.end())
+							materialIndex.push_back(std::get<0>(c));
+					}
+				}
+			}
+
+			if (geometryMesh)
+			{
+				assert(geometryMesh.value().materialRange.size() == materialIndex.size());
+
+				auto g = Transform<Vector2D, Vector3D>(std::move(modelMesh.second), std::move(geometryMesh.value()));
+				result = AppendModel3DParts<Vector2D, Vector3D>(std::move(result), std::make_pair(std::move(g), std::move(materialIndex)));
+			}
+		}
+
+		return result;
+	}
 
 
+	template<typename Vector2D, typename Vector3D>
+	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b)
+	{
+		Model3DParts<Vector2D, Vector3D> result{};
+
+		auto vertex = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(a));
+
+		{
+			auto tmpV = GetVertecesAndMaterialIndecsArray<Vector2D,Vector3D>(std::move(b));
+			std::move(tmpV.begin(), tmpV.end(), std::back_inserter(vertex));
+		}
+
+		std::sort(vertex.begin(), vertex.end(), [](auto& a, auto& b) {
+			return a.second < b.second;
+			});
+
+
+		for (auto&& v : vertex)
+		{
+			if (result.second.size() == 0|| result.second.back() != v.second)
+			{
+				result.first.materialRange.push_back(v.first.size());
+				std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
+				result.second.push_back(v.second);
+			}
+			else //if (result.second.back() == v.second)
+			{
+				result.first.materialRange.back() += v.first.size();
+				std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
+			}
+		}
+		
+		return result;
+	}
+
+	template<typename Vector2D, typename Vector3D>
+	std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> GetVertecesAndMaterialIndecsArray(Model3DParts<Vector2D, Vector3D>&& v)
+	{
+		std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> result{};
+
+		std::vector<Vertex<Vector2D, Vector3D>> tmpVertex{};
+		std::size_t vertexOffset{};
+
+		for (std::size_t i = 0; i < v.second.size(); i++)
+		{
+			std::move(v.first.vertices.begin() + vertexOffset, v.first.vertices.begin() + vertexOffset + v.first.materialRange[i], std::back_inserter(tmpVertex));
+			result.push_back(std::make_pair(std::move(tmpVertex), v.second[i]));
+			vertexOffset += v.first.materialRange[i];
+		}
+
+		return result;
+	}
 }

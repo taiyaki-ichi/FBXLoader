@@ -57,7 +57,7 @@ namespace FBXL
 	template<typename Vector2D,typename Vector3D>
 	struct GeometryMesh
 	{
-		std::vector<Vertex<Vector2D,Vector3D>> verteces;
+		std::vector<Vertex<Vector2D,Vector3D>> vertices;
 		std::vector<std::int32_t> materialRange{};
 	};
 
@@ -77,12 +77,15 @@ namespace FBXL
 	{
 		Vector3D diffuseColor;
 		double diffuseFactor;
+		std::optional<std::string> diffuseColorTexturePath;
 
 		Vector3D ambientColor;
 		double ambientFactor;
+		std::optional<std::string> ambientColorTexturePath;
 
 		Vector3D specularColor;
 		double specularFactor;
+		std::optional<std::string> specularColorTexturePath;
 
 		//Phongの反射モデル参照
 		//影つけるやつ
@@ -92,6 +95,7 @@ namespace FBXL
 		//自身が放つ光
 		Vector3D emissive;
 		double emissiveFactor;
+		std::optional<std::string> emissiveTexturePath;
 
 		//透過度
 		//alpha成分のみ作用
@@ -100,6 +104,7 @@ namespace FBXL
 
 		Vector3D reflectionColor;
 		double reflectionFactor;
+		std::optional<std::string> reflectionColorTexturePath;
 
 		//BumpMap,NormapMapとか追加するかも
 	};
@@ -127,7 +132,7 @@ namespace FBXL
 	template<typename Vector2D,typename Vector3D>
 	struct Model3D
 	{
-		std::vector<Vertex<Vector2D, Vector3D>> verteces;
+		std::vector<Vertex<Vector2D, Vector3D>> vertices;
 		std::vector<std::int32_t> materialRange{};
 
 		std::vector<Material<Vector3D>> material{};

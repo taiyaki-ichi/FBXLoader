@@ -10,7 +10,7 @@ struct Vector3
 	double x{};
 	double y{};
 	double z{};
-
+	/*
 	Vector3() = default;
 
 	Vector3(double inX, double inY, double inZ)
@@ -19,6 +19,7 @@ struct Vector3
 		y = inY;
 		z = inZ;
 	}
+	*/
 };
 
 struct Vector2
@@ -26,6 +27,7 @@ struct Vector2
 	double x{};
 	double y{};
 
+	/*
 	Vector2() = default;
 
 	Vector2(double inX, double inY)
@@ -33,6 +35,8 @@ struct Vector2
 		x = inX;
 		y = inY;
 	}
+	*/
+
 };
 
 
@@ -54,22 +58,30 @@ int main()
 
 	//auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
 
-	auto data = FBXL::LoadFBX("../../Assets/test_material.fbx");
+	auto data = FBXL::LoadFBX("../../Assets/test_material_texture.fbx");
 
 
     //モディファイアの情報は頂点として保存されてそう
 
+
+	std::optional<FBXL::Objects<Vector2, Vector3>> objects{};
+	std::optional<FBXL::Connections> connections{};
+
 	for (auto& node : data.nodes)
 	{
 		if (node.name == "Objects") {
-			auto objects = FBXL::GetObjects<Vector2, Vector3>(std::move(node));
+			objects = FBXL::GetObjects<Vector2, Vector3>(std::move(node));
 		}
 		else if (node.name == "Connections")
 		{
-			auto connectios = FBXL::GetConnections(std::move(node));
+			connections = FBXL::GetConnections(std::move(node));
 		}
 	}
 
+	if (objects && connections)
+	{
+		auto hoge = FBXL::GetModel3D<Vector2,Vector3>(connections.value(), objects.value());
+	}
 
 
 	return 0;

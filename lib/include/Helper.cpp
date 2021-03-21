@@ -150,5 +150,30 @@ namespace FBXL
 
 		return result;
 	}
+
+
+	struct IsEqualDestinationIndex
+	{
+		std::int64_t index{};
+
+		bool operator()(const std::int64_t& i) {
+			return index == i;
+		}
+
+		bool operator()(const std::pair<std::int64_t, std::string>& pair) {
+			return index == pair.first;
+		}
+	};
+
+	std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections,std::int64_t index)
+	{
+		std::vector<ObjectOrPropertyIndex> result{};
+
+		for (auto& c : connections)
+			if (std::visit(IsEqualDestinationIndex{ index }, c.second))
+				result.emplace_back(c.first);
+
+		return result;
+	}
 	
 }
