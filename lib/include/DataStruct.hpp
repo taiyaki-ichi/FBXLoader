@@ -8,43 +8,6 @@
 
 namespace FBXL
 {
-	using DataVariant = std::variant <
-		std::int16_t,
-		bool,
-		std::int32_t,
-		float,
-		double,
-		std::int64_t,
-		std::vector<float>,
-		std::vector<double>,
-		std::vector<std::int64_t>,
-		std::vector<std::int32_t>,
-		std::vector<bool>,
-		std::string,
-		std::vector<unsigned char>//バイナリデータ
-	>;
-
-
-	struct Node {
-		std::string name{};
-		std::vector<DataVariant> properties{};
-		std::vector<Node> children{};
-	};
-
-
-	struct PrimitiveData {
-		std::string filePath{};
-		std::uint32_t version{};
-		std::vector<Node> nodes{};
-	};
-
-
-
-	//
-	//以下、Objects内の構造体
-	//どれも仮の姿
-	//
-
 	
 	template<typename Vector2D,typename Vector3D>
 	struct Vertex
@@ -53,24 +16,6 @@ namespace FBXL
 		Vector3D normal;
 		Vector2D uv;
 	};
-	
-	template<typename Vector2D,typename Vector3D>
-	struct GeometryMesh
-	{
-		std::vector<Vertex<Vector2D,Vector3D>> vertices;
-		std::vector<std::int32_t> materialRange{};
-	};
-
-
-
-	template<typename Vector3D>
-	struct ModelMesh
-	{
-		Vector3D localTranslation;
-		Vector3D localRotation;
-		Vector3D localScaling;
-	};
-
 
 	template<typename Vector3D>
 	struct Material
@@ -104,32 +49,6 @@ namespace FBXL
 
 		//BumpMap,NormapMapとか追加するかも
 	};
-
-
-	struct Texture
-	{
-		std::string fileName{};
-		std::string relativeFileName{};
-	};
-
-
-	template<typename Vector2D,typename Vector3D>
-	using Objects = std::tuple<
-		std::unordered_map<std::int64_t, ModelMesh<Vector3D>>,
-		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>>,
-		std::unordered_map<std::int64_t, Material<Vector3D>>,
-		std::unordered_map<std::int64_t, Texture>
-	>;
-
-	
-	//Connectionsの構造体
-	using ObjectOrPropertyIndex = std::variant<std::int64_t, std::pair<std::int64_t, std::string>>;
-	using Connections = std::vector<std::pair<ObjectOrPropertyIndex, ObjectOrPropertyIndex>>;
-
-
-	//GeometryMeshにModelMeshのローカルの変換を適用した
-	template<typename Vector2D,typename Vector3D>
-	using Model3DParts = std::pair<GeometryMesh<Vector2D, Vector3D>, std::vector<std::int64_t>>;
 
 
 	template<typename Vector2D,typename Vector3D>

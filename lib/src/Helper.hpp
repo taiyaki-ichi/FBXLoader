@@ -4,13 +4,14 @@
 #include<optional>
 #include<cassert>
 #include<algorithm>
-#include"DataStruct.hpp"
-#include"DefaultPolicyTraits.hpp"
+#include"ImplDataStruct.hpp"
+#include"include/DataStruct.hpp"
 
 #include<iostream>
 
 namespace FBXL
 {
+
 
 	//node.mChildrenのノードのうちnameが一致するノードの参照の取得
 	std::vector<const Node*> GetChildrenNodes(const Node* modelMesh, const std::string& name);
@@ -24,7 +25,7 @@ namespace FBXL
 	std::optional<T> GetProperty(const Node* modelMesh, std::size_t index);
 
 	//propertyのインデックス3つを指定しVector３Dを生成
-	template<typename Vector3D, typename CreateVector3DPolicy = DefaultCreateVector3D<Vector3D>>
+	template<typename Vector3D, typename CreateVector3DPolicy>
 	std::optional<Vector3D> GetVector3DProperty(const Node* modelMesh, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex);
 
 	std::optional<const Node*> GetProperties70ComponentNode(const Node* prop70, const std::string& name);
@@ -32,7 +33,7 @@ namespace FBXL
 	template<typename T>
 	std::optional<T> GetProperities70Data(const Node* prop70, const std::string& name, std::int32_t index);
 
-	template<typename Vector3D,typename CreateVector3DPolicy>
+	template<typename Vector3D, typename CreateVector3DPolicy>
 	std::optional<Vector3D> GetProperities70Vector3DData(const Node* prop70, const std::string& name, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex);
 
 
@@ -40,11 +41,11 @@ namespace FBXL
 	std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh);
 
 	//GeometyMeshNodeから法線の配列を取得
-	template<typename Vector3D,typename CreateVector3DPolicy>
+	template<typename Vector3D, typename CreateVector3DPolicy>
 	std::vector<Vector3D> GetNormals(const Node* geometryMesh);
 
 	//GeometyMeshNodeからUVの取得
-	template<typename Vector2D,typename CreateVector2DPolicy>
+	template<typename Vector2D, typename CreateVector2DPolicy>
 	std::vector<Vector2D> GetUVs(const Node* geometryMesh);
 
 	//materialの指定がないver
@@ -53,15 +54,12 @@ namespace FBXL
 		std::vector<Vector3D>&& positions, std::vector<Vector3D>&& normals, std::vector<Vector2D>&& uv);
 
 	//geometryMeshのノードからシンプルな頂点データなどを取得
-	template<typename Vector2D, typename Vector3D,
-		typename CreateVector2DPolicy = DefaultCreateVector2D<Vector2D>,
-		typename CreateVector3DPolicy = DefaultCreateVector3D<Vector3D>
-	>
+	template<typename Vector2D, typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
 	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh);
 
 	//geometryMeshから取得したシンプルなデータを加工
-	template<typename Vector2D,typename Vector3D>
-	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> 
+	template<typename Vector2D, typename Vector3D>
+	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>>
 		GetVerticesAndMaterialRange(std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>>&& pair);
 
 
@@ -70,7 +68,7 @@ namespace FBXL
 	std::pair<ModelMesh<Vector3D>, std::int64_t> GetModelMesh(Node&& modelMesh);
 
 	//GeometryMeshのノードからデータを取得
-	template<typename Vector2D, typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
 	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh);
 
 	//materialのノードからデータを取得
@@ -80,11 +78,9 @@ namespace FBXL
 	std::pair<Texture, std::int64_t> GetTexture(Node&& textureNode);
 
 	//PrimitiveDataからObjectsの取得
-	template<typename Vector2D, typename Vector3D,
-		typename CreateVector2DPolicy = DefaultCreateVector2D<Vector2D>,
-		typename CreateVector3DPolicy = DefaultCreateVector3D<Vector3D>>
-		std::optional<Objects<Vector2D, Vector3D>> GetObjects(Node&& objects);
-	
+	template<typename Vector2D, typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
+	std::optional<Objects<Vector2D, Vector3D>> GetObjects(Node&& objects);
+
 	//connectiosの取得
 	Connections GetConnections(Node&& connections);
 
@@ -101,22 +97,22 @@ namespace FBXL
 		const Connections& connections);
 
 
-	template<typename Vector2D,typename Vector3D>
+	template<typename Vector2D, typename Vector3D>
 	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b);
 
 	//
 	//GeometryMEshにローカル座標を適用し変換
 	//まだ仮
 	//
-	template<typename Vector2D,typename Vector3D>
+	template<typename Vector2D, typename Vector3D>
 	GeometryMesh<Vector2D, Vector3D> Transform(ModelMesh<Vector3D>&& modelMesh, GeometryMesh<Vector2D, Vector3D>&& geometryMesh) {
 		return geometryMesh;
 	}
 
-	template<typename Vector2D,typename Vector3D>
+	template<typename Vector2D, typename Vector3D>
 	std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> GetVertecesAndMaterialIndecsArray(Model3DParts<Vector2D, Vector3D>&& v);
 
-	
+
 	//マテリアエルにテクスチャの情報を加える
 	template<typename Vector3D>
 	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomarion(
@@ -124,6 +120,8 @@ namespace FBXL
 		std::unordered_map<std::int64_t, Texture>&& textures,
 		const Connections& connectios);
 
+	template<typename Vector2D, typename Vector3D>
+	Model3D<Vector2D, Vector3D> GetModel3D(Model3DParts<Vector2D, Vector3D>&& model3DPair, std::unordered_map<std::int64_t, Material<Vector3D>>&& materials);
 
 
 	//
@@ -131,8 +129,8 @@ namespace FBXL
 	//
 
 
-	template<typename Vector3D,typename CreateVector3DPolicy>
-	std::pair<ModelMesh<Vector3D>,std::int64_t> GetModelMesh(Node&& modelMesh)
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	std::pair<ModelMesh<Vector3D>, std::int64_t> GetModelMesh(Node&& modelMesh)
 	{
 		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
 			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
@@ -144,7 +142,7 @@ namespace FBXL
 		auto index = GetProperty<std::int64_t>(&modelMesh, 0).value();
 
 		auto prop70 = GetSingleChildrenNode(&modelMesh, "Properties70").value();
-		
+
 		{
 			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Transration", 4, 5, 6);
 			if (vec)
@@ -171,10 +169,10 @@ namespace FBXL
 
 		return std::make_pair(std::move(result), index);
 	}
-	
 
-	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
-	std::pair<GeometryMesh<Vector2D,Vector3D>,std::int64_t> GetGeometryMesh(Node&& geormetryMesh)
+
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh)
 	{
 		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
 			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");
@@ -197,7 +195,7 @@ namespace FBXL
 	}
 
 	template<typename Vector3D, typename CreateVector3DPolicy>
-	std::pair<Material<Vector3D>,std::int64_t> GetMaterial(Node&& modelMesh)
+	std::pair<Material<Vector3D>, std::int64_t> GetMaterial(Node&& modelMesh)
 	{
 		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
 			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
@@ -241,7 +239,7 @@ namespace FBXL
 			else
 				result.ambientFactor = 0.0;
 		}
-		
+
 		{
 			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "SpecularColor", 4, 5, 6);
 			if (vec)
@@ -354,7 +352,7 @@ namespace FBXL
 
 
 	template<typename T>
-	std::optional<T> GetProperty(const Node* modelMesh,std::size_t index)
+	std::optional<T> GetProperty(const Node* modelMesh, std::size_t index)
 	{
 		if (std::holds_alternative<T>(modelMesh->properties[index]))
 			return std::get<T>(modelMesh->properties[index]);
@@ -414,7 +412,7 @@ namespace FBXL
 			result.push_back(CreateVector3DPolicy::Create(vertices[(-indeces[j + 1] - 1) * 3], vertices[(-indeces[j + 1] - 1) * 3 + 1], vertices[(-indeces[j + 1] - 1) * 3 + 2]));
 			i = j + 2;
 		}
-		
+
 		return result;
 	}
 
@@ -437,7 +435,7 @@ namespace FBXL
 	template<typename Vector2D, typename CreateVector2DPolicy>
 	std::vector<Vector2D> GetUVs(const Node* geometryMesh)
 	{
-		
+
 		auto layerElementUVNode = GetSingleChildrenNode(geometryMesh, "LayerElementUV");
 
 		auto uvNode = GetSingleChildrenNode(layerElementUVNode.value(), "UV");
@@ -450,13 +448,13 @@ namespace FBXL
 			return 0 <= index && index < uv.size();
 		};
 
-		
+
 		std::vector<Vector2D> result{};
 		result.reserve(uvIndex.size());
 		for (std::size_t i = 0; i < uvIndex.size(); i++)
 			if (isVailedIndex(uvIndex[i] * 2) && isVailedIndex(uvIndex[i] * 2 + 1))
 				result.push_back(CreateVector2DPolicy::Create(uv[uvIndex[i] * 2], uv[uvIndex[i] * 2 + 1]));
-				
+
 		return result;
 
 	}
@@ -479,7 +477,7 @@ namespace FBXL
 	}
 
 
-	template<typename Vector2D, typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
 	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh)
 	{
 		std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> result{};
@@ -490,7 +488,7 @@ namespace FBXL
 		auto indexNode = GetSingleChildrenNode(geometryMesh, "PolygonVertexIndex");
 		auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode.value(), 0).value();
 
-		auto normals = GetNormals<Vector3D,CreateVector3DPolicy>(geometryMesh);
+		auto normals = GetNormals<Vector3D, CreateVector3DPolicy>(geometryMesh);
 		auto uvs = GetUVs<Vector2D, CreateVector2DPolicy>(geometryMesh);
 
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
@@ -498,7 +496,7 @@ namespace FBXL
 		assert(normals.size() == uvs.size());
 
 		auto pushBack = [&vertices, &normals, &uvs, &result, &materialIndeces](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset) {
-			
+
 			Vertex<Vector2D, Vector3D> tmpVec;
 			tmpVec.position = CreateVector3DPolicy::Create(vertices[index1], vertices[index2], vertices[index3]);
 			tmpVec.normal = normals[offset];
@@ -507,7 +505,7 @@ namespace FBXL
 				result.emplace_back(std::make_pair(std::move(tmpVec), materialIndeces.value()[offset]));
 			else
 				result.emplace_back(std::make_pair(std::move(tmpVec), 0));
-			
+
 		};
 
 		std::size_t offset = 0;
@@ -672,7 +670,7 @@ namespace FBXL
 		auto vertex = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(a));
 
 		{
-			auto tmpV = GetVertecesAndMaterialIndecsArray<Vector2D,Vector3D>(std::move(b));
+			auto tmpV = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(b));
 			std::move(tmpV.begin(), tmpV.end(), std::back_inserter(vertex));
 		}
 
@@ -683,7 +681,7 @@ namespace FBXL
 
 		for (auto&& v : vertex)
 		{
-			if (result.second.size() == 0|| result.second.back() != v.second)
+			if (result.second.size() == 0 || result.second.back() != v.second)
 			{
 				result.first.materialRange.push_back(v.first.size());
 				std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
@@ -695,7 +693,7 @@ namespace FBXL
 				std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
 			}
 		}
-		
+
 		return result;
 	}
 
@@ -720,8 +718,8 @@ namespace FBXL
 
 	template<typename Vector3D>
 	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomarion(
-		std::unordered_map<std::int64_t, Material<Vector3D>>&& materials, 
-		std::unordered_map<std::int64_t, Texture>&& textures, 
+		std::unordered_map<std::int64_t, Material<Vector3D>>&& materials,
+		std::unordered_map<std::int64_t, Texture>&& textures,
 		const Connections& connectios)
 	{
 		for (auto& [index, material] : materials)
@@ -744,5 +742,24 @@ namespace FBXL
 		}
 
 		return materials;
+	}
+
+
+	template<typename Vector2D, typename Vector3D>
+	Model3D<Vector2D, Vector3D> GetModel3D(Model3DParts<Vector2D, Vector3D>&& model3DPair, std::unordered_map<std::int64_t, Material<Vector3D>>&& materials)
+	{
+		Model3D<Vector2D, Vector3D> result{};
+		result.vertices = std::move(model3DPair.first.vertices);
+		result.materialRange = std::move(model3DPair.first.materialRange);
+
+		result.material.resize(model3DPair.second.size());
+		for (std::size_t i = 0; i < model3DPair.second.size(); i++)
+		{
+			auto iter = materials.find(model3DPair.second[i]);
+			if (iter != materials.end())
+				result.material[i] = std::move(iter->second);
+		}
+
+		return result;
 	}
 }

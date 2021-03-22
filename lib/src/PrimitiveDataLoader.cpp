@@ -1,4 +1,4 @@
-#include"Loader.hpp"
+#include"PrimitiveDataLoader.hpp"
 
 #ifndef ZLIB_WINAPI
 #	define ZLIB_WINAPI
@@ -13,15 +13,16 @@
 
 #pragma comment(lib,"zlibstat.lib")
 
-
 namespace FBXL
 {
 	namespace {
 
+		//‰ð“€‚·‚é‚Æ‚«‚Ì’PˆÊ
 		constexpr std::size_t CHUNK = 16384;
 
+
 		template<typename T>
-		T ReadPrimitiveType(std::istream& is) 
+		T ReadPrimitiveType(std::istream& is)
 		{
 			T result{};
 			is.read(reinterpret_cast<char*>(std::addressof(result)), sizeof(T));
@@ -64,7 +65,7 @@ namespace FBXL
 					ret = inflate(&strm, Z_NO_FLUSH);
 
 					have = CHUNK - strm.avail_out;
-					
+
 					auto nowPos = result.size();
 					result.resize(result.size() + have / sizeof(T));
 					if (have > 0)
@@ -75,7 +76,7 @@ namespace FBXL
 				offset += availInISize;
 
 			} while (ret != Z_STREAM_END);
-			
+
 			inflateEnd(&strm);
 		}
 
@@ -96,7 +97,7 @@ namespace FBXL
 			else if (encoding == 1)
 			{
 				std::vector<unsigned char> inBuffer(compressedLength);
-				is.read(reinterpret_cast<char*>(inBuffer.data()),static_cast<std::uint64_t>(compressedLength));
+				is.read(reinterpret_cast<char*>(inBuffer.data()), static_cast<std::uint64_t>(compressedLength));
 				ReadZipCompressedBuffer(result, std::move(inBuffer));
 			}
 
@@ -155,55 +156,55 @@ namespace FBXL
 
 				switch (typeCode)
 				{
-				case 'Y' :
+				case 'Y':
 					result.properties[i] = ReadPrimitiveType<std::int16_t>(is);
 					break;
 
-				case 'C' :
+				case 'C':
 					result.properties[i] = ReadPrimitiveType<bool>(is);
 					break;
 
-				case 'I' :
+				case 'I':
 					result.properties[i] = ReadPrimitiveType<std::int32_t>(is);
 					break;
 
-				case 'F' : 
+				case 'F':
 					result.properties[i] = ReadPrimitiveType<float>(is);
 					break;
 
-				case 'D' :
+				case 'D':
 					result.properties[i] = ReadPrimitiveType<double>(is);
 					break;
 
-				case 'L' :
+				case 'L':
 					result.properties[i] = ReadPrimitiveType<std::int64_t>(is);
 					break;
 
-				case 'f' :
+				case 'f':
 					result.properties[i] = ReadArrayType<float>(is);
 					break;
 
-				case 'd' :
+				case 'd':
 					result.properties[i] = ReadArrayType<double>(is);
 					break;
 
-				case 'l' :
+				case 'l':
 					result.properties[i] = ReadArrayType<std::int64_t>(is);
 					break;
 
-				case 'i' :
+				case 'i':
 					result.properties[i] = ReadArrayType<std::int32_t>(is);
 					break;
 
-				case 'b' :
+				case 'b':
 					result.properties[i] = ReadArrayType<unsigned char>(is);
 					break;
 
-				case 'S' :
+				case 'S':
 					result.properties[i] = ReadStringType(is);
 					break;
 
-				case 'R' : 
+				case 'R':
 					result.properties[i] = ReadRawBinaryType(is);
 					break;
 
@@ -226,7 +227,7 @@ namespace FBXL
 			}
 
 			is.seekg(endPos, std::ios::beg);
-			
+
 			return result;
 		}
 
@@ -241,7 +242,7 @@ namespace FBXL
 			return std::count(std::begin(zeroCheck), std::end(zeroCheck), 0) == N;
 		}
 
-		template<typename UintType,int N>
+		template<typename UintType, int N>
 		std::vector<Node> LoadNode(std::istream& is)
 		{
 			std::vector<Node> result{};
@@ -255,18 +256,20 @@ namespace FBXL
 			}
 
 			return result;
-		}	
+		}
+
+
 	}
 
 
-	PrimitiveData LoadFBX(const std::string& filePath)
+	PrimitiveData LoadPrimitiveData(const std::string& filePath)
 	{
 		PrimitiveData result{};
 		result.filePath = filePath;
 
 		std::ifstream is(result.filePath, std::ios::in | std::ios::binary);
 
-		if (!is) 
+		if (!is)
 			throw std::invalid_argument("FBXL::LoadFBX   file is not found : " + filePath);
 
 		char magic[21];
@@ -287,4 +290,5 @@ namespace FBXL
 
 		return result;
 	}
+
 }

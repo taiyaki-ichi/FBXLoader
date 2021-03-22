@@ -16,11 +16,14 @@
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DataStruct.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DefaultPolicyTraits.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\Helper.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Loader.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\Helper.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\ImplDataStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\LoaderImpl.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\PrimitiveDataLoader.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)include\Helper.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)include\Loader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\Helper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\PrimitiveDataLoader.cpp" />
   </ItemGroup>
 </Project>

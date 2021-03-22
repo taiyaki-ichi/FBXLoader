@@ -75,7 +75,7 @@ namespace FBXL
 			return std::make_pair(GetProperty<std::int64_t>(node, offset).value(), GetProperty<std::string>(node, offset + 1).value());
 		}
 	}
-	
+
 	std::pair<Texture, std::int64_t> GetTexture(Node&& textureNode)
 	{
 		assert(textureNode.name == "Texture");
@@ -138,13 +138,13 @@ namespace FBXL
 
 		for (const auto& c : connections)
 		{
-			
+
 			if ((key.index() == 0 &&
 				c.second.index() == 0 &&
 				std::get<0>(key) == std::get<0>(c.second)) ||
 				(key.index() == 1 &&
-				c.second.index() == 1 &&
-				std::get<1>(key) == std::get<1>(c.second)))
+					c.second.index() == 1 &&
+					std::get<1>(key) == std::get<1>(c.second)))
 			{
 				result.emplace_back(c.first);
 			}
@@ -154,5 +154,5 @@ namespace FBXL
 	}
 
 
-	
+
 }
