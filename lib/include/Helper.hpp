@@ -38,9 +38,6 @@ namespace FBXL
 	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
 		GetConnectionByDestination(const Node* connection, std::int64_t index);
 
-	//geometryMeshにローカルの変換を適用し
-	template<typename Vector2D,typename Vector3D,typename TranslationVector3DPolicy,typename RotationVector3DPolicy,typename ScallingVector3DPolicy>
-	Model3DParts<Vector2D, Vector3D> GetModel3DParts();
 
 	//GeometyMeshNodeからマテリアルのインデックス配列を取得
 	std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh);
@@ -97,9 +94,15 @@ namespace FBXL
 	//dstからインデックスを取得
 	std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections, std::int64_t index);
 
-	template<typename Vector2D,typename Vector3D>
+
+	//TransformのPolicyが追加される予定
+	template<typename Vector2D, typename Vector3D>
 	Model3DParts<Vector2D, Vector3D> GetModel3DParts(
-		const ModelMesh<Vector3D>& modelMesh, const GeometryMesh<Vector2D, Vector3D>& geometryMesh, std::initializer_list<std::int64_t>&& materialIndex);
+		std::unordered_map<std::int64_t, ModelMesh<Vector3D>>&& modelMeshes,
+		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>>&& geometryMeshes,
+		const std::unordered_map<std::int64_t, Material<Vector3D>>& materials,
+		const Connections& connections);
+
 
 	template<typename Vector2D,typename Vector3D>
 	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b);
@@ -564,41 +567,48 @@ namespace FBXL
 
 		assert(objects.name == "Objects");
 
-		Objects<Vector2D, Vector3D> result{};
+		std::unordered_map<std::int64_t, ModelMesh<Vector3D>> modelMeshes{};
+		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>> geometryMeshes{};
+		std::unordered_map<std::int64_t, Material<Vector3D>> materials{};
+		std::unordered_map<std::int64_t, Texture> textures{};
 
 		for (auto& node : objects.children)
 		{
 			if (node.name == "Model" && GetProperty<std::string>(&node, 2) == "Mesh")
 			{
 				auto [modelMesh, index] = GetModelMesh<Vector3D, CreateVector3DPolicy>(std::move(node));
-				result.modelMeshes.emplace(index, std::move(modelMesh));
+				modelMeshes.emplace(index, std::move(modelMesh));
 			}
 			else if (node.name == "Geometry" && GetProperty<std::string>(&node, 2) == "Mesh")
 			{
 				auto [geometryMesh, index] = GetGeometryMesh<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(node));
-				result.geometryMeshes.emplace(index, std::move(geometryMesh));
+				geometryMeshes.emplace(index, std::move(geometryMesh));
 			}
 			else if (node.name == "Material")
 			{
 				auto [material, index] = GetMaterial<Vector3D, CreateVector3DPolicy>(std::move(node));
-				result.materials.emplace(index, std::move(material));
+				materials.emplace(index, std::move(material));
 			}
 			else if (node.name == "Texture")
 			{
 				auto [texture, index] = GetTexture(std::move(node));
-				result.textures.emplace(index, std::move(texture));
+				textures.emplace(index, std::move(texture));
 			}
 		}
 
-		return result;
+		return std::make_tuple(std::move(modelMeshes), std::move(geometryMeshes), std::move(materials), std::move(textures));
 	}
 
-	template<typename Vector2D,typename Vector3D>
-	Model3DParts<Vector2D,Vector3D> GetModel3D(const Connections& connections, Objects<Vector2D, Vector3D>& objects)
+	template<typename Vector2D, typename Vector3D>
+	Model3DParts<Vector2D, Vector3D> GetModel3DParts(
+		std::unordered_map<std::int64_t, ModelMesh<Vector3D>>&& modelMeshes,
+		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>>&& geometryMeshes,
+		const std::unordered_map<std::int64_t, Material<Vector3D>>& materials,
+		const Connections& connections)
 	{
 		Model3DParts<Vector2D, Vector3D> result{};
 
-		for (auto&& modelMesh : objects.modelMeshes)
+		for (auto&& modelMesh : modelMeshes)
 		{
 			auto cs = GetConnectionByDestination(connections, modelMesh.first);
 
@@ -607,16 +617,17 @@ namespace FBXL
 
 			for (auto&& c : cs)
 			{
+				//オブジェクトとのつながりのみ
 				if (c.index() == 0)
 				{
 					//geometryMeshを探す
 					//moveしてしまう
 					{
-						auto iter = objects.geometryMeshes.find(std::get<0>(c));
-						if (iter != objects.geometryMeshes.end())
+						auto iter = geometryMeshes.find(std::get<0>(c));
+						if (iter != geometryMeshes.end())
 						{
 							geometryMesh = std::move(iter->second);
-							objects.geometryMeshes.erase(iter);
+							geometryMeshes.erase(iter);
 						}
 					}
 
@@ -624,8 +635,8 @@ namespace FBXL
 					//そのインデックスだけメモ
 					//順番あっているか分からん
 					{
-						auto iter = objects.materials.find(std::get<0>(c));
-						if (iter != objects.materials.end())
+						auto iter = materials.find(std::get<0>(c));
+						if (iter != materials.end())
 							materialIndex.push_back(std::get<0>(c));
 					}
 				}

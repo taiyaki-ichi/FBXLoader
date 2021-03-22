@@ -81,7 +81,8 @@ int main()
 
 	if (objects && connections)
 	{
-		auto hoge = FBXL::GetModel3D<Vector2,Vector3>(connections.value(), objects.value());
+		auto&& [modelMeshes, geometryMeshes, materials, textures] = std::move(objects.value());
+		auto hoge = FBXL::GetModel3DParts<Vector2, Vector3>(std::move(modelMeshes), std::move(geometryMeshes), materials, connections.value());
 	}
 
 
