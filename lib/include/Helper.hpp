@@ -83,6 +83,8 @@ namespace FBXL
 	template<typename Vector3D, typename CreateVector3DPolicy>
 	std::pair<Material<Vector3D>, std::int64_t> GetMaterial(Node&& modelMesh);
 
+	std::pair<Texture, std::int64_t> GetTexture(Node&& textureNode);
+
 	//PrimitiveData‚©‚çObjects‚ÌŽæ“¾
 	template<typename Vector2D, typename Vector3D,
 		typename CreateVector2DPolicy = DefaultCreateVector2D<Vector2D>,
@@ -581,11 +583,15 @@ namespace FBXL
 				auto [material, index] = GetMaterial<Vector3D, CreateVector3DPolicy>(std::move(node));
 				result.materials.emplace(index, std::move(material));
 			}
+			else if (node.name == "Texture")
+			{
+				auto [texture, index] = GetTexture(std::move(node));
+				result.textures.emplace(index, std::move(texture));
+			}
 		}
 
 		return result;
 	}
-
 
 	template<typename Vector2D,typename Vector3D>
 	Model3DParts<Vector2D,Vector3D> GetModel3D(const Connections& connections, Objects<Vector2D, Vector3D>& objects)

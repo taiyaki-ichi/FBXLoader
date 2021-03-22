@@ -58,7 +58,8 @@ int main()
 
 	//auto data = FBXL::LoadFBX("../../Assets/cube005.fbx");
 
-	auto data = FBXL::LoadFBX("../../Assets/test_material_texture.fbx");
+	//auto data = FBXL::LoadFBX("../../Assets/test_material_texture.fbx");
+	auto data = FBXL::LoadFBX("../../Assets/test_texture_002.fbx");
 
 
     //モディファイアの情報は頂点として保存されてそう
