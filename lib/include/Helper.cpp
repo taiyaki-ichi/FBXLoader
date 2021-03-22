@@ -49,47 +49,6 @@ namespace FBXL
 		return std::nullopt;
 	}
 
-	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
-		GetConnectionByDestination(const Node* connection, std::int64_t index)
-	{
-		assert(connection->name == "Connections");
-
-		std::vector<std::int64_t> object{};
-		std::vector<std::pair<std::int64_t, std::string>> prop{};
-
-		std::int64_t src;
-		std::string srcStr;
-		std::int64_t dst;
-		std::size_t offset{};
-		for (auto& n : connection->children)
-		{
-			auto type = GetProperty<std::string>(&n, 0);
-
-			src = GetProperty<std::int64_t>(&n, 1).value();
-
-			if (type.value()[0] == 'O')
-				offset = 2;
-			else if (type.value()[0] == 'P')
-				offset = 3;
-
-			if (type.value()[1] == 'O')
-			{
-				dst = GetProperty<std::int64_t>(&n, offset).value();
-				if (dst == index)
-					object.push_back(src);
-			}
-			else if (type.value()[1] == 'P')
-			{
-				dst = GetProperty<std::int64_t>(&n, offset).value();
-				srcStr = GetProperty<std::string>(&n, offset + 1).value();
-
-				if (dst == index)
-					prop.push_back(std::make_pair(src, srcStr));
-			}
-		}
-
-		return std::make_pair(object, prop);
-	}
 
 	std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh)
 	{
@@ -173,28 +132,27 @@ namespace FBXL
 	}
 
 
-	struct IsEqualDestinationIndex
-	{
-		std::int64_t index{};
-
-		bool operator()(const std::int64_t& i) {
-			return index == i;
-		}
-
-		bool operator()(const std::pair<std::int64_t, std::string>& pair) {
-			return index == pair.first;
-		}
-	};
-
-	std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections,std::int64_t index)
+	std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections, const ObjectOrPropertyIndex& key)
 	{
 		std::vector<ObjectOrPropertyIndex> result{};
 
-		for (auto& c : connections)
-			if (std::visit(IsEqualDestinationIndex{ index }, c.second))
+		for (const auto& c : connections)
+		{
+			
+			if ((key.index() == 0 &&
+				c.second.index() == 0 &&
+				std::get<0>(key) == std::get<0>(c.second)) ||
+				(key.index() == 1 &&
+				c.second.index() == 1 &&
+				std::get<1>(key) == std::get<1>(c.second)))
+			{
 				result.emplace_back(c.first);
+			}
+		}
 
 		return result;
 	}
+
+
 	
 }

@@ -48,7 +48,7 @@ int main()
 	//auto data = FBXL::LoadFBX("../../Assets/Dragon/Dragon_Baked_Actions_fbx_7.4_binary.fbx");
 	//auto data = FBXL::LoadFBX("../../Assets/unitychan/unitychan.fbx");
 	//auto data = FBXL::LoadFBX("../../Assets/unitychan/BoxUnityChan.fbx");
-    //auto data = FBXL::LoadFBX("../../Assets/Yuno_ver1.01/Mesh/CS_girl_MasterFile_Sock.fbx");
+   // auto data = FBXL::LoadFBX("../../Assets/Yuno_ver1.01/Mesh/CS_girl_MasterFile_Sock.fbx");
     //auto data = FBXL::LoadFBX("../../Assets/test_body.fbx");
     //auto data = FBXL::LoadFBX("../../Assets/test_dog_003.fbx");
 
@@ -76,6 +76,16 @@ int main()
 		else if (node.name == "Connections")
 		{
 			connections = FBXL::GetConnections(std::move(node));
+			/*
+			for (auto& [src, dst] : connections.value())
+			{
+				if (src.index() == 1)
+					std::cout << std::get<1>(src).first << " " << std::get<1>(src).second << "\n";
+
+				if (dst.index() == 1)
+					std::cout << std::get<1>(dst).first << " " << std::get<1>(dst).second << "\n";
+			}
+			*/
 		}
 	}
 
@@ -83,6 +93,10 @@ int main()
 	{
 		auto&& [modelMeshes, geometryMeshes, materials, textures] = std::move(objects.value());
 		auto hoge = FBXL::GetModel3DParts<Vector2, Vector3>(std::move(modelMeshes), std::move(geometryMeshes), materials, connections.value());
+
+		auto huga = FBXL::AddTextureInfomarion<Vector3>(std::move(materials), std::move(textures), connections.value());
+
+
 	}
 
 

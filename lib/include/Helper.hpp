@@ -35,9 +35,6 @@ namespace FBXL
 	template<typename Vector3D,typename CreateVector3DPolicy>
 	std::optional<Vector3D> GetProperities70Vector3DData(const Node* prop70, const std::string& name, std::int32_t xIndex, std::int32_t yIndex, std::int32_t zIndex);
 
-	std::pair<std::vector<std::int64_t>, std::vector<std::pair<std::int64_t, std::string>>>
-		GetConnectionByDestination(const Node* connection, std::int64_t index);
-
 
 	//GeometyMeshNodeからマテリアルのインデックス配列を取得
 	std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh);
@@ -92,7 +89,7 @@ namespace FBXL
 	Connections GetConnections(Node&& connections);
 
 	//dstからインデックスを取得
-	std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections, std::int64_t index);
+	std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections, const ObjectOrPropertyIndex& key);
 
 
 	//TransformのPolicyが追加される予定
@@ -107,7 +104,10 @@ namespace FBXL
 	template<typename Vector2D,typename Vector3D>
 	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b);
 
+	//
 	//GeometryMEshにローカル座標を適用し変換
+	//まだ仮
+	//
 	template<typename Vector2D,typename Vector3D>
 	GeometryMesh<Vector2D, Vector3D> Transform(ModelMesh<Vector3D>&& modelMesh, GeometryMesh<Vector2D, Vector3D>&& geometryMesh) {
 		return geometryMesh;
@@ -115,6 +115,15 @@ namespace FBXL
 
 	template<typename Vector2D,typename Vector3D>
 	std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> GetVertecesAndMaterialIndecsArray(Model3DParts<Vector2D, Vector3D>&& v);
+
+	
+	//マテリアエルにテクスチャの情報を加える
+	template<typename Vector3D>
+	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomarion(
+		std::unordered_map<std::int64_t, Material<Vector3D>>&& materials,
+		std::unordered_map<std::int64_t, Texture>&& textures,
+		const Connections& connectios);
+
 
 
 	//
@@ -706,5 +715,34 @@ namespace FBXL
 		}
 
 		return result;
+	}
+
+
+	template<typename Vector3D>
+	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomarion(
+		std::unordered_map<std::int64_t, Material<Vector3D>>&& materials, 
+		std::unordered_map<std::int64_t, Texture>&& textures, 
+		const Connections& connectios)
+	{
+		for (auto& [index, material] : materials)
+		{
+			auto cs = GetConnectionByDestination(connectios, std::make_pair(index, "DiffuseColor"));
+
+			for (auto& c : cs)
+			{
+				//とりあえずプロパティとしてマテリアルとつながっているテクスチャのみ
+				//Diffuseのテクスチャのみ
+				if (c.index() == 0)
+				{
+					auto& index = std::get<0>(c);
+
+					auto textureIter = textures.find(index);
+					if (textureIter != textures.end())
+						material.diffuseColorTexturePath = textureIter->second.relativeFileName;
+				}
+			}
+		}
+
+		return materials;
 	}
 }

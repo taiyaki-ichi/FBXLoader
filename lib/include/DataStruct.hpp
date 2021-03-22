@@ -81,11 +81,9 @@ namespace FBXL
 
 		Vector3D ambientColor;
 		double ambientFactor;
-		std::optional<std::string> ambientColorTexturePath;
 
 		Vector3D specularColor;
 		double specularFactor;
-		std::optional<std::string> specularColorTexturePath;
 
 		//Phongの反射モデル参照
 		//影つけるやつ
@@ -95,7 +93,6 @@ namespace FBXL
 		//自身が放つ光
 		Vector3D emissive;
 		double emissiveFactor;
-		std::optional<std::string> emissiveTexturePath;
 
 		//透過度
 		//alpha成分のみ作用
@@ -104,7 +101,6 @@ namespace FBXL
 
 		Vector3D reflectionColor;
 		double reflectionFactor;
-		std::optional<std::string> reflectionColorTexturePath;
 
 		//BumpMap,NormapMapとか追加するかも
 	};
