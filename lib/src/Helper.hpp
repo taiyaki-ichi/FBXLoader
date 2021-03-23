@@ -40,9 +40,8 @@ namespace FBXL
 	//GeometyMeshNodeからマテリアルのインデックス配列を取得
 	std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh);
 
-	//GeometyMeshNodeから法線の配列を取得
-	template<typename Vector3D, typename CreateVector3DPolicy>
-	std::vector<Vector3D> GetNormals(const Node* geometryMesh);
+	//GeometyMeshNodeから法線のデータとポリゴンに対応じているのか頂点に対応しているのか
+	std::pair<std::vector<double>, bool> GetNormalData(const Node* geometryMesh);
 
 	//GeometyMeshNodeからUVの取得
 	template<typename Vector2D, typename CreateVector2DPolicy>
@@ -376,60 +375,6 @@ namespace FBXL
 
 
 
-
-	template<typename Vector3D, typename CreateVector3DPolicy>
-	std::vector<Vector3D> GetPositions(const Node* geometryMesh)
-	{
-		auto verticesNode = GetSingleChildrenNode(geometryMesh, "Vertices").value();
-		auto vertices = GetProperty<std::vector<double>>(verticesNode, 0).value();
-
-		auto indexNode = GetSingleChildrenNode(geometryMesh, "PolygonVertexIndex").value();
-		auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode, 0).value();
-
-		std::vector<Vector3D> result{};
-		//少なくともインデックスの大きさ以上
-		result.reserve(indeces.size());
-
-		std::size_t i = 0;
-		std::size_t j = 0;
-		while (i < indeces.size())
-		{
-			j = i + 1;
-
-			while (indeces[j + 1] >= 0)
-			{
-				result.push_back(CreateVector3DPolicy::Create(vertices[indeces[i] * 3], vertices[indeces[i] * 3 + 1], vertices[indeces[i] * 3 + 2]));
-				result.push_back(CreateVector3DPolicy::Create(vertices[indeces[j] * 3], vertices[indeces[j] * 3 + 1], vertices[indeces[j] * 3 + 2]));
-				result.push_back(CreateVector3DPolicy::Create(vertices[indeces[j + 1] * 3], vertices[indeces[j + 1] * 3 + 1], vertices[indeces[j + 1] * 3 + 2]));
-
-				j++;
-			}
-
-			result.push_back(CreateVector3DPolicy::Create(vertices[indeces[i] * 3], vertices[indeces[i] * 3 + 1], vertices[indeces[i] * 3 + 2]));
-			result.push_back(CreateVector3DPolicy::Create(vertices[indeces[j] * 3], vertices[indeces[j] * 3 + 1], vertices[indeces[j] * 3 + 2]));
-			result.push_back(CreateVector3DPolicy::Create(vertices[(-indeces[j + 1] - 1) * 3], vertices[(-indeces[j + 1] - 1) * 3 + 1], vertices[(-indeces[j + 1] - 1) * 3 + 2]));
-			i = j + 2;
-		}
-
-		return result;
-	}
-
-	template<typename Vector3D, typename CreateVector3DPolicy>
-	std::vector<Vector3D> GetNormals(const Node* geometryMesh)
-	{
-		auto layerElementNormalNode = GetSingleChildrenNode(geometryMesh, "LayerElementNormal");
-
-		auto modelMesh = GetSingleChildrenNode(layerElementNormalNode.value(), "Normals");
-
-		auto vec = GetProperty<std::vector<double>>(modelMesh.value(), 0).value();
-		std::vector<Vector3D> result{};
-		result.reserve(vec.size() / 3);
-		for (std::size_t i = 0; i < vec.size() / 3; i++)
-			result.push_back(CreateVector3DPolicy::Create(vec[i * 3], vec[i * 3 + 1], vec[i * 3 + 2]));
-
-		return result;
-	}
-
 	template<typename Vector2D, typename CreateVector2DPolicy>
 	std::vector<Vector2D> GetUVs(const Node* geometryMesh)
 	{
@@ -449,12 +394,14 @@ namespace FBXL
 
 		std::vector<Vector2D> result{};
 		result.reserve(uvIndex.size());
-		for (std::size_t i = 0; i < uvIndex.size(); i++)
+		for (std::size_t i = 0; i < uvIndex.size(); i++) {
 			if (isVailedIndex(uvIndex[i] * 2) && isVailedIndex(uvIndex[i] * 2 + 1))
 				result.push_back(CreateVector2DPolicy::Create(uv[uvIndex[i] * 2], uv[uvIndex[i] * 2 + 1]));
+			else
+				result.push_back(CreateVector2DPolicy::Create(0.0, 0.0));
+		}
 
 		return result;
-
 	}
 
 	template<typename Vector2D, typename Vector3D>
@@ -486,24 +433,36 @@ namespace FBXL
 		auto indexNode = GetSingleChildrenNode(geometryMesh, "PolygonVertexIndex");
 		auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode.value(), 0).value();
 
-		auto normals = GetNormals<Vector3D, CreateVector3DPolicy>(geometryMesh);
+		auto [normals, normalIsByPolygon] = GetNormalData(geometryMesh);
 		auto uvs = GetUVs<Vector2D, CreateVector2DPolicy>(geometryMesh);
 
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
 
-		assert(normals.size() == uvs.size());
+		assert((normalIsByPolygon && normals.size() == indeces.size()) ||
+			(!normalIsByPolygon && normals.size() == vertices.size()));
 
-		auto pushBack = [&vertices, &normals, &uvs, &result, &materialIndeces](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset) {
+		//uvはByPolygonVertex一択のはず
+		assert(uvs.size() == indeces.size());
+
+
+		auto pushBack = [&vertices, &normals, normalIsByPolygon, &uvs, &result, &materialIndeces](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset) {
 
 			Vertex<Vector2D, Vector3D> tmpVec;
 			tmpVec.position = CreateVector3DPolicy::Create(vertices[index1], vertices[index2], vertices[index3]);
-			tmpVec.normal = normals[offset];
+
+			if (normalIsByPolygon)
+				tmpVec.normal = CreateVector3DPolicy::Create(normals[offset * 3], normals[offset * 3 + 1], normals[offset * 3 + 2]);
+			else
+				tmpVec.normal = CreateVector3DPolicy::Create(normals[index1], normals[index2], normals[index3]);
+
+
 			tmpVec.uv = uvs[offset];
+
+
 			if (materialIndeces && materialIndeces.value().size() > 1)
 				result.emplace_back(std::make_pair(std::move(tmpVec), materialIndeces.value()[offset]));
 			else
 				result.emplace_back(std::make_pair(std::move(tmpVec), 0));
-
 		};
 
 		std::size_t offset = 0;

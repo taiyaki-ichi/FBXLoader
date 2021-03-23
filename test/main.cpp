@@ -22,7 +22,8 @@ struct Vector2
 
 int main()
 {
-	auto model3D = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/test_texture_002.fbx");
+	//auto model3D = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/test_texture_002.fbx");
+	auto model3D = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/Yuno_ver1.01/Mesh/CS_girl_MasterFile_noSock.fbx");
 
 	return 0;
 }

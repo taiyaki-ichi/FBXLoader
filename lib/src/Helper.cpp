@@ -153,6 +153,20 @@ namespace FBXL
 		return result;
 	}
 
+	std::pair<std::vector<double>, bool> GetNormalData(const Node* geometryMesh)
+	{
+		auto layerElementNormalNode = GetSingleChildrenNode(geometryMesh, "LayerElementNormal");
 
+		auto modelMesh = GetSingleChildrenNode(layerElementNormalNode.value(), "Normals");
+
+		auto mappingInformationTypeNode = GetSingleChildrenNode(geometryMesh, "MappingInformationType");
+		bool isByPolygon{};
+		if (mappingInformationTypeNode)
+			isByPolygon = (GetProperty<std::string>(mappingInformationTypeNode.value(), 0) == "ByPolygonVertex");
+
+		auto result = GetProperty<std::vector<double>>(modelMesh.value(), 0).value();
+
+		return std::make_pair(std::move(result), isByPolygon);
+	}
 
 }
