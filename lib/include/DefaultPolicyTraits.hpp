@@ -1,7 +1,10 @@
 #pragma once
+#include<cmath>
 
 namespace FBXL
 {
+	//‰¼
+	constexpr double PI = 3.1415;
 
 	template<typename VertexContainer>
 	struct DefaultVertexContainerPushBack
@@ -36,6 +39,52 @@ namespace FBXL
 	{
 		static Vector2D Create(double x, double y) {
 			return Vector2D{ x,y };
+		}
+	};
+
+	template<typename Vector3D>
+	struct DefaultRotationVector3DPolicy
+	{
+		static Vector3D Rotation(Vector3D&& vec, const Vector3D& rotationVec)
+		{
+			auto rot = [](double& a, double& b, double rot) {
+				double memoA = a;
+				double memoB = b;
+				a = memoA * std::cos(rot) - memoB * std::sin(rot);
+				b = memoA * std::sin(rot) + memoB * std::cos(rot);
+			};
+
+			rot(vec.x, vec.y, rotationVec.z);
+			rot(vec.y, vec.z, rotationVec.x);
+			rot(vec.z, vec.x, rotationVec.y);
+
+			return vec;
+		}
+	};
+
+	template<typename Vector3D>
+	struct DefaultTranslationVector3DPolicy
+	{
+		static Vector3D Translation(Vector3D&& vec, const Vector3D& transformVec)
+		{
+			vec.x += transformVec.x;
+			vec.y += transformVec.y;
+			vec.z += transformVec.z;
+
+			return vec;
+		}
+	};
+
+	template<typename Vector3D>
+	struct DefaultScallingVector3DPolicy
+	{
+		static Vector3D Scalling(Vector3D&& vec, const Vector3D& scallingVec)
+		{
+			vec.x *= scallingVec.x;
+			vec.y *= scallingVec.y;
+			vec.z *= scallingVec.z;
+
+			return vec;
 		}
 	};
 }

@@ -104,10 +104,8 @@ namespace FBXL
 	//GeometryMEshにローカル座標を適用し変換
 	//まだ仮
 	//
-	template<typename Vector2D, typename Vector3D>
-	GeometryMesh<Vector2D, Vector3D> Transform(ModelMesh<Vector3D>&& modelMesh, GeometryMesh<Vector2D, Vector3D>&& geometryMesh) {
-		return geometryMesh;
-	}
+	template<typename Vector2D, typename Vector3D,typename TranslationVector3DPolicy,typename RotationVector3DPolicy,typename ScalinngVector3DPolicy>
+	GeometryMesh<Vector2D, Vector3D> TransformGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh, ModelMesh<Vector3D>&& modelMesh);
 
 	template<typename Vector2D, typename Vector3D>
 	std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> GetVertecesAndMaterialIndecsArray(Model3DParts<Vector2D, Vector3D>&& v);
@@ -606,7 +604,7 @@ namespace FBXL
 		return std::make_tuple(std::move(modelMeshes), std::move(geometryMeshes), std::move(materials), std::move(textures));
 	}
 
-	template<typename Vector2D, typename Vector3D>
+	template<typename Vector2D, typename Vector3D,typename TranslationVector3DPolicy,typename RotationVector3DPolicy,typename ScallingVecor3DPolicy>
 	Model3DParts<Vector2D, Vector3D> GetModel3DParts(
 		std::unordered_map<std::int64_t, ModelMesh<Vector3D>>&& modelMeshes,
 		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>>&& geometryMeshes,
@@ -653,7 +651,8 @@ namespace FBXL
 			{
 				assert(geometryMesh.value().materialRange.size() == materialIndex.size());
 
-				auto g = Transform<Vector2D, Vector3D>(std::move(modelMesh.second), std::move(geometryMesh.value()));
+				auto g = TransformGeometryMesh<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVecor3DPolicy>(
+					std::move(geometryMesh.value()), std::move(modelMesh.second));
 				result = AppendModel3DParts<Vector2D, Vector3D>(std::move(result), std::make_pair(std::move(g), std::move(materialIndex)));
 			}
 		}
@@ -761,5 +760,20 @@ namespace FBXL
 		}
 
 		return result;
+	}
+
+	template<typename Vector2D, typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScalinngVector3DPolicy>
+	GeometryMesh<Vector2D, Vector3D> TransformGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh, ModelMesh<Vector3D>&& modelMesh)
+	{
+		for (std::size_t i = 0; i < geometryMesh.vertices.size(); i++)
+		{
+			geometryMesh.vertices[i].position = ScalinngVector3DPolicy::Scalling(std::move(geometryMesh.vertices[i].position), modelMesh.localScaling);
+			geometryMesh.vertices[i].position = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].position), modelMesh.localRotation);
+			geometryMesh.vertices[i].position = TranslationVector3DPolicy::Translation(std::move(geometryMesh.vertices[i].position), modelMesh.localTranslation);
+
+			geometryMesh.vertices[i].normal = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].normal), modelMesh.localRotation);
+		}
+
+		return geometryMesh;
 	}
 }

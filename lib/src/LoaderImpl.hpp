@@ -5,7 +5,8 @@
 
 namespace FBXL
 {
-	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy,
+		typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScallingVecor3DPolicy>
 	std::optional<Model3D<Vector2D, Vector3D>> LoadModel3D(const std::string& filePath)
 	{
 		auto primitiveData = LoadPrimitiveData(filePath);
@@ -25,7 +26,8 @@ namespace FBXL
 		{
 			auto&& [modelMeshes, geometryMeshes, materials, textures] = std::move(objects.value());
 
-			auto model3DParts = GetModel3DParts<Vector2D, Vector3D>(std::move(modelMeshes), std::move(geometryMeshes), materials, connections.value());
+			auto model3DParts = GetModel3DParts<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVecor3DPolicy>(
+				std::move(modelMeshes), std::move(geometryMeshes), materials, connections.value());
 
 			auto m = AddTextureInfomarion<Vector3D>(std::move(materials), std::move(textures), connections.value());
 
