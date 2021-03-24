@@ -563,7 +563,7 @@ namespace FBXL
 		return std::make_tuple(std::move(modelMeshes), std::move(geometryMeshes), std::move(materials), std::move(textures));
 	}
 
-	template<typename Vector2D, typename Vector3D,typename TranslationVector3DPolicy,typename RotationVector3DPolicy,typename ScallingVecor3DPolicy>
+	template<typename Vector2D, typename Vector3D,typename TranslationVector3DPolicy,typename RotationVector3DPolicy,typename ScallingVector3DPolicy>
 	Model3DParts<Vector2D, Vector3D> GetModel3DParts(
 		std::unordered_map<std::int64_t, ModelMesh<Vector3D>>&& modelMeshes,
 		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>>&& geometryMeshes,
@@ -610,7 +610,7 @@ namespace FBXL
 			{
 				assert(geometryMesh.value().materialRange.size() == materialIndex.size());
 
-				auto g = TransformGeometryMesh<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVecor3DPolicy>(
+				auto g = TransformGeometryMesh<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
 					std::move(geometryMesh.value()), std::move(modelMesh.second));
 				result = AppendModel3DParts<Vector2D, Vector3D>(std::move(result), std::make_pair(std::move(g), std::move(materialIndex)));
 			}

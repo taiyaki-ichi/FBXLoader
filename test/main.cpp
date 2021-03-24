@@ -1,4 +1,5 @@
 #include"include/Loader.hpp"
+#include"Window.hpp"
 
 #include<iostream>
 #include<fstream>
@@ -22,8 +23,9 @@ struct Vector2
 
 int main()
 {
-	//auto model3D = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/test_texture_002.fbx");
-	auto model3D = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/Yuno_ver1.01/Mesh/CS_girl_MasterFile_noSock.fbx");
+	CreateSimpleWindow(L"test", 800, 600);
+
+	while (UpdateWindow());
 
 	return 0;
 }
