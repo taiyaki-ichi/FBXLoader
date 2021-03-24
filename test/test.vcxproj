@@ -160,10 +160,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DirectX12\CommandList.cpp" />
     <ClCompile Include="DirectX12\Device.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DirectX12\CommandList.hpp" />
     <ClInclude Include="DirectX12\Device.hpp" />
     <ClInclude Include="Window.hpp" />
   </ItemGroup>

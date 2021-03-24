@@ -1,6 +1,7 @@
 #include"include/Loader.hpp"
 #include"Window.hpp"
 #include"DirectX12/Device.hpp"
+#include"DirectX12//CommandList.hpp"
 
 #include<iostream>
 #include<fstream>
@@ -28,6 +29,9 @@ int main()
 
 	DX12::Device device{};
 	device.Initialize();
+
+	DX12::CommandList commandList{};
+	commandList.Initialize(&device);
 
 	while (Window::UpdateWindow());
 

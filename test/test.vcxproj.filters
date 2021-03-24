@@ -3,9 +3,11 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="DirectX12\Device.cpp" />
+    <ClCompile Include="DirectX12\CommandList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp" />
     <ClInclude Include="DirectX12\Device.hpp" />
+    <ClInclude Include="DirectX12\CommandList.hpp" />
   </ItemGroup>
 </Project>
