@@ -16,6 +16,31 @@ namespace DX12
 			fence->Release();
 	}
 
+	CommandList::CommandList(CommandList&& rhs) noexcept
+	{
+		allocator = rhs.allocator;
+		queue = rhs.queue;
+		list = rhs.list;
+		fence = rhs.fence;
+		rhs.allocator = nullptr;
+		rhs.queue = nullptr; 
+		rhs.list = nullptr;
+		rhs.fence = nullptr;
+	}
+
+	CommandList& CommandList::operator=(CommandList&& rhs) noexcept
+	{
+		allocator = rhs.allocator;
+		queue = rhs.queue;
+		list = rhs.list;
+		fence = rhs.fence;
+		rhs.allocator = nullptr;
+		rhs.queue = nullptr;
+		rhs.list = nullptr;
+		rhs.fence = nullptr;
+		return *this;
+	}
+
 	void CommandList::Initialize(Device* device)
 	{
 		if (FAILED(device->Get()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&allocator))))

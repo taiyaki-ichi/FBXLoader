@@ -16,6 +16,27 @@ namespace DX12
 			adaptor->Release();
 	}
 
+	Device::Device(Device&& rhs) noexcept
+	{
+		device = rhs.device;
+		factory = rhs.factory;
+		adaptor = rhs.adaptor;
+		rhs.device = nullptr;
+		rhs.factory = nullptr;
+		rhs.adaptor = nullptr;
+	}
+
+	Device& Device::operator=(Device&& rhs) noexcept
+	{
+		device = rhs.device;
+		factory = rhs.factory;
+		adaptor = rhs.adaptor;
+		rhs.device = nullptr;
+		rhs.factory = nullptr;
+		rhs.adaptor = nullptr;
+		return *this;
+	}
+
 	void Device::Initialize()
 	{
 		ID3D12Debug* debugLayer = nullptr;

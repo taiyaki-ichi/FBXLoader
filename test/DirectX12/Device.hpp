@@ -19,6 +19,12 @@ namespace DX12
 		Device() = default;
 		~Device();
 
+		Device(const Device&) = delete;
+		Device& operator=(const Device&) = delete;
+
+		Device(Device&&) noexcept;
+		Device& operator=(Device&&) noexcept;
+
 		void Initialize();
 
 		ID3D12Device* Get() const noexcept;

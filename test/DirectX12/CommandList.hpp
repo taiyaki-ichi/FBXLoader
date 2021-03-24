@@ -25,6 +25,12 @@ namespace DX12
 		CommandList() = default;
 		~CommandList();
 
+		CommandList(const  CommandList&) = delete;
+		CommandList& operator=(const CommandList&) = delete;
+
+		CommandList(CommandList&&) noexcept;
+		CommandList& operator=(CommandList&&) noexcept;
+
 		void Initialize(Device*);
 
 		ID3D12GraphicsCommandList* Get();
