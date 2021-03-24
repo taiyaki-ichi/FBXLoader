@@ -1,5 +1,6 @@
 #include"include/Loader.hpp"
 #include"Window.hpp"
+#include"DirectX12/Device.hpp"
 
 #include<iostream>
 #include<fstream>
@@ -23,9 +24,12 @@ struct Vector2
 
 int main()
 {
-	CreateSimpleWindow(L"test", 800, 600);
+	auto hwnd = Window::CreateSimpleWindow(L"test", 800, 600);
 
-	while (UpdateWindow());
+	DX12::Device device{};
+	device.Initialize();
+
+	while (Window::UpdateWindow());
 
 	return 0;
 }
