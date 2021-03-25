@@ -18,7 +18,6 @@ namespace DX12
 		ID3D12GraphicsCommandList* list = nullptr;
 
 		ID3D12Fence* fence = nullptr;
-		HANDLE fenceEvent = nullptr;
 		UINT64 fenceValue = 1;
 
 	public:

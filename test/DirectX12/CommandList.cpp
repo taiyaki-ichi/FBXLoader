@@ -22,6 +22,7 @@ namespace DX12
 		queue = rhs.queue;
 		list = rhs.list;
 		fence = rhs.fence;
+		fenceValue = rhs.fenceValue;
 		rhs.allocator = nullptr;
 		rhs.queue = nullptr; 
 		rhs.list = nullptr;
@@ -34,6 +35,7 @@ namespace DX12
 		queue = rhs.queue;
 		list = rhs.list;
 		fence = rhs.fence;
+		fenceValue = rhs.fenceValue;
 		rhs.allocator = nullptr;
 		rhs.queue = nullptr;
 		rhs.list = nullptr;
@@ -106,6 +108,7 @@ namespace DX12
 		//コマンドキューが終了していないことの確認
 		if (fence->GetCompletedValue() < fenceValue)
 		{
+			HANDLE fenceEvent = nullptr;
 			fence->SetEventOnCompletion(fenceValue, fenceEvent);
 			// イベントが発火するまで待つ
 			WaitForSingleObject(fenceEvent, INFINITE);

@@ -166,6 +166,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DirectX12\CommandList.hpp" />
+    <ClInclude Include="DirectX12\DescriptorHeap\CreateViewFunction.hpp" />
+    <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeap.hpp" />
+    <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeapType.hpp" />
+    <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeapViewType.hpp" />
     <ClInclude Include="DirectX12\Device.hpp" />
     <ClInclude Include="Window.hpp" />
   </ItemGroup>

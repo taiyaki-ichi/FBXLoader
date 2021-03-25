@@ -1,7 +1,8 @@
 #include"include/Loader.hpp"
 #include"Window.hpp"
 #include"DirectX12/Device.hpp"
-#include"DirectX12//CommandList.hpp"
+#include"DirectX12/CommandList.hpp"
+#include"DirectX12/DescriptorHeap/DescriptorHeap.hpp"
 
 #include<iostream>
 #include<fstream>
@@ -32,6 +33,9 @@ int main()
 
 	DX12::CommandList commandList{};
 	commandList.Initialize(&device);
+
+	DX12::DescriptorHeap<DX12::DescriptorHeapType::CBV_SRV_UAV> descriptorHeap{};
+	descriptorHeap.Initialize(&device, 10);
 
 	while (Window::UpdateWindow());
 
