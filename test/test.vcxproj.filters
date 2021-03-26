@@ -5,6 +5,9 @@
     <ClCompile Include="DirectX12\Device.cpp" />
     <ClCompile Include="DirectX12\CommandList.cpp" />
     <ClCompile Include="DirectX12\Shader.cpp" />
+    <ClCompile Include="DirectX12\Resource\ResourceBase.cpp" />
+    <ClCompile Include="DirectX12\Resource\UploadResource.cpp" />
+    <ClCompile Include="DirectX12\Resource\VertexBufferResource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp" />
@@ -15,6 +18,9 @@
     <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeapType.hpp" />
     <ClInclude Include="DirectX12\DescriptorHeap\CreateViewFunction.hpp" />
     <ClInclude Include="DirectX12\Shader.hpp" />
+    <ClInclude Include="DirectX12\Resource\ResourceBase.hpp" />
+    <ClInclude Include="DirectX12\Resource\UploadResource.hpp" />
+    <ClInclude Include="DirectX12\Resource\VertexBufferResource.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderFile\VertexShader.hlsl" />

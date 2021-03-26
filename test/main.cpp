@@ -4,6 +4,7 @@
 #include"DirectX12/CommandList.hpp"
 #include"DirectX12/DescriptorHeap/DescriptorHeap.hpp"
 #include"DirectX12/Shader.hpp"
+#include"DirectX12/Resource/VertexBufferResource.hpp"
 
 #include<iostream>
 #include<fstream>
@@ -43,6 +44,16 @@ int main()
 
 	DX12::Shader pixcelShader{};
 	pixcelShader.Intialize(L"ShaderFile/PixelShader.hlsl", "main", "ps_5_0");
+
+	Vector3 vertices[] = {
+		{-1.f,-1.f,0.f},
+		{-1.f,1.f,0.f},
+		{1.f,-1.f,0.f},
+	};
+
+	DX12::VertexBufferResource vertexBuffer{};
+	vertexBuffer.Initialize(&device, sizeof(vertices), sizeof(vertices) / sizeof(vertices[0]));
+	vertexBuffer.Map(std::move(vertices));
 
 	while (Window::UpdateWindow());
 

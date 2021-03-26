@@ -162,6 +162,9 @@
   <ItemGroup>
     <ClCompile Include="DirectX12\CommandList.cpp" />
     <ClCompile Include="DirectX12\Device.cpp" />
+    <ClCompile Include="DirectX12\Resource\ResourceBase.cpp" />
+    <ClCompile Include="DirectX12\Resource\UploadResource.cpp" />
+    <ClCompile Include="DirectX12\Resource\VertexBufferResource.cpp" />
     <ClCompile Include="DirectX12\Shader.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -172,6 +175,9 @@
     <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeapType.hpp" />
     <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeapViewType.hpp" />
     <ClInclude Include="DirectX12\Device.hpp" />
+    <ClInclude Include="DirectX12\Resource\ResourceBase.hpp" />
+    <ClInclude Include="DirectX12\Resource\UploadResource.hpp" />
+    <ClInclude Include="DirectX12\Resource\VertexBufferResource.hpp" />
     <ClInclude Include="DirectX12\Shader.hpp" />
     <ClInclude Include="Window.hpp" />
   </ItemGroup>

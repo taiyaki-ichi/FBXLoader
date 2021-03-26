@@ -40,7 +40,9 @@ namespace DX12
 	template<typename T>
 	struct GetResourcePtrPolicy
 	{
-		static ID3D12Resource* GetResourcePtr(T*);
+		static ID3D12Resource* GetResourcePtr(T* t) {
+			return t->Get();
+		}
 	};
 
 }
