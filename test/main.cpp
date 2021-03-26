@@ -3,6 +3,7 @@
 #include"DirectX12/Device.hpp"
 #include"DirectX12/CommandList.hpp"
 #include"DirectX12/DescriptorHeap/DescriptorHeap.hpp"
+#include"DirectX12/Shader.hpp"
 
 #include<iostream>
 #include<fstream>
@@ -36,6 +37,12 @@ int main()
 
 	DX12::DescriptorHeap<DX12::DescriptorHeapType::CBV_SRV_UAV> descriptorHeap{};
 	descriptorHeap.Initialize(&device, 10);
+
+	DX12::Shader vertexShader{};
+	vertexShader.Intialize(L"ShaderFile/VertexShader.hlsl", "main", "vs_5_0");
+
+	DX12::Shader pixcelShader{};
+	pixcelShader.Intialize(L"ShaderFile/PixelShader.hlsl", "main", "ps_5_0");
 
 	while (Window::UpdateWindow());
 

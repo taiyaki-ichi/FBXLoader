@@ -4,6 +4,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="DirectX12\Device.cpp" />
     <ClCompile Include="DirectX12\CommandList.cpp" />
+    <ClCompile Include="DirectX12\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp" />
@@ -13,5 +14,10 @@
     <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeap.hpp" />
     <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeapType.hpp" />
     <ClInclude Include="DirectX12\DescriptorHeap\CreateViewFunction.hpp" />
+    <ClInclude Include="DirectX12\Shader.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="ShaderFile\VertexShader.hlsl" />
+    <FxCompile Include="ShaderFile\PixelShader.hlsl" />
   </ItemGroup>
 </Project>
