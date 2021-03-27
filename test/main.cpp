@@ -6,6 +6,8 @@
 #include"DirectX12/Shader.hpp"
 #include"DirectX12/Resource/VertexBufferResource.hpp"
 
+#include"DirectX12/Utility.hpp"
+
 #include<iostream>
 #include<fstream>
 
@@ -28,6 +30,8 @@ struct Vector2
 
 int main()
 {
+
+	/*
 	auto hwnd = Window::CreateSimpleWindow(L"test", 800, 600);
 
 	DX12::Device device{};
@@ -56,6 +60,31 @@ int main()
 	vertexBuffer.Map(std::move(vertices));
 
 	while (Window::UpdateWindow());
+	*/
+
+
+	constexpr auto hoge = DX12::GetRootParams<
+		DX12::RootParameter<DX12::DescriptorRange::CBV, DX12::DescriptorRange::CBV, DX12::DescriptorRange::SRV>,
+		DX12::RootParameter<DX12::DescriptorRange::CBV, DX12::DescriptorRange::CBV, DX12::DescriptorRange::SRV>
+	>();
+
+	
+	static_assert(std::get<0>(hoge)[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+	static_assert(std::get<0>(hoge)[1].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+	static_assert(std::get<0>(hoge)[2].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SRV);
+	static_assert(std::get<0>(hoge)[0].BaseShaderRegister == 0);
+	static_assert(std::get<0>(hoge)[1].BaseShaderRegister == 1);
+	static_assert(std::get<0>(hoge)[2].BaseShaderRegister == 0);
+
+	static_assert(std::get<1>(hoge)[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+	static_assert(std::get<1>(hoge)[1].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+	static_assert(std::get<1>(hoge)[2].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SRV);
+	static_assert(std::get<1>(hoge)[0].BaseShaderRegister == 2);
+	static_assert(std::get<1>(hoge)[1].BaseShaderRegister == 3);
+	static_assert(std::get<1>(hoge)[2].BaseShaderRegister == 1);
+
+
+
 
 	return 0;
 }

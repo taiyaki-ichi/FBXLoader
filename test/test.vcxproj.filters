@@ -21,6 +21,7 @@
     <ClInclude Include="DirectX12\Resource\ResourceBase.hpp" />
     <ClInclude Include="DirectX12\Resource\UploadResource.hpp" />
     <ClInclude Include="DirectX12\Resource\VertexBufferResource.hpp" />
+    <ClInclude Include="DirectX12\Utility.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderFile\VertexShader.hlsl" />
