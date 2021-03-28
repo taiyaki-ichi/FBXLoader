@@ -103,6 +103,106 @@ namespace DX12
 	}
 
 
+	namespace StaticSampler
+	{
+		//通常の描写用
+		struct Normal {};
 
+		//Toon用
+		struct Toon {};
+
+		//ShadowMapping用
+		struct Shadow {};
+	}
+
+	template<typename... StaticSamplerTypes>
+	struct StaticSamplers
+	{
+		using Types = std::tuple<StaticSamplerTypes...>;
+	};
+
+
+	template<typename StaticSamplerType,std::size_t Index>
+	struct GetStaticSamplerDesc {};
+
+	template<std::size_t Index>
+	struct GetStaticSamplerDesc<StaticSampler::Normal,Index>{
+		constexpr static auto Get() {
+
+			D3D12_STATIC_SAMPLER_DESC result{};
+			result.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//横繰り返し
+			result.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//縦繰り返し
+			result.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//奥行繰り返し
+			result.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;//ボーダーの時は黒
+			result.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//補間しない(ニアレストネイバー)
+			result.MaxLOD = D3D12_FLOAT32_MAX;//ミップマップ最大値
+			result.MinLOD = 0.0f;//ミップマップ最小値
+			result.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;//オーバーサンプリングの際リサンプリングしない？
+			result.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//ピクセルシェーダからのみ可視
+			result.RegisterSpace = Index;
+
+			return result;
+		}
+	};
+
+	template<std::size_t Index>
+	struct GetStaticSamplerDesc<StaticSampler::Shadow, Index> {
+		constexpr static auto Get() {
+
+			D3D12_STATIC_SAMPLER_DESC result{};
+			result.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			result.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			result.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			result.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;//ボーダーの時は黒
+			result.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//補間しない(ニアレストネイバー)
+			result.MaxLOD = D3D12_FLOAT32_MAX;//ミップマップ最大値
+			result.MinLOD = 0.0f;//ミップマップ最小値
+			result.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;//オーバーサンプリングの際リサンプリングしない
+			result.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//ピクセルシェーダからのみ可視
+			result.RegisterSpace = Index;
+
+			return result;
+		}
+	};
+
+	template<std::size_t Index>
+	struct GetStaticSamplerDesc<StaticSampler::Toon, Index> {
+		constexpr static auto Get() {
+
+			D3D12_STATIC_SAMPLER_DESC result{};
+			result.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			result.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			result.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			result.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;//ボーダーの時は黒
+			result.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;//比較結果をリニア補完
+			result.MaxLOD = D3D12_FLOAT32_MAX;//ミップマップ最大値
+			result.MinLOD = 0.0f;//ミップマップ最小値
+			result.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+			result.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//ピクセルシェーダからのみ可視
+			result.MaxAnisotropy = 1;//深度傾斜を有効に
+			result.RegisterSpace = Index;
+
+			return result;
+		}
+	};
+
+	template<typename StaticSamplersType,std::size_t Index>
+	constexpr auto GetStaticSamplerArray(std::array<D3D12_STATIC_SAMPLER_DESC, std::tuple_size_v<typename StaticSamplersType::Types>>& resultArray)
+	{
+		if constexpr (Index<std::tuple_size_v<typename StaticSamplersType::Types>)
+		{
+			resultArray[Index] = GetStaticSamplerDesc<std::tuple_element_t<Index, typename StaticSamplersType::Types>, Index>::Get();
+			GetStaticSamplerArray<StaticSamplersType, Index + 1>(resultArray);
+		}
+	}
+
+	template<typename StaticSamplersType>
+	constexpr auto GetStaticSamplerArray()
+	{
+		std::array<D3D12_STATIC_SAMPLER_DESC, std::tuple_size_v<typename StaticSamplersType::Types>> result{};
+		GetStaticSamplerArray<StaticSamplersType, 0>(result);
+
+		return result;
+	}
 }
 
