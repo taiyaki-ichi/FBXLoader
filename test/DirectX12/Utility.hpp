@@ -36,8 +36,14 @@ namespace DX12
 		using Types = std::tuple<DescriptorRangeTypes...>;
 	};
 
+	template<typename... RootParameterTypes>
+	struct RootParameters
+	{
+		using Types = std::tuple<RootParameterTypes...>;
+	};
+
 	template<typename DescriptorRangeType>
-	constexpr auto GetDescriptorRangeStruct(std::array<std::size_t, 4>&& nums)
+	constexpr auto GetDescriptorRange(std::array<std::size_t, 4>&& nums)
 	{
 		D3D12_DESCRIPTOR_RANGE descriptorRange{};
 		descriptorRange.NumDescriptors = 1;
@@ -51,7 +57,7 @@ namespace DX12
 	}
 
 	template<typename RootParameterType, std::size_t Index,std::size_t N>
-	constexpr auto GetDescriptorRangeStructArray(std::array<D3D12_DESCRIPTOR_RANGE, N>& result, std::array<std::size_t, 4>&& nums)
+	constexpr auto GetDescriptorRangeArrayImpl(std::array<D3D12_DESCRIPTOR_RANGE, N>& result, std::array<std::size_t, 4>&& nums)
 	{
 		if constexpr (Index == std::tuple_size_v<typename RootParameterType::Types>)
 		{
@@ -59,13 +65,46 @@ namespace DX12
 		}
 		else
 		{
-			auto [descriptorRange, returnNums] = GetDescriptorRangeStruct<std::tuple_element_t<Index, RootParameterType::Types>>(std::move(nums));
+			auto [descriptorRange, returnNums] = GetDescriptorRange<std::tuple_element_t<Index, RootParameterType::Types>>(std::move(nums));
 			result[Index] = std::move(descriptorRange);
-			return GetDescriptorRangeStructArray<RootParameterType, Index + 1>(result, std::move(returnNums));
+			return GetDescriptorRangeArrayImpl<RootParameterType, Index + 1>(result, std::move(returnNums));
 		}
 	}
 
+	template<typename RootParameterType>
+	constexpr auto GetDescriptorRangeArray(std::array<std::size_t, 4>&& nums)
+	{
+		std::array<D3D12_DESCRIPTOR_RANGE, std::tuple_size_v<typename RootParameterType::Types>> result{};
+		auto returnNums = GetDescriptorRangeArrayImpl<RootParameterType, 0>(result, std::move(nums));
+		return std::make_pair(std::move(result), std::move(returnNums));
+	}
 
+	template<typename RootParametersType,std::size_t Index>
+	constexpr auto GetRootParametersImpl(std::array<std::size_t, 4>&& nums)
+	{
+		using NowRootParamterType = std::tuple_element_t<Index, typename RootParametersType::Types>;
+
+		auto [rangeArray, returnNums] = GetDescriptorRangeArray<NowRootParamterType>(std::move(nums));
+
+		if constexpr (Index+1 < std::tuple_size_v<typename RootParametersType::Types>)
+		{
+			auto lest = GetRootParametersImpl<RootParametersType, Index + 1>(std::move(returnNums));
+			return std::tuple_cat(std::make_tuple(std::move(rangeArray)), std::move(lest));
+		}
+		else
+		{
+			return std::make_tuple(std::move(rangeArray));
+		}
+	}
+
+	template<typename RootParametersType>
+	constexpr auto GetRootParameters()
+	{
+		return GetRootParametersImpl<RootParametersType, 0>({});
+	}
+
+
+	/*
 	struct End {};
 
 	template<typename Head,typename... Tail>
@@ -83,7 +122,7 @@ namespace DX12
 	constexpr auto GetRootParamsImpl(std::array<std::size_t, 4>&& nums)
 	{
 		std::array<D3D12_DESCRIPTOR_RANGE, std::tuple_size_v<typename First::Types>> rangeArray{};
-		auto returnNums = GetDescriptorRangeStructArray<First, 0>(rangeArray, std::move(nums));
+		auto returnNums = GetDescriptorRangeArray<First, 0>(rangeArray, std::move(nums));
 
 		if constexpr (std::is_same_v<Second, End>)
 		{
@@ -101,7 +140,7 @@ namespace DX12
 	{
 		return GetRootParamsImpl<RootParameters... ,End>({});
 	}
-
+	*/
 
 	namespace StaticSampler
 	{
@@ -123,10 +162,10 @@ namespace DX12
 
 
 	template<typename StaticSamplerType,std::size_t Index>
-	struct GetStaticSamplerDesc {};
+	struct StaticSamplerDescGetter {};
 
 	template<std::size_t Index>
-	struct GetStaticSamplerDesc<StaticSampler::Normal,Index>{
+	struct StaticSamplerDescGetter<StaticSampler::Normal,Index>{
 		constexpr static auto Get() {
 
 			D3D12_STATIC_SAMPLER_DESC result{};
@@ -146,7 +185,7 @@ namespace DX12
 	};
 
 	template<std::size_t Index>
-	struct GetStaticSamplerDesc<StaticSampler::Shadow, Index> {
+	struct StaticSamplerDescGetter<StaticSampler::Shadow, Index> {
 		constexpr static auto Get() {
 
 			D3D12_STATIC_SAMPLER_DESC result{};
@@ -166,7 +205,7 @@ namespace DX12
 	};
 
 	template<std::size_t Index>
-	struct GetStaticSamplerDesc<StaticSampler::Toon, Index> {
+	struct StaticSamplerDescGetter<StaticSampler::Toon, Index> {
 		constexpr static auto Get() {
 
 			D3D12_STATIC_SAMPLER_DESC result{};
@@ -191,7 +230,7 @@ namespace DX12
 	{
 		if constexpr (Index<std::tuple_size_v<typename StaticSamplersType::Types>)
 		{
-			resultArray[Index] = GetStaticSamplerDesc<std::tuple_element_t<Index, typename StaticSamplersType::Types>, Index>::Get();
+			resultArray[Index] = StaticSamplerDescGetter<std::tuple_element_t<Index, typename StaticSamplersType::Types>, Index>::Get();
 			GetStaticSamplerArray<StaticSamplersType, Index + 1>(resultArray);
 		}
 	}

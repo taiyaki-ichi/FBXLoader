@@ -72,8 +72,25 @@ int main()
 	static_assert(hoge[2].RegisterSpace == 2);
 
 
+	constexpr auto huga = DX12::GetRootParameters<DX12::RootParameters<
+		DX12::RootParameter<DX12::DescriptorRange::CBV, DX12::DescriptorRange::CBV, DX12::DescriptorRange::SRV>,
+		DX12::RootParameter<DX12::DescriptorRange::CBV, DX12::DescriptorRange::CBV>,
+		DX12::RootParameter<DX12::DescriptorRange::SRV>
+		>>();
 
+	static_assert(std::get<0>(huga)[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+	static_assert(std::get<0>(huga)[1].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+	static_assert(std::get<0>(huga)[2].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SRV);
+	static_assert(std::get<1>(huga)[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+	static_assert(std::get<1>(huga)[1].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+	static_assert(std::get<2>(huga)[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SRV);
 
+	static_assert(std::get<0>(huga)[0].BaseShaderRegister == 0);
+	static_assert(std::get<0>(huga)[1].BaseShaderRegister == 1);
+	static_assert(std::get<0>(huga)[2].BaseShaderRegister == 0);
+	static_assert(std::get<1>(huga)[0].BaseShaderRegister == 2);
+	static_assert(std::get<1>(huga)[1].BaseShaderRegister == 3);
+	static_assert(std::get<2>(huga)[0].BaseShaderRegister == 1);
 
 	return 0;
 }
