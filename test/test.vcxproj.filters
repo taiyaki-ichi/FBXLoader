@@ -10,6 +10,7 @@
     <ClCompile Include="DirectX12\Resource\VertexBufferResource.cpp" />
     <ClCompile Include="DirectX12\RootSignature.cpp" />
     <ClCompile Include="DirectX12\PipelineState.cpp" />
+    <ClCompile Include="DirectX12\Resource\ConstantBufferResource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp" />
@@ -26,6 +27,7 @@
     <ClInclude Include="DirectX12\Utility.hpp" />
     <ClInclude Include="DirectX12\RootSignature.hpp" />
     <ClInclude Include="DirectX12\PipelineState.hpp" />
+    <ClInclude Include="DirectX12\Resource\ConstantBufferResource.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderFile\VertexShader.hlsl" />

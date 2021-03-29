@@ -163,6 +163,7 @@
     <ClCompile Include="DirectX12\CommandList.cpp" />
     <ClCompile Include="DirectX12\Device.cpp" />
     <ClCompile Include="DirectX12\PipelineState.cpp" />
+    <ClCompile Include="DirectX12\Resource\ConstantBufferResource.cpp" />
     <ClCompile Include="DirectX12\Resource\ResourceBase.cpp" />
     <ClCompile Include="DirectX12\Resource\UploadResource.cpp" />
     <ClCompile Include="DirectX12\Resource\VertexBufferResource.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="DirectX12\DescriptorHeap\DescriptorHeapViewType.hpp" />
     <ClInclude Include="DirectX12\Device.hpp" />
     <ClInclude Include="DirectX12\PipelineState.hpp" />
+    <ClInclude Include="DirectX12\Resource\ConstantBufferResource.hpp" />
     <ClInclude Include="DirectX12\Resource\ResourceBase.hpp" />
     <ClInclude Include="DirectX12\Resource\UploadResource.hpp" />
     <ClInclude Include="DirectX12\Resource\VertexBufferResource.hpp" />
