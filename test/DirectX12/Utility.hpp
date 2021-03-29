@@ -31,13 +31,13 @@ namespace DX12
 
 
 	template<typename... DescriptorRangeTypes>
-	struct RootParameter
+	struct DescriptorTable
 	{
 		using Types = std::tuple<DescriptorRangeTypes...>;
 	};
 
 	template<typename... RootParameterTypes>
-	struct RootParameters
+	struct DescrriptorTableArray
 	{
 		using Types = std::tuple<RootParameterTypes...>;
 	};
@@ -56,39 +56,39 @@ namespace DX12
 		return std::make_pair(std::move(descriptorRange), std::move(nums));
 	}
 
-	template<typename RootParameterType, std::size_t Index,std::size_t N>
-	constexpr auto GetDescriptorRangeArrayImpl(std::array<D3D12_DESCRIPTOR_RANGE, N>& result, std::array<std::size_t, 4>&& nums)
+	template<typename DescriptorTableType, std::size_t Index,std::size_t N>
+	constexpr auto GetDescriptorTableImpl(std::array<D3D12_DESCRIPTOR_RANGE, N>& result, std::array<std::size_t, 4>&& nums)
 	{
-		if constexpr (Index == std::tuple_size_v<typename RootParameterType::Types>)
+		if constexpr (Index == std::tuple_size_v<typename DescriptorTableType::Types>)
 		{
 			return std::move(nums);
 		}
 		else
 		{
-			auto [descriptorRange, returnNums] = GetDescriptorRange<std::tuple_element_t<Index, RootParameterType::Types>>(std::move(nums));
+			auto [descriptorRange, returnNums] = GetDescriptorRange<std::tuple_element_t<Index, DescriptorTableType::Types>>(std::move(nums));
 			result[Index] = std::move(descriptorRange);
-			return GetDescriptorRangeArrayImpl<RootParameterType, Index + 1>(result, std::move(returnNums));
+			return GetDescriptorTableImpl<DescriptorTableType, Index + 1>(result, std::move(returnNums));
 		}
 	}
 
-	template<typename RootParameterType>
-	constexpr auto GetDescriptorRangeArray(std::array<std::size_t, 4>&& nums)
+	template<typename DescriptorTableType>
+	constexpr auto GetDescriptorTable(std::array<std::size_t, 4>&& nums)
 	{
-		std::array<D3D12_DESCRIPTOR_RANGE, std::tuple_size_v<typename RootParameterType::Types>> result{};
-		auto returnNums = GetDescriptorRangeArrayImpl<RootParameterType, 0>(result, std::move(nums));
+		std::array<D3D12_DESCRIPTOR_RANGE, std::tuple_size_v<typename DescriptorTableType::Types>> result{};
+		auto returnNums = GetDescriptorTableImpl<DescriptorTableType, 0>(result, std::move(nums));
 		return std::make_pair(std::move(result), std::move(returnNums));
 	}
 
-	template<typename RootParametersType,std::size_t Index>
-	constexpr auto GetRootParametersImpl(std::array<std::size_t, 4>&& nums)
+	template<typename DescriptorTableType,std::size_t Index>
+	constexpr auto GetDescriptorTableTupleDataImpl(std::array<std::size_t, 4>&& nums)
 	{
-		using NowRootParamterType = std::tuple_element_t<Index, typename RootParametersType::Types>;
+		using NowDescriptorTableType = std::tuple_element_t<Index, typename DescriptorTableType::Types>;
 
-		auto [rangeArray, returnNums] = GetDescriptorRangeArray<NowRootParamterType>(std::move(nums));
+		auto [rangeArray, returnNums] = GetDescriptorTable<NowDescriptorTableType>(std::move(nums));
 
-		if constexpr (Index+1 < std::tuple_size_v<typename RootParametersType::Types>)
+		if constexpr (Index+1 < std::tuple_size_v<typename DescriptorTableType::Types>)
 		{
-			auto lest = GetRootParametersImpl<RootParametersType, Index + 1>(std::move(returnNums));
+			auto lest = GetDescriptorTableTupleDataImpl<DescriptorTableType, Index + 1>(std::move(returnNums));
 			return std::tuple_cat(std::make_tuple(std::move(rangeArray)), std::move(lest));
 		}
 		else
@@ -97,50 +97,39 @@ namespace DX12
 		}
 	}
 
-	template<typename RootParametersType>
-	constexpr auto GetRootParameters()
+	template<typename DescriptorTableArrayType>
+	constexpr auto GetDescriptorTableTupleData()
 	{
-		return GetRootParametersImpl<RootParametersType, 0>({});
+		return GetDescriptorTableTupleDataImpl<DescriptorTableArrayType, 0>({});
 	}
 
-
-	/*
-	struct End {};
-
-	template<typename Head,typename... Tail>
-	constexpr std::size_t GetSize()
+	template<std::size_t Index, typename DescriptorTableDataTupleType,typename ResultArray>
+	void GetDescriptorTableStructArrayImpl(const DescriptorTableDataTupleType& descriptorTableArray, ResultArray& resultArray)
 	{
-		if constexpr (std::is_same_v<Head, End>) {
-			return 0;
-		}
-		else {
-			return std::tuple_size_v<Head::Types>+GetSize<Tail...>();
-		}
-	}
-
-	template<typename  First,typename Second, typename... Tail>
-	constexpr auto GetRootParamsImpl(std::array<std::size_t, 4>&& nums)
-	{
-		std::array<D3D12_DESCRIPTOR_RANGE, std::tuple_size_v<typename First::Types>> rangeArray{};
-		auto returnNums = GetDescriptorRangeArray<First, 0>(rangeArray, std::move(nums));
-
-		if constexpr (std::is_same_v<Second, End>)
+		if constexpr (Index < std::tuple_size_v<DescriptorTableDataTupleType>)
 		{
-			return std::make_tuple(std::move(rangeArray));
-		}
-		else 
-		{
-			auto lest = GetRootParamsImpl<Second, Tail...>(std::move(returnNums));
-			return std::tuple_cat(std::make_tuple(std::move(rangeArray)), std::move(lest));
+			D3D12_ROOT_PARAMETER descriptorTable{};
+			descriptorTable.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			descriptorTable.DescriptorTable.pDescriptorRanges = std::get<Index>(descriptorTableArray).data();
+			descriptorTable.DescriptorTable.NumDescriptorRanges = std::get<Index>(descriptorTableArray).size();
+			descriptorTable.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+			resultArray[Index] = std::move(descriptorTable);
+
+			GetDescriptorTableStructArrayImpl<Index + 1>(descriptorTableArray, resultArray);
 		}
 	}
 
-	template<typename... RootParameters>
-	constexpr auto GetRootParams()
+	template<typename DescriptorTableDataTupleType>
+	auto GetDescriptorTableStructArray(const DescriptorTableDataTupleType& descriptorTableArray)
 	{
-		return GetRootParamsImpl<RootParameters... ,End>({});
+		std::array<D3D12_ROOT_PARAMETER, std::tuple_size_v<DescriptorTableDataTupleType>> result{};
+		GetDescriptorTableStructArrayImpl<0>(descriptorTableArray, result);;
+		return result;
 	}
-	*/
+
+
+
 
 	namespace StaticSampler
 	{
@@ -243,5 +232,8 @@ namespace DX12
 
 		return result;
 	}
+
+
+
 }
 

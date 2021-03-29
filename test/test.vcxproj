@@ -165,6 +165,7 @@
     <ClCompile Include="DirectX12\Resource\ResourceBase.cpp" />
     <ClCompile Include="DirectX12\Resource\UploadResource.cpp" />
     <ClCompile Include="DirectX12\Resource\VertexBufferResource.cpp" />
+    <ClCompile Include="DirectX12\RootSignature.cpp" />
     <ClCompile Include="DirectX12\Shader.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -178,6 +179,7 @@
     <ClInclude Include="DirectX12\Resource\ResourceBase.hpp" />
     <ClInclude Include="DirectX12\Resource\UploadResource.hpp" />
     <ClInclude Include="DirectX12\Resource\VertexBufferResource.hpp" />
+    <ClInclude Include="DirectX12\RootSignature.hpp" />
     <ClInclude Include="DirectX12\Shader.hpp" />
     <ClInclude Include="DirectX12\Utility.hpp" />
     <ClInclude Include="Window.hpp" />

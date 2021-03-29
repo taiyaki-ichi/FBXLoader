@@ -8,6 +8,7 @@
     <ClCompile Include="DirectX12\Resource\ResourceBase.cpp" />
     <ClCompile Include="DirectX12\Resource\UploadResource.cpp" />
     <ClCompile Include="DirectX12\Resource\VertexBufferResource.cpp" />
+    <ClCompile Include="DirectX12\RootSignature.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp" />
@@ -22,6 +23,7 @@
     <ClInclude Include="DirectX12\Resource\UploadResource.hpp" />
     <ClInclude Include="DirectX12\Resource\VertexBufferResource.hpp" />
     <ClInclude Include="DirectX12\Utility.hpp" />
+    <ClInclude Include="DirectX12\RootSignature.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderFile\VertexShader.hlsl" />
