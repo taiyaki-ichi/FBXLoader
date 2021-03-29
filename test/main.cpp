@@ -6,6 +6,7 @@
 #include"DirectX12/Shader.hpp"
 #include"DirectX12/Resource/VertexBufferResource.hpp"
 #include"DirectX12/RootSignature.hpp"
+#include"DirectX12/PipelineState.hpp"
 
 #include<iostream>
 #include<fstream>
@@ -68,42 +69,13 @@ int main()
 		>, DX12::StaticSamplers<DX12::StaticSampler::Normal, DX12::StaticSampler::Shadow, DX12::StaticSampler::Toon>
 	>(&device);
 
+	DX12::PipelineState pipelineState{};
+	pipelineState.Initialize(&device, std::move(rootSignature), std::move(vertexShader), std::move(pixcelShader));
+
 
 	while (Window::UpdateWindow());
 	
 
-	/*
-	constexpr auto hoge = DX12::GetStaticSamplerArray<
-		DX12::StaticSamplers<DX12::StaticSampler::Normal, DX12::StaticSampler::Shadow, DX12::StaticSampler::Toon>
-	>();
-
-	static_assert(hoge[0].RegisterSpace == 0);
-	static_assert(hoge[1].RegisterSpace == 1);
-	static_assert(hoge[2].RegisterSpace == 2);
-
-
-	constexpr auto huga = DX12::GetDescriptorTableTupleData<DX12::DescrriptorTableArray<
-		DX12::DescriptorTable<DX12::DescriptorRange::CBV, DX12::DescriptorRange::CBV, DX12::DescriptorRange::SRV>,
-		DX12::DescriptorTable<DX12::DescriptorRange::CBV, DX12::DescriptorRange::CBV>,
-		DX12::DescriptorTable<DX12::DescriptorRange::SRV>
-		>>();
-
-	static_assert(std::get<0>(huga)[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
-	static_assert(std::get<0>(huga)[1].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
-	static_assert(std::get<0>(huga)[2].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SRV);
-	static_assert(std::get<1>(huga)[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
-	static_assert(std::get<1>(huga)[1].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
-	static_assert(std::get<2>(huga)[0].RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SRV);
-
-	static_assert(std::get<0>(huga)[0].BaseShaderRegister == 0);
-	static_assert(std::get<0>(huga)[1].BaseShaderRegister == 1);
-	static_assert(std::get<0>(huga)[2].BaseShaderRegister == 0);
-	static_assert(std::get<1>(huga)[0].BaseShaderRegister == 2);
-	static_assert(std::get<1>(huga)[1].BaseShaderRegister == 3);
-	static_assert(std::get<2>(huga)[0].BaseShaderRegister == 1);
-
-	auto piyo = DX12::GetDescriptorTableStructArray(huga);
-	*/
 
 
 	return 0;
