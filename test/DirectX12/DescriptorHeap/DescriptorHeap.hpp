@@ -53,8 +53,8 @@ namespace DX12
 
 		ID3D12DescriptorHeap*& Get() noexcept;
 
-		D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(std::size_t index);
-		D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(std::size_t index);
+		D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(std::size_t index = 0);
+		D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(std::size_t index = 0);
 
 	};
 
@@ -95,14 +95,14 @@ namespace DX12
 	}
 
 	template<typename DescriptorHeapType>
-	inline void DescriptorHeap<DescriptorHeapType>::Initialize(Device* d, unsigned int size)
+	inline void DescriptorHeap<DescriptorHeapType>::Initialize(Device* d, unsigned int s)
 	{
-		descriptorHeap = DescriptorHeapType::Initialize(d, size);
+		descriptorHeap = DescriptorHeapType::Initialize(d, s);
 		if (!descriptorHeap) 
 			throw "descriptor heap init is failed\n";
 
 		incrementSize = DescriptorHeapType::GetIncrementSize(d);
-		size = size;
+		size = s;
 	}
 
 	template<typename DescriptorHeapType>

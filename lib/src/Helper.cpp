@@ -159,7 +159,7 @@ namespace FBXL
 
 		auto modelMesh = GetSingleChildrenNode(layerElementNormalNode.value(), "Normals");
 
-		auto mappingInformationTypeNode = GetSingleChildrenNode(geometryMesh, "MappingInformationType");
+		auto mappingInformationTypeNode = GetSingleChildrenNode(layerElementNormalNode.value(), "MappingInformationType");
 		bool isByPolygon{};
 		if (mappingInformationTypeNode)
 			isByPolygon = (GetProperty<std::string>(mappingInformationTypeNode.value(), 0) == "ByPolygonVertex");

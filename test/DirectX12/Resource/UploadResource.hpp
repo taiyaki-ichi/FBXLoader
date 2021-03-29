@@ -12,6 +12,9 @@ namespace DX12
 		UploadResource() = default;
 		virtual ~UploadResource() = default;
 
+		UploadResource(UploadResource&&) noexcept = default;
+		UploadResource& operator=(UploadResource&&) noexcept = default;
+
 		void Initialize(Device*, std::size_t size);
 
 		//コンテナ、配列用

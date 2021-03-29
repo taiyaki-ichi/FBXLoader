@@ -438,8 +438,9 @@ namespace FBXL
 
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
 
-		assert((normalIsByPolygon && normals.size() == indeces.size()) ||
-			(!normalIsByPolygon && normals.size() == vertices.size()));
+		
+		//assert((normalIsByPolygon && normals.size() == indeces.size()) ||
+			//(!normalIsByPolygon && normals.size() == vertices.size()));
 
 		//uv‚ÍByPolygonVertexˆê‘ð‚Ì‚Í‚¸
 		assert(uvs.size() == indeces.size());
