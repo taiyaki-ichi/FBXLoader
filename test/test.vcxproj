@@ -84,12 +84,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\zlib-1.2.11;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\zlib-1.2.11\contrib\vstudio\vc14\x86\ZlibStatDebug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\zlib-1.2.11\contrib\vstudio\vc14\x64\ZlibStatDebug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\zlib-1.2.11;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\zlib-1.2.11\contrib\vstudio\vc14\x86\ZlibStatDebug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\zlib-1.2.11\contrib\vstudio\vc14\x64\ZlibStatDebug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

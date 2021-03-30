@@ -6,6 +6,8 @@
 #include"CommandList.hpp"
 #include<vector>
 
+#include<DirectXMath.h>
+
 namespace DX12
 {
 	//とりあえず
@@ -22,13 +24,20 @@ namespace DX12
 		double specularFactor;
 	};
 
-
+	//とりあえず　
+	struct SceneData
+	{
+		DirectX::XMMATRIX view{};
+		DirectX::XMMATRIX proj{};
+	};
+	
 
 	class FBXModel
 	{
 		VertexBufferResource vertexBufferResource{};
 		DescriptorHeap<DescriptorHeapType::CBV_SRV_UAV> descriptorHeap{};
-		std::vector<ConstantBufferResource> constantBufferResources{};
+		std::vector<ConstantBufferResource> materialConstantBufferResources{};
+		ConstantBufferResource sceneDataConstantBufferResource{};
 
 		std::vector<std::int32_t> materialRange{};
 
@@ -37,6 +46,8 @@ namespace DX12
 		void Initialize(Device*, FBXL::Model3D<Vector2D, Vector3D>&&);
 
 		void Draw(CommandList*);
+
+		void MapSceneData(SceneData&&);
 	};
 
 	//
@@ -46,12 +57,15 @@ namespace DX12
 	template<typename Vector2D, typename Vector3D>
 	inline void FBXModel::Initialize(Device* device, FBXL::Model3D<Vector2D, Vector3D>&& model)
 	{
-		vertexBufferResource.Initialize(device, sizeof(model.vertices), sizeof(typename decltype(model.vertices)::value_type));
+		vertexBufferResource.Initialize(device, sizeof(model.vertices[0]) * model.vertices.size(), sizeof(model.vertices[0]));
 		vertexBufferResource.Map(std::move(model.vertices));
 
-		descriptorHeap.Initialize(device, model.material.size());
+		//SceneDataとマテリアルの分
+		descriptorHeap.Initialize(device, 1 + model.material.size());
 
-		constantBufferResources.resize(model.material.size());
+		sceneDataConstantBufferResource.Initialize(device, sizeof(SceneData));
+
+		materialConstantBufferResources.resize(model.material.size());
 		for (std::size_t i = 0; i < model.material.size(); i++)
 		{
 			ConstantBufferResource tmp{};
@@ -59,10 +73,11 @@ namespace DX12
 			FBXL::Material<Vector3D> hoge[] = { std::move(model.material[i]) };
 			tmp.Map(hoge);
 
-			constantBufferResources[i] = std::move(tmp);
+			materialConstantBufferResources[i] = std::move(tmp);
 		}
 
-		for (auto& materialBuff : constantBufferResources)
+		descriptorHeap.PushBackView(device, &sceneDataConstantBufferResource);
+		for (auto& materialBuff : materialConstantBufferResources)
 			descriptorHeap.PushBackView(device, &materialBuff);
 
 		materialRange = std::move(model.materialRange);
@@ -77,13 +92,24 @@ namespace DX12
 
 		cl->Get()->SetDescriptorHeaps(1, &descriptorHeap.Get());
 
+		cl->Get()->SetGraphicsRootDescriptorTable(0, descriptorHeap.GetGPUHandle(0));
+
 		for (std::size_t i = 0; i < materialRange.size(); i++)
 		{
-			cl->Get()->SetGraphicsRootDescriptorTable(0, descriptorHeap.GetGPUHandle(i));
-			//cl->Get()->DrawInstanced(materialRange[i], materialRange[i] / 3, vertexOffset, 3);
+			cl->Get()->SetGraphicsRootDescriptorTable(1, descriptorHeap.GetGPUHandle(i + 1));
+			cl->Get()->DrawInstanced(materialRange[i], materialRange[i] / 3, vertexOffset, 0);
 
 			vertexOffset += materialRange[i];
 		}
+	}
 
+	inline void FBXModel::MapSceneData(SceneData&& sceneData)
+	{
+		SceneData* ptr = nullptr;
+		sceneDataConstantBufferResource.Get()->Map(0, nullptr, (void**)&ptr);
+
+		*ptr = std::move(sceneData);
+
+		sceneDataConstantBufferResource.Get()->Unmap(0, nullptr);
 	}
 }

@@ -61,14 +61,15 @@ int main()
 	DX12::RootSignature rootSignature{};
 	rootSignature.Initialize<
 		DX12::DescrriptorTableArray<
+		DX12::DescriptorTable<DX12::DescriptorRange::CBV>,
 		DX12::DescriptorTable<DX12::DescriptorRange::CBV>
-		>, DX12::StaticSamplers<DX12::StaticSampler::Normal>
+	>, DX12::StaticSamplers<DX12::StaticSampler::Normal>
 	>(&device);
 
 	DX12::PipelineState pipelineState{};
 	pipelineState.Initialize(&device, std::move(rootSignature), std::move(vertexShader), std::move(pixcelShader));
 
-	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/test_material.fbx");
+	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/cube.fbx");
 
 	DX12::FBXModel fbxModel{};
 	fbxModel.Initialize(&device, std::move(model.value()));
@@ -87,11 +88,27 @@ int main()
 	scissorrect.right = scissorrect.left + windowWidth;//êÿÇËî≤Ç´âEç¿ïW
 	scissorrect.bottom = scissorrect.top + windowHeight;//êÿÇËî≤Ç´â∫ç¿ïW
 
+	DirectX::XMFLOAT3 eye{ 0,7,-6 };
+	DirectX::XMFLOAT3 target{ 0,0,0 };
+	DirectX::XMFLOAT3 up{ 0,1,0 };
+	auto view = DirectX::XMMatrixLookAtLH(
+		DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
+	auto proj = DirectX::XMMatrixPerspectiveFovLH(
+		DirectX::XM_PIDIV2,
+		static_cast<float>(windowWidth) / static_cast<float>(windowHeight),
+		1.f,
+		100.f
+	);
 
-
-
+	auto cnt = 0;
 	while (Window::UpdateWindow())
 	{
+		DirectX::XMFLOAT3 eye{ 5 * std::sin(cnt / 100.f),5,5 * std::cos(cnt / 100.f) };
+		view = DirectX::XMMatrixLookAtLH(
+			DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
+		cnt++;
+
+		fbxModel.MapSceneData({ view,proj });
 
 		doubleBuffer.BarriorToBackbuffer(&commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		commandList.SetRenderTarget(doubleBuffer.GetBackbufferCpuHandle());
