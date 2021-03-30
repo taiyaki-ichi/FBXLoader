@@ -29,6 +29,7 @@ namespace DX12
 	{
 		DirectX::XMMATRIX view{};
 		DirectX::XMMATRIX proj{};
+		DirectX::XMFLOAT3 eye{};
 	};
 	
 

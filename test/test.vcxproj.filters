@@ -12,6 +12,7 @@
     <ClCompile Include="DirectX12\PipelineState.cpp" />
     <ClCompile Include="DirectX12\Resource\ConstantBufferResource.cpp" />
     <ClCompile Include="DirectX12\DoubleBuffer.cpp" />
+    <ClCompile Include="DirectX12\Resource\DepthStencilBufferResource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp" />
@@ -32,9 +33,13 @@
     <ClInclude Include="DirectX12\FBXModel.hpp" />
     <ClInclude Include="DirectX12\DoubleBuffer.hpp" />
     <ClInclude Include="DirectX12\Resource\DoubleBufferResource.hpp" />
+    <ClInclude Include="DirectX12\Resource\DepthStencilBufferResource.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderFile\VertexShader.hlsl" />
     <FxCompile Include="ShaderFile\PixelShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ShaderFile\Header.hlsli" />
   </ItemGroup>
 </Project>

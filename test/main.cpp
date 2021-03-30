@@ -7,6 +7,7 @@
 #include"DirectX12/PipelineState.hpp"
 #include"DirectX12/FBXModel.hpp"
 #include"DirectX12/DoubleBuffer.hpp"
+#include"DirectX12/Resource/DepthStencilBufferResource.hpp"
 
 #include<DirectXMath.h>
 
@@ -26,8 +27,6 @@ struct Vector2
 {
 	float x{};
 	float y{};
-
-
 };
 
 
@@ -69,7 +68,7 @@ int main()
 	DX12::PipelineState pipelineState{};
 	pipelineState.Initialize(&device, std::move(rootSignature), std::move(vertexShader), std::move(pixcelShader));
 
-	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/cube.fbx");
+	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/FOX.fbx");
 
 	DX12::FBXModel fbxModel{};
 	fbxModel.Initialize(&device, std::move(model.value()));
@@ -100,20 +99,32 @@ int main()
 		500.f
 	);
 
+
+	DX12::DepthStencilBufferResource depthStencilBufferResource{};
+	depthStencilBufferResource.Initialize(&device, windowWidth, windowHeight);
+
+	DX12::DescriptorHeap<DX12::DescriptorHeapType::DSV> depthStencilDescriptorHeap{};
+	depthStencilDescriptorHeap.Initialize(&device, 1);
+
+	depthStencilDescriptorHeap.PushBackView(&device, &depthStencilBufferResource);
+
 	auto cnt = 0;
 	while (Window::UpdateWindow())
 	{
-		DirectX::XMFLOAT3 eye{ 300 * std::sin(cnt / 100.f),5,300 * std::cos(cnt / 100.f) };
+		DirectX::XMFLOAT3 eye{ 100 * std::sin(cnt / 100.f),0,100 * std::cos(cnt / 100.f) };
 		view = DirectX::XMMatrixLookAtLH(
 			DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
 		cnt++;
 
-		fbxModel.MapSceneData({ view,proj });
+		fbxModel.MapSceneData({ view,proj ,eye });
 
 		doubleBuffer.BarriorToBackbuffer(&commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		commandList.SetRenderTarget(doubleBuffer.GetBackbufferCpuHandle());
+		commandList.SetRenderTarget(doubleBuffer.GetBackbufferCpuHandle(), depthStencilDescriptorHeap.GetCPUHandle());
 
 		doubleBuffer.ClearBackBuffer(&commandList);
+
+		commandList.Get()->ClearDepthStencilView(depthStencilDescriptorHeap.GetCPUHandle(),
+			D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 
 		commandList.SetViewport(viewport);
 		commandList.SetScissorRect(scissorrect);

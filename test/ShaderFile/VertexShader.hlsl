@@ -1,10 +1,20 @@
+#include"Header.hlsli"
 
 cbuffer SceneData : register(b0) {
 	matrix view;
 	matrix proj;
+	float3 eye;
 };
 
-float4 main(float4 pos : POSITION, float4 normal : NORMAL, float2 uv : TEXCOORD) : SV_POSITION
+DataType main(float4 pos : POSITION, float4 normal : NORMAL, float2 uv : TEXCOORD) 
 {
-	return mul(mul(proj, view), pos);
+	DataType output;
+	output.svpos = mul(mul(proj, view), pos);
+	output.pos = pos;
+	normal.w = 0;
+	output.normal = normal;
+	output.uv = uv;
+	output.ray = normalize(pos.xyz - mul(view, eye));
+
+	return output;
 }

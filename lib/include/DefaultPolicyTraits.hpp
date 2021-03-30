@@ -29,7 +29,6 @@ namespace FBXL
 	{
 		static Vector3D Create(double x, double y, double z)
 		{
-			//‰¼
 			return Vector3D{ static_cast<float>(x),static_cast<float>(y),static_cast<float>(z) };
 		}
 		
@@ -38,8 +37,8 @@ namespace FBXL
 	template<typename Vector2D>
 	struct DefaultCreateVector2D
 	{
-		static Vector2D Create(double x, double y) {
-			//‰¼
+		static Vector2D Create(double x, double y) 
+		{
 			return Vector2D{ static_cast<float>(x),static_cast<float>(y) };
 		}
 	};

@@ -74,14 +74,14 @@ namespace DX12
 
 		//Žc‚è
 		graphicsPipelineDesc.RasterizerState.FrontCounterClockwise = false;
-		graphicsPipelineDesc.RasterizerState.DepthBias = 0;// D3D12_DEFAULT_DEPTH_BIAS;
+		graphicsPipelineDesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
 		graphicsPipelineDesc.RasterizerState.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-		graphicsPipelineDesc.RasterizerState.SlopeScaledDepthBias = 0.01f;// D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+		graphicsPipelineDesc.RasterizerState.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
 		graphicsPipelineDesc.RasterizerState.AntialiasedLineEnable = false;
 		graphicsPipelineDesc.RasterizerState.ForcedSampleCount = 0;
 		graphicsPipelineDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-		graphicsPipelineDesc.DepthStencilState.DepthEnable = false;
+		graphicsPipelineDesc.DepthStencilState.DepthEnable = true;
 		graphicsPipelineDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 		graphicsPipelineDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 		graphicsPipelineDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
