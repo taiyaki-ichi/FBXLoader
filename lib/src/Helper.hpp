@@ -144,24 +144,18 @@ namespace FBXL
 			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Transration", 4, 5, 6);
 			if (vec)
 				result.localTranslation = vec.value();
-			else
-				result.localTranslation = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
 			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Rotation", 4, 5, 6);
 			if (vec)
 				result.localRotation = vec.value();
-			else
-				result.localRotation = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		{
 			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Scaling", 4, 5, 6);
 			if (vec)
 				result.localScaling = vec.value();
-			else
-				result.localScaling = CreateVector3DPolicy::Create(0.0, 0.0, 0.0);
 		}
 
 		return std::make_pair(std::move(result), index);
@@ -727,11 +721,15 @@ namespace FBXL
 	{
 		for (std::size_t i = 0; i < geometryMesh.vertices.size(); i++)
 		{
-			geometryMesh.vertices[i].position = ScalinngVector3DPolicy::Scalling(std::move(geometryMesh.vertices[i].position), modelMesh.localScaling);
-			geometryMesh.vertices[i].position = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].position), modelMesh.localRotation);
-			geometryMesh.vertices[i].position = TranslationVector3DPolicy::Translation(std::move(geometryMesh.vertices[i].position), modelMesh.localTranslation);
-
-			geometryMesh.vertices[i].normal = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].normal), modelMesh.localRotation);
+			if (modelMesh.localScaling)
+				geometryMesh.vertices[i].position = ScalinngVector3DPolicy::Scalling(std::move(geometryMesh.vertices[i].position), modelMesh.localScaling.value());
+			if (modelMesh.localRotation) {
+				geometryMesh.vertices[i].position = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].position), modelMesh.localRotation.value());
+				geometryMesh.vertices[i].normal = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].normal), modelMesh.localRotation.value());
+			}
+			if (modelMesh.localTranslation)
+				geometryMesh.vertices[i].position = TranslationVector3DPolicy::Translation(std::move(geometryMesh.vertices[i].position), modelMesh.localTranslation.value());
+	
 		}
 
 		return geometryMesh;

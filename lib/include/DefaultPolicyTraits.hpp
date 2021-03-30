@@ -29,7 +29,8 @@ namespace FBXL
 	{
 		static Vector3D Create(double x, double y, double z)
 		{
-			return Vector3D{ x,y,z };
+			//‰¼
+			return Vector3D{ static_cast<float>(x),static_cast<float>(y),static_cast<float>(z) };
 		}
 		
 	};
@@ -38,7 +39,8 @@ namespace FBXL
 	struct DefaultCreateVector2D
 	{
 		static Vector2D Create(double x, double y) {
-			return Vector2D{ x,y };
+			//‰¼
+			return Vector2D{ static_cast<float>(x),static_cast<float>(y) };
 		}
 	};
 
@@ -47,9 +49,9 @@ namespace FBXL
 	{
 		static Vector3D Rotation(Vector3D&& vec, const Vector3D& rotationVec)
 		{
-			auto rot = [](double& a, double& b, double rot) {
-				double memoA = a;
-				double memoB = b;
+			auto rot = [](auto& a, auto& b, float rot) {
+				auto memoA = a;
+				auto memoB = b;
 				a = memoA * std::cos(rot) - memoB * std::sin(rot);
 				b = memoA * std::sin(rot) + memoB * std::cos(rot);
 			};

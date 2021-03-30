@@ -101,6 +101,8 @@ namespace DX12
 
 			vertexOffset += materialRange[i];
 		}
+
+		//cl->Get()->DrawInstanced(vertexOffset, 3, 0, 0);
 	}
 
 	inline void FBXModel::MapSceneData(SceneData&& sceneData)
