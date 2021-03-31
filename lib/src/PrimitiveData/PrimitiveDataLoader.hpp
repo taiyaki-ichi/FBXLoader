@@ -1,4 +1,6 @@
-#include"PrimitiveDataLoader.hpp"
+#pragma once
+#include"../../include/DataStruct.hpp"
+#include"PrimitiveDataStruct.hpp"
 
 #ifndef ZLIB_WINAPI
 #	define ZLIB_WINAPI
@@ -31,7 +33,7 @@ namespace FBXL
 
 
 		template<typename T>
-		void ReadZipCompressedBuffer(std::vector<T>& result, std::vector<unsigned char>&& inBuffer)
+		inline void ReadZipCompressedBuffer(std::vector<T>& result, std::vector<unsigned char>&& inBuffer)
 		{
 			z_stream strm;
 
@@ -104,7 +106,7 @@ namespace FBXL
 			return result;
 		}
 
-		std::string ReadStringType(std::istream& is)
+		inline std::string ReadStringType(std::istream& is)
 		{
 			auto length = ReadPrimitiveType<std::uint32_t>(is);
 
@@ -116,7 +118,7 @@ namespace FBXL
 			return result;
 		}
 
-		std::vector<unsigned char> ReadRawBinaryType(std::istream& is)
+		inline std::vector<unsigned char> ReadRawBinaryType(std::istream& is)
 		{
 			auto length = ReadPrimitiveType<std::uint32_t>(is);
 
@@ -262,7 +264,7 @@ namespace FBXL
 	}
 
 
-	PrimitiveData LoadPrimitiveData(const std::string& filePath)
+	inline PrimitiveData LoadPrimitiveData(const std::string& filePath)
 	{
 		PrimitiveData result{};
 		result.filePath = filePath;

@@ -1,7 +1,9 @@
 #pragma once
 #include"LoaderImpl.hpp"
-#include"PrimitiveDataLoader.hpp"
-#include"Helper.hpp"
+#include"PrimitiveData/PrimitiveDataLoader.hpp"
+#include"FBXComponents/GlobalSettings/GlobalSettingsFunction.hpp"
+#include"FBXComponents/Objects/ObjectsFunction.hpp"
+#include"Model3DFunction.hpp"
 
 namespace FBXL
 {

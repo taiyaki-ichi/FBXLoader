@@ -17,13 +17,25 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DataStruct.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DefaultPolicyTraits.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Loader.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)src\Helper.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)src\ImplDataStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Connections\ConnectionsFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Connections\ConnectionsStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\GlobalSettings\GlobalSettingsFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\GlobalSettings\GlobalSettingsStruct.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\LoaderImpl.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)src\PrimitiveDataLoader.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\Helper.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\PrimitiveDataLoader.cpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\Model3DFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\Model3DParts\Model3DPartsFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\Model3DParts\Model3DPartsStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\Geometry\GeometryFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\Geometry\GeometryStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\Material\MaterialFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\Model\ModelFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\Model\ModelStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\ObjectsFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\ObjectsStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\Texture\TextureFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Objects\Texture\TextureStruct.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\PrimitiveData\PrimitiveDataFunction.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\PrimitiveData\PrimitiveDataLoader.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\PrimitiveData\PrimitiveDataStruct.hpp" />
   </ItemGroup>
 </Project>
