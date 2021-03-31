@@ -19,6 +19,20 @@ namespace FBXL
 		return std::nullopt;
 	}
 
+	std::optional<Node> RemoveTopLevelNode(PrimitiveData* primitiveData, const std::string& nodeName)
+	{
+		for (auto iter = primitiveData->nodes.begin(); iter != primitiveData->nodes.end(); iter++)
+		{
+			if (iter->name == nodeName) {
+				auto result = std::move(*iter);
+				primitiveData->nodes.erase(iter);
+				return result;
+			}
+		}
+
+		return std::nullopt;
+	}
+
 
 	std::vector<const Node*> GetChildrenNodes(const Node* node, const std::string& name)
 	{
@@ -160,6 +174,42 @@ namespace FBXL
 				result.emplace_back(c.first);
 			}
 		}
+
+		return result;
+	}
+
+	GlobalSettings GetGlobalSettings(Node&& globalSettingsNode)
+	{
+		assert(globalSettingsNode.name == "GlobalSettings");
+
+		GlobalSettings result{};
+
+		auto globalSettingsProp70 = GetSingleChildrenNode(&globalSettingsNode, "Properties70");
+
+		auto coordAxis = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "CoordAxis", 4);
+		if (coordAxis)
+			result.coordAxis = coordAxis.value();
+
+		auto coordAxisSign = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "CoordAxisSign", 4);
+		if (coordAxisSign)
+			result.coordAxisSign = coordAxisSign.value();
+
+		auto upAxis = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "UpAxis", 4);
+		if (upAxis)
+			result.upAxis = upAxis.value();
+
+		auto upAxisSign = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "UpAxisSign", 4);
+		if (upAxisSign)
+			result.upAxisSign = upAxisSign.value();
+
+
+		auto frontAxis = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "FrontAxis", 4);
+		if (frontAxis)
+			result.frontAxis = frontAxis.value();
+
+		auto frontAxisSign = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "FrontAxisSign", 4);
+		if (frontAxisSign)
+			result.frontAxisSign = frontAxisSign.value();
 
 		return result;
 	}

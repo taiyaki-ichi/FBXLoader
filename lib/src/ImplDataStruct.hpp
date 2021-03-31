@@ -79,5 +79,16 @@ namespace FBXL
 	template<typename Vector2D, typename Vector3D>
 	using Model3DParts = std::pair<GeometryMesh<Vector2D, Vector3D>, std::vector<std::int64_t>>;
 
+	
+	struct GlobalSettings
+	{
+		std::int32_t coordAxis;
+		std::int32_t coordAxisSign;
+		std::int32_t upAxis;
+		std::int32_t upAxisSign;
+		std::int32_t frontAxis;
+		std::int32_t frontAxisSign;
 
+	};
+	
 }

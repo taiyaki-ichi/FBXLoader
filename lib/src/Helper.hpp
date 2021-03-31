@@ -12,6 +12,7 @@
 namespace FBXL
 {
 	std::optional<const Node*> GetTopLevelNode(const PrimitiveData* primitiveData, const std::string& nodeName);
+	std::optional<Node> RemoveTopLevelNode(PrimitiveData* primitiveData, const std::string& nodeName);
 
 	//node.mChildrenのノードのうちnameが一致するノードの参照の取得
 	std::vector<const Node*> GetChildrenNodes(const Node* modelMesh, const std::string& name);
@@ -54,7 +55,7 @@ namespace FBXL
 
 	//geometryMeshのノードからシンプルな頂点データなどを取得
 	template<typename Vector2D, typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
-	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh);
+	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings);
 
 	//geometryMeshから取得したシンプルなデータを加工
 	template<typename Vector2D, typename Vector3D>
@@ -68,7 +69,7 @@ namespace FBXL
 
 	//GeometryMeshのノードからデータを取得
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh);
+	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh, const GlobalSettings& globalSettings);
 
 	//materialのノードからデータを取得
 	template<typename Vector3D, typename CreateVector3DPolicy>
@@ -86,6 +87,7 @@ namespace FBXL
 	//dstからインデックスを取得
 	std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections, const ObjectOrPropertyIndex& key);
 
+	GlobalSettings GetGlobalSettings(Node&& globalSettingNode);
 
 	//TransformのPolicyが追加される予定
 	template<typename Vector2D, typename Vector3D>
@@ -124,10 +126,13 @@ namespace FBXL
 	template<typename CreateVector3DPolicy>
 	struct CreateVector3DInterfacePolicy
 	{
-		static auto Invoke(double a, double b, double c,std::size_t indexX,std::size_t indexY,std::size_t indexZ)
+		static auto Invoke(double a, double b, double c, const GlobalSettings& globalSettings)
 		{
 			double nums[] = { a,b,c };
-			return CreateVector3DPolicy::Create(nums[indexX], nums[indexY], nums[indexZ]);
+			return CreateVector3DPolicy::Create(
+				nums[globalSettings.coordAxis] * globalSettings.coordAxisSign,
+				nums[globalSettings.upAxis] * globalSettings.upAxisSign, 
+				nums[globalSettings.frontAxis] * globalSettings.coordAxisSign);
 		}
 	};
 
@@ -178,7 +183,7 @@ namespace FBXL
 
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh, std::size_t indexX, std::size_t indexY, std::size_t indexZ)
+	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh, const GlobalSettings& globalSettings)
 	{
 		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
 			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");
@@ -192,7 +197,7 @@ namespace FBXL
 
 		auto index = GetProperty<std::int64_t>(&geormetryMesh, 0).value();
 
-		auto vertexAndMaterialNumPairs = GetVertexAndMaterialNumberPairs<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh, indexX, indexY, indexZ);
+		auto vertexAndMaterialNumPairs = GetVertexAndMaterialNumberPairs<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh,globalSettings);
 		auto [vertices, materialRange] = GetVerticesAndMaterialRange(std::move(vertexAndMaterialNumPairs));
 		result.vertices = std::move(vertices);
 		result.materialRange = std::move(materialRange);
@@ -432,7 +437,7 @@ namespace FBXL
 
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh,std::size_t indexX,std::size_t indexY,std::size_t indexZ)
+	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh,const GlobalSettings& globalSettings)
 	{
 		std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> result{};
 
@@ -455,19 +460,15 @@ namespace FBXL
 		assert(uvs.size() == indeces.size());
 
 
-		auto pushBack = [&vertices, &normals, normalIsByPolygon, &uvs, &result, &materialIndeces,indexX,indexY,indexZ](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset) {
+		auto pushBack = [&vertices, &normals, normalIsByPolygon, &uvs, &result, &materialIndeces,&globalSettings](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset) {
 
 			Vertex<Vector2D, Vector3D> tmpVec;
-			tmpVec.position = CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(vertices[index1], vertices[index2], vertices[index3], indexX, indexY, indexZ);
-			//CreateVector3DPolicy::Create(vertices[index1], vertices[index2], vertices[index3]);
+			tmpVec.position = CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(vertices[index1], vertices[index2], vertices[index3], globalSettings);
 
 			if (normalIsByPolygon)
-				tmpVec.normal = CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(normals[offset * 3], normals[offset * 3 + 1], normals[offset * 3 + 2], indexX, indexY, indexZ);
-			//CreateVector3DPolicy::Create(normals[offset * 3], normals[offset * 3 + 1], normals[offset * 3 + 2]);
+				tmpVec.normal = CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(normals[offset * 3], normals[offset * 3 + 1], normals[offset * 3 + 2], globalSettings);
 			else
-				tmpVec.normal = CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(normals[index1], normals[index2], normals[index3], indexX, indexY, indexZ);
-			//CreateVector3DPolicy::Create(normals[index1], normals[index2], normals[index3]);
-
+				tmpVec.normal = CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(normals[index1], normals[index2], normals[index3], globalSettings);
 
 			tmpVec.uv = uvs[offset];
 
@@ -534,7 +535,7 @@ namespace FBXL
 
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::optional<Objects<Vector2D, Vector3D>> GetObjects(Node&& objects,std::size_t indexX,std::size_t indexY,std::size_t indexZ)
+	std::optional<Objects<Vector2D, Vector3D>> GetObjects(Node&& objects,const GlobalSettings& globalSettings)
 	{
 		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
 			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");
@@ -558,7 +559,7 @@ namespace FBXL
 			}
 			else if (node.name == "Geometry" && GetProperty<std::string>(&node, 2) == "Mesh")
 			{
-				auto [geometryMesh, index] = GetGeometryMesh<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(node), indexX, indexY, indexZ);
+				auto [geometryMesh, index] = GetGeometryMesh<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(node), globalSettings);
 				geometryMeshes.emplace(index, std::move(geometryMesh));
 			}
 			else if (node.name == "Material")
