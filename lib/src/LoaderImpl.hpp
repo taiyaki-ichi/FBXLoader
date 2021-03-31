@@ -14,10 +14,16 @@ namespace FBXL
 		std::optional<Objects<Vector2D, Vector3D>> objects = std::nullopt;
 		std::optional<Connections> connections = std::nullopt;
 
+		auto globalSettings = GetTopLevelNode(&primitiveData, "GlobalSettings");
+		auto globalSettingsProp70 = GetSingleChildrenNode(globalSettings.value(), "Properties70");
+		auto indexX = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "CoordAxis", 4);
+		auto indexY = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "UpAxis", 4);
+		auto indexZ = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "FrontAxis", 4);
+
 		for (auto& node : primitiveData.nodes)
 		{
 			if (node.name == "Objects")
-				objects = GetObjects<Vector2D, Vector3D,CreateVector2DPolicy,CreateVector3DPolicy>(std::move(node));
+				objects = GetObjects<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(node), indexX.value(), indexY.value(), indexZ.value());
 			else if (node.name == "Connections")
 				connections = GetConnections(std::move(node));
 		}

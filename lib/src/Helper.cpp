@@ -8,6 +8,17 @@
 
 namespace FBXL
 {
+	std::optional<const Node*> GetTopLevelNode(const PrimitiveData* primitiveData, const std::string& nodeName)
+	{
+		for (auto& node : primitiveData->nodes)
+		{
+			if (node.name == nodeName)
+				return &node;
+		}
+
+		return std::nullopt;
+	}
+
 
 	std::vector<const Node*> GetChildrenNodes(const Node* node, const std::string& name)
 	{

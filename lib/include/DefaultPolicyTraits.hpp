@@ -48,16 +48,16 @@ namespace FBXL
 	{
 		static Vector3D Rotation(Vector3D&& vec, const Vector3D& rotationVec)
 		{
-			auto rot = [](auto& a, auto& b, float rot) {
-				auto memoA = a;
-				auto memoB = b;
+			auto rot = [](float& a, float& b, float rot) {
+				float memoA = a;
+				float memoB = b;
 				a = memoA * std::cos(rot) - memoB * std::sin(rot);
 				b = memoA * std::sin(rot) + memoB * std::cos(rot);
 			};
 
-			rot(vec.x, vec.y, rotationVec.z);
-			rot(vec.y, vec.z, rotationVec.x);
-			rot(vec.z, vec.x, rotationVec.y);
+			rot(vec.x, vec.y, rotationVec.z / 180.f * PI);
+			rot(vec.y, vec.z, rotationVec.x / 180.f * PI);
+			rot(vec.z, vec.x, rotationVec.y / 180.f * PI);
 
 			return vec;
 		}
