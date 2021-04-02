@@ -39,7 +39,9 @@ namespace FBXL
 			auto model3DParts = GetModel3DParts<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
 				std::move(modelMeshes), std::move(geometryMeshes), materials, connections.value());
 
-			auto m = AddTextureInfomarion<Vector3D>(std::move(materials), std::move(textures), connections.value());
+			auto folderPath = std::string{ filePath.begin(),filePath.begin() + filePath.rfind('/') + 1 };
+
+			auto m = AddTextureInfomarion<Vector3D>(std::move(materials), std::move(textures), connections.value(), std::move(folderPath));
 
 			return  GetModel3D<Vector2D, Vector3D>(std::move(model3DParts), std::move(m));
 		}

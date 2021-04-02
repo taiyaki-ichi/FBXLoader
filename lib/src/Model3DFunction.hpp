@@ -9,7 +9,8 @@ namespace FBXL
 	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomarion(
 		std::unordered_map<std::int64_t, Material<Vector3D>>&& materials,
 		std::unordered_map<std::int64_t, Texture>&& textures,
-		const Connections& connectios);
+		const Connections& connectios,
+		std::string&& folderPath);
 
 	//Model3D�̎擾
 	template<typename Vector2D, typename Vector3D>
@@ -26,7 +27,8 @@ namespace FBXL
 	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomarion(
 		std::unordered_map<std::int64_t, Material<Vector3D>>&& materials,
 		std::unordered_map<std::int64_t, Texture>&& textures,
-		const Connections& connectios)
+		const Connections& connectios,
+		std::string&& folderPath)
 	{
 		for (auto& [index, material] : materials)
 		{
@@ -42,7 +44,7 @@ namespace FBXL
 
 					auto textureIter = textures.find(index);
 					if (textureIter != textures.end())
-						material.diffuseColorTexturePath = textureIter->second.relativeFileName;
+						material.diffuseColorTexturePath = folderPath + textureIter->second.relativeFileName;
 				}
 			}
 		}

@@ -1,6 +1,6 @@
 #pragma once
 #include"TextureStruct.hpp"
-#include"../../PrimitiveData/PrimitiveDataFunction.hpp"
+#include"../../../PrimitiveData/PrimitiveDataFunction.hpp"
 
 namespace FBXL
 {

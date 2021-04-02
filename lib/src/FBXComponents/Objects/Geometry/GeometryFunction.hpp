@@ -103,7 +103,7 @@ namespace FBXL
 			assert(uvs.size() == indeces.size());
 
 
-			auto pushBack = [&vertices, &normals, normalIsByPolygon, &uvs, &result, &materialIndeces, &globalSettings](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset) {
+			auto pushBack = [&vertices, &normals, normalIsByPolygon, &uvs, &result, &materialIndeces, &globalSettings](std::size_t index1, std::size_t index2, std::size_t index3, std::size_t offset,std::size_t i) {
 
 				Vertex<Vector2D, Vector3D> tmpVec;
 				tmpVec.position = CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(vertices[index1], vertices[index2], vertices[index3], globalSettings);
@@ -113,7 +113,7 @@ namespace FBXL
 				else
 					tmpVec.normal = CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(normals[index1], normals[index2], normals[index3], globalSettings);
 
-				tmpVec.uv = uvs[offset];
+				tmpVec.uv = uvs[i];
 
 
 				if (materialIndeces && materialIndeces.value().size() > 1)
@@ -132,16 +132,16 @@ namespace FBXL
 
 				while (indeces[j + 1] >= 0)
 				{
-					pushBack(indeces[i] * 3, indeces[i] * 3 + 1, indeces[i] * 3 + 2, offset);
-					pushBack(indeces[j] * 3, indeces[j] * 3 + 1, indeces[j] * 3 + 2, offset);
-					pushBack(indeces[j + 1] * 3, indeces[j + 1] * 3 + 1, indeces[j + 1] * 3 + 2, offset);
+					pushBack(indeces[i] * 3, indeces[i] * 3 + 1, indeces[i] * 3 + 2, offset, i);
+					pushBack(indeces[j] * 3, indeces[j] * 3 + 1, indeces[j] * 3 + 2, offset, j);
+					pushBack(indeces[j + 1] * 3, indeces[j + 1] * 3 + 1, indeces[j + 1] * 3 + 2, offset, j + 1);
 
 					j++;
 				}
 
-				pushBack(indeces[i] * 3, indeces[i] * 3 + 1, indeces[i] * 3 + 2, offset);
-				pushBack(indeces[j] * 3, indeces[j] * 3 + 1, indeces[j] * 3 + 2, offset);
-				pushBack((-indeces[j + 1] - 1) * 3, (-indeces[j + 1] - 1) * 3 + 1, (-indeces[j + 1] - 1) * 3 + 2, offset);
+				pushBack(indeces[i] * 3, indeces[i] * 3 + 1, indeces[i] * 3 + 2, offset, i);
+				pushBack(indeces[j] * 3, indeces[j] * 3 + 1, indeces[j] * 3 + 2, offset, j);
+				pushBack((-indeces[j + 1] - 1) * 3, (-indeces[j + 1] - 1) * 3 + 1, (-indeces[j + 1] - 1) * 3 + 2, offset, j + 1);
 
 				i = j + 2;
 
@@ -213,7 +213,10 @@ namespace FBXL
 			result.reserve(uvIndex.size());
 			for (std::size_t i = 0; i < uvIndex.size(); i++) {
 				if (isVailedIndex(uvIndex[i] * 2) && isVailedIndex(uvIndex[i] * 2 + 1))
-					result.push_back(CreateVector2DPolicy::Create(uv[uvIndex[i] * 2], uv[uvIndex[i] * 2 + 1]));
+					//
+					//uv.y???‹t‚©?
+					//
+					result.push_back(CreateVector2DPolicy::Create(uv[uvIndex[i] * 2], -uv[uvIndex[i] * 2 + 1]));
 				else
 					result.push_back(CreateVector2DPolicy::Create(0.0, 0.0));
 			}
@@ -230,7 +233,7 @@ namespace FBXL
 			auto mappingInformationTypeNode = GetSingleChildrenNode(layerElementNormalNode.value(), "MappingInformationType");
 			bool isByPolygon{};
 			if (mappingInformationTypeNode)
-				isByPolygon = (GetProperty<std::string>(mappingInformationTypeNode.value(), 0) == "ByPolygonVertex");
+				isByPolygon = (GetProperty<std::string>(mappingInformationTypeNode.value(), 0) != "ByPolygonVertex");
 
 			auto result = GetProperty<std::vector<double>>(modelMesh.value(), 0).value();
 

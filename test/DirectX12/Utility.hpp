@@ -4,9 +4,13 @@
 #include<tuple>
 #include<d3d12.h>
 #include<dxgi1_6.h>
+#include<DirectXTex.h>
+#include<Windows.h>
+#include<optional>
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
+#pragma comment(lib,"DirectXTex.lib")
 
 namespace DX12
 {
@@ -233,7 +237,34 @@ namespace DX12
 		return result;
 	}
 
+	inline constexpr size_t AlignmentSize(size_t size, size_t alignment) {
+		return size + alignment - size % alignment;
+	}
 
+	inline std::wstring ToWstring(const std::string& str)
+	{
+		if (str.empty())
+			return {};
+
+		int neededSize = MultiByteToWideChar(CP_UTF8, 0, &str[0], static_cast<int>(str.size()), NULL, 0);
+		std::wstring result(neededSize, 0);
+		MultiByteToWideChar(CP_UTF8, 0, &str[0], static_cast<int>(str.size()), &result[0], neededSize);
+
+		return result;
+	}
+
+	//画像データの取得
+	//あと、ScratchImageはコピー不可
+	inline std::optional<std::pair<DirectX::TexMetadata, DirectX::ScratchImage>>
+		GetTexture(const std::string& fileName) {
+
+		DirectX::TexMetadata metaData{};
+		DirectX::ScratchImage scratch{};
+		if (FAILED(LoadFromWICFile(ToWstring(fileName).c_str(), DirectX::WIC_FLAGS_NONE, &metaData, scratch))) {
+			return std::nullopt;
+		}
+		return std::make_pair(std::move(metaData), std::move(scratch));
+	}
 
 }
 
