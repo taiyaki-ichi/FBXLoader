@@ -7,3 +7,9 @@ struct DataType
 	float2 uv:TEXCOORD;//UV’l
 	float3 ray:VECTOR;
 };
+
+cbuffer SceneData : register(b0) {
+	matrix view;
+	matrix proj;
+	float3 eye;
+};
