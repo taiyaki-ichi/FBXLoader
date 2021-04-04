@@ -18,13 +18,13 @@ namespace DX12
 	struct Material
 	{
 		Vector3D diffuseColor;
-		//double diffuseFactor;
+		float diffuseFactor;
 
 		Vector3D ambientColor;
-		//double ambientFactor;
+		float ambientFactor;
 
 		Vector3D specularColor;
-		//double specularFactor;
+		float specularFactor;
 	};
 
 	//Ç∆ÇËÇ†Ç¶Ç∏Å@
@@ -80,8 +80,11 @@ namespace DX12
 		{
 			Material<Vector3D> materialTmp[1]{};
 			materialTmp[0].diffuseColor = model.material[i].diffuseColor;
+			materialTmp[0].diffuseFactor = model.material[i].diffuseFactor;
 			materialTmp[0].ambientColor = model.material[i].ambientColor;
+			materialTmp[0].ambientFactor = model.material[i].ambientFactor;
 			materialTmp[0].specularColor = model.material[i].specularColor;
+			materialTmp[0].specularFactor = model.material[i].specularFactor;
 	
 			ConstantBufferResource constantBufferTmp{};
 			constantBufferTmp.Initialize(device, sizeof(Material<Vector3D>));
