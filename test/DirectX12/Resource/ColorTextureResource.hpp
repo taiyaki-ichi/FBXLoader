@@ -66,7 +66,7 @@ namespace DX12
 	{
 		ColorTextureResourceBase::Initialize(device, 4, 4);
 
-		std::vector<std::size_t> data(4 * 4 * 4);
+		std::vector<std::uint8_t> data(4 * 4 * 4);
 		std::fill(data.begin(), data.end(), Color);
 
 		if (FAILED(Get()->WriteToSubresource(0, nullptr, data.data(), 4 * 4, data.size())))

@@ -15,22 +15,23 @@ namespace FBXL
 		const Connections& connections);
 
 
-	namespace {
 
-		//Model3DPartsの合体
-		template<typename Vector2D, typename Vector3D>
-		Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b);
 
-		//GeometryMEshにModelMeshを適用
-		template<typename Vector2D, typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScalinngVector3DPolicy>
-		GeometryMesh<Vector2D, Vector3D> TransformGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh, ModelMesh<Vector3D>&& modelMesh);
+	//Model3DPartsの合体
+	template<typename Vector2D, typename Vector3D>
+	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b);
 
-	}
-
+	//GeometryMEshにModelMeshを適用
+	template<typename Vector2D, typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScalinngVector3DPolicy>
+	GeometryMesh<Vector2D, Vector3D> TransformGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh, ModelMesh<Vector3D>&& modelMesh);
 
 	//Model3DPartsを分解
 	template<typename Vector2D, typename Vector3D>
 	std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> GetVertecesAndMaterialIndecsArray(Model3DParts<Vector2D, Vector3D>&& v);
+
+
+
+
 
 
 
@@ -84,7 +85,7 @@ namespace FBXL
 
 			if (geometryMesh)
 			{
-				assert(geometryMesh.value().materialRange.size() == materialIndex.size());
+				//assert(geometryMesh.value().materialRange.size() == materialIndex.size());
 
 				auto g = TransformGeometryMesh<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
 					std::move(geometryMesh.value()), std::move(modelMesh.second));
@@ -95,64 +96,61 @@ namespace FBXL
 		return result;
 	}
 
-	namespace {
-		template<typename Vector2D, typename Vector3D>
-		Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b)
+
+	template<typename Vector2D, typename Vector3D>
+	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b)
+	{
+		Model3DParts<Vector2D, Vector3D> result{};
+
+		auto vertex = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(a));
+
 		{
-			Model3DParts<Vector2D, Vector3D> result{};
-
-			auto vertex = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(a));
-
-			{
-				auto tmpV = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(b));
-				std::move(tmpV.begin(), tmpV.end(), std::back_inserter(vertex));
-			}
-
-			std::sort(vertex.begin(), vertex.end(), [](auto& a, auto& b) {
-				return a.second < b.second;
-				});
-
-
-			for (auto&& v : vertex)
-			{
-				if (result.second.size() == 0 || result.second.back() != v.second)
-				{
-					result.first.materialRange.push_back(v.first.size());
-					std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
-					result.second.push_back(v.second);
-				}
-				else //if (result.second.back() == v.second)
-				{
-					result.first.materialRange.back() += v.first.size();
-					std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
-				}
-			}
-
-			return result;
+			auto tmpV = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(b));
+			std::move(tmpV.begin(), tmpV.end(), std::back_inserter(vertex));
 		}
 
-		template<typename Vector2D, typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScalinngVector3DPolicy>
-		GeometryMesh<Vector2D, Vector3D> TransformGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh, ModelMesh<Vector3D>&& modelMesh)
+		std::sort(vertex.begin(), vertex.end(), [](auto& a, auto& b) {
+			return a.second < b.second;
+			});
+
+
+		for (auto&& v : vertex)
 		{
-			for (std::size_t i = 0; i < geometryMesh.vertices.size(); i++)
+			if (result.second.size() == 0 || result.second.back() != v.second)
 			{
-				if (modelMesh.localScaling)
-					geometryMesh.vertices[i].position = ScalinngVector3DPolicy::Scalling(std::move(geometryMesh.vertices[i].position), modelMesh.localScaling.value());
-				if (modelMesh.localRotation) {
-					geometryMesh.vertices[i].position = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].position), modelMesh.localRotation.value());
-					geometryMesh.vertices[i].normal = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].normal), modelMesh.localRotation.value());
-				}
-				if (modelMesh.localTranslation)
-					geometryMesh.vertices[i].position = TranslationVector3DPolicy::Translation(std::move(geometryMesh.vertices[i].position), modelMesh.localTranslation.value());
-
+				result.first.materialRange.push_back(v.first.size());
+				std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
+				result.second.push_back(v.second);
 			}
-
-			return geometryMesh;
+			else //if (result.second.back() == v.second)
+			{
+				result.first.materialRange.back() += v.first.size();
+				std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
+			}
 		}
 
-
-
+		return result;
 	}
+
+	template<typename Vector2D, typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScalinngVector3DPolicy>
+	GeometryMesh<Vector2D, Vector3D> TransformGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh, ModelMesh<Vector3D>&& modelMesh)
+	{
+		for (std::size_t i = 0; i < geometryMesh.vertices.size(); i++)
+		{
+			if (modelMesh.localScaling)
+				geometryMesh.vertices[i].position = ScalinngVector3DPolicy::Scalling(std::move(geometryMesh.vertices[i].position), modelMesh.localScaling.value());
+			if (modelMesh.localRotation) {
+				geometryMesh.vertices[i].position = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].position), modelMesh.localRotation.value());
+				geometryMesh.vertices[i].normal = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].normal), modelMesh.localRotation.value());
+			}
+			if (modelMesh.localTranslation)
+				geometryMesh.vertices[i].position = TranslationVector3DPolicy::Translation(std::move(geometryMesh.vertices[i].position), modelMesh.localTranslation.value());
+
+		}
+
+		return geometryMesh;
+	}
+
 
 
 
@@ -173,5 +171,7 @@ namespace FBXL
 
 		return result;
 	}
+
+
 
 }

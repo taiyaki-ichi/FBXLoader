@@ -1,6 +1,5 @@
 #pragma once
 #include"ModelStruct.hpp"
-#include"../../PrimitiveData/PrimitiveDataFunction.hpp"
 
 namespace FBXL
 {

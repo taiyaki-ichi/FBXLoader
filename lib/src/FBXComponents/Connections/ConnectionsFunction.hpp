@@ -1,6 +1,5 @@
 #pragma once
 #include"ConnectionsStruct.hpp"
-#include"../PrimitiveData/PrimitiveDataFunction.hpp"
 #include<cassert>
 
 namespace FBXL
@@ -8,13 +7,12 @@ namespace FBXL
 	//NodeからConnectionsの取得
 	inline Connections GetConnections(Node&& connections);
 
-	namespace {
-		//offest番目のObjectのIndexの取得
-		inline ObjectOrPropertyIndex GetObjectIndex(const Node* node, std::size_t offset);
+	//offest番目のObjectのIndexの取得
+	inline ObjectOrPropertyIndex GetObjectIndex(const Node* node, std::size_t offset);
 
-		//offset番目のPropertyのIndexの取得
-		inline ObjectOrPropertyIndex GetPropertyIndex(const Node* node, std::size_t offset);
-	}
+	//offset番目のPropertyのIndexの取得
+	inline ObjectOrPropertyIndex GetPropertyIndex(const Node* node, std::size_t offset);
+
 
 	//そのインデックスのオブジェクトに子ノードとして接続しているオブジェクトのインデックスの取得
 	inline std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections, const ObjectOrPropertyIndex& key);
@@ -59,18 +57,16 @@ namespace FBXL
 	}
 
 
-	namespace {
-
-		inline ObjectOrPropertyIndex GetObjectIndex(const Node* node, std::size_t offset)
-		{
-			return GetProperty<std::int64_t>(node, offset).value();
-		}
-
-		inline ObjectOrPropertyIndex GetPropertyIndex(const Node* node, std::size_t offset)
-		{
-			return std::make_pair(GetProperty<std::int64_t>(node, offset).value(), GetProperty<std::string>(node, offset + 1).value());
-		}
+	inline ObjectOrPropertyIndex GetObjectIndex(const Node* node, std::size_t offset)
+	{
+		return GetProperty<std::int64_t>(node, offset).value();
 	}
+
+	inline ObjectOrPropertyIndex GetPropertyIndex(const Node* node, std::size_t offset)
+	{
+		return std::make_pair(GetProperty<std::int64_t>(node, offset).value(), GetProperty<std::string>(node, offset + 1).value());
+	}
+
 
 
 	inline std::vector<ObjectOrPropertyIndex> GetConnectionByDestination(const Connections& connections, const ObjectOrPropertyIndex& key)

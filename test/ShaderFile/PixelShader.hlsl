@@ -26,12 +26,12 @@ struct LightStruct
 	float quadratic;
 };
 
-float3 calcLight(LightStruct lightStruct, float3 pos, float3 normal,float3 viewDir)
+float3 calcLight(LightStruct lightStruct, float3 pos, float3 normal,float3 viewDir,float3 textureColor)
 {
 	float3 lightDir = normalize(lightStruct.position - pos);
 
 	float diff = max(dot(normal, lightDir), 0.0);
-	float3 lightDiffuse = lightStruct.diffuse * (diff * diffuse.xyz);
+	float3 lightDiffuse = lightStruct.diffuse * (diff * diffuse.xyz) * textureColor;
 
 	float3 reflectDir = reflect(-lightDir, normal);
 	//shininess=32
@@ -68,19 +68,15 @@ float4 main(DataType input) : SV_TARGET
 	//target=0,0,0
 	float3 viewDir = normalize(eye - input.pos).xyz;
 
+	float3 textureColor=tex.Sample(smp, input.uv);
+
 	float3 color = float3(0, 0, 0);
 	for (int i = 0; i < 4; i++)
 	{
 		lightStruct.position = lightPos[i];
-		color += calcLight(lightStruct, input.pos, n,viewDir);
+		color += calcLight(lightStruct, input.pos, n, viewDir, textureColor);
 	}
 
 	return float4(color, 1);
-	
 
-	/*
-	float3 light = normalize(float3(1,0,1));
-	float brightness = dot(-light, input.normal);
-	return float4(brightness, brightness, brightness, 1);
-	*/
 }

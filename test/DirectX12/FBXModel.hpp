@@ -85,7 +85,7 @@ namespace DX12
 			materialTmp[0].ambientFactor = model.material[i].ambientFactor;
 			materialTmp[0].specularColor = model.material[i].specularColor;
 			materialTmp[0].specularFactor = model.material[i].specularFactor;
-	
+
 			ConstantBufferResource constantBufferTmp{};
 			constantBufferTmp.Initialize(device, sizeof(Material<Vector3D>));
 			constantBufferTmp.Map(materialTmp);
@@ -113,10 +113,6 @@ namespace DX12
 			if (!textureFlag)
 				descriptorHeap.PushBackView(device, &whiteTextureResource);
 		}
-
-		//descriptorHeap.PushBackView(device, &sceneDataConstantBufferResource);
-		//for (auto& materialBuff : materialConstantBufferResources)
-			//descriptorHeap.PushBackView(device, &materialBuff);
 
 		materialRange = std::move(model.materialRange);
 	}
