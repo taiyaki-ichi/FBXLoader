@@ -131,7 +131,6 @@ namespace DX12
 
 		for (std::size_t i = 0; i < materialRange.size(); i++)
 		{
-
 			cl->Get()->SetGraphicsRootDescriptorTable(1, descriptorHeap.GetGPUHandle(i * 2 + 1));
 			cl->Get()->DrawInstanced(materialRange[i], materialRange[i] / 3, vertexOffset, vertexOffset / 3);
 

@@ -79,18 +79,14 @@ namespace FBXL
 	};
 
 
-	//TrianglePolygonÇ∆Ç®Ç»Ç∂
-	//å„Ç≈íºÇ∑
-	template<typename Vector2D,typename Vector3D>
-	using VertexArray3 = std::array<Vertex<Vector2D, Vector3D>, 3>;
-
 	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
-	std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>>
-		GetVertexAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings);
+	std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>>
+		GetTrianglePolygonAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings);
+
 
 	template<typename Vector2D, typename Vector3D>
-	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>>
-		GetVerticesAndMaterialRange(std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>>&& pair);
+	GeometryMesh<Vector2D,Vector3D> GetGeometryMeshFromTrianglePolygonAndMaterialNumberPairs(std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>>&& pair);
+
 
 	//
 	//à»â∫ÅAé¿ëï
@@ -111,13 +107,12 @@ namespace FBXL
 
 		auto index = GetProperty<std::int64_t>(&geormetryMesh, 0).value();
 
-		//
-		auto vertexAndMaterialNumPairs = GetVertexAndMaterialNumberPairs<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh, globalSettings);
-		auto [vertices, materialRange] = GetVerticesAndMaterialRange(std::move(vertexAndMaterialNumPairs));
-		result.vertices = std::move(vertices);
-		result.materialRange = std::move(materialRange);
+		auto vertexAndMaterialNumPairs = GetTrianglePolygonAndMaterialNumberPairs<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh, globalSettings);
+		auto gm = GetGeometryMeshFromTrianglePolygonAndMaterialNumberPairs(std::move(vertexAndMaterialNumPairs));
 
-		return std::make_pair(std::move(result), index);
+		return std::make_pair(std::move(gm), index);
+		
+
 	}
 
 
@@ -272,10 +267,10 @@ namespace FBXL
 	}
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>> 
-		GetVertexAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings)
+	std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>>
+		GetTrianglePolygonAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings)
 	{
-		std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>> result{};
+		std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>> result{};
 
 		auto verticesNode = GetSingleChildrenNode(geometryMesh, "Vertices");
 		auto vertices = GetProperty<std::vector<double>>(verticesNode.value(), 0).value();
@@ -310,7 +305,7 @@ namespace FBXL
 		std::size_t i = 0;
 		std::size_t j = 0;
 		std::size_t polygonIndex = 0;
-		VertexArray3<Vector2D,Vector3D> tmpVertexArray{};
+		TrianglePolygon<Vector2D,Vector3D> tmpTrianglePolygon{};
 		while (i < indeces.size())
 		{
 			j = i + 1;
@@ -318,11 +313,11 @@ namespace FBXL
 
 				auto materialIndex = getMaterialIndex(polygonIndex);
 
-				tmpVertexArray[0] = getVertex(i);
-				tmpVertexArray[1] = getVertex(j);
-				tmpVertexArray[2] = getVertex(j + 1);
+				tmpTrianglePolygon[0] = getVertex(i);
+				tmpTrianglePolygon[1] = getVertex(j);
+				tmpTrianglePolygon[2] = getVertex(j + 1);
 
-				result.emplace_back(std::make_pair(std::move(tmpVertexArray), materialIndex));
+				result.emplace_back(std::make_pair(std::move(tmpTrianglePolygon), materialIndex));
 
 				j++;
 			} while (indeces[j] >= 0);
@@ -333,12 +328,10 @@ namespace FBXL
 		return result;
 	}
 
-
 	template<typename Vector2D, typename Vector3D>
-	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> 
-		GetVerticesAndMaterialRange(std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>>&& pair)
+	GeometryMesh<Vector2D, Vector3D> GetGeometryMeshFromTrianglePolygonAndMaterialNumberPairs(std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>>&& pair)
 	{
-		std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> result{};
+		GeometryMesh<Vector2D, Vector3D> result{};
 
 		if (pair.size() == 0)
 			return result;
@@ -347,21 +340,18 @@ namespace FBXL
 			return a.second < b.second;
 			});
 
-		result.first.resize(pair.size() * 3);
-		result.second.resize(pair[pair.size() - 1].second + 1);
+		result.trianglePolygons.resize(pair.size());
+		result.materialRange.resize(pair[pair.size() - 1].second + 1);
 
-		std::fill(result.second.begin(), result.second.end(), 0);
+		std::fill(result.materialRange.begin(), result.materialRange.end(), 0);
 
 		for (std::size_t i = 0; i < pair.size(); i++) {
-			result.first[i * 3] = std::move(pair[i].first[0]);
-			result.first[i * 3 + 1] = std::move(pair[i].first[1]);
-			result.first[i * 3 + 2] = std::move(pair[i].first[2]);
+			result.trianglePolygons[i] = std::move(pair[i].first);
 
-			result.second[pair[i].second] += 3;
+			result.materialRange[pair[i].second]++;
 		}
 
 		return result;
 	}
-
 
 }

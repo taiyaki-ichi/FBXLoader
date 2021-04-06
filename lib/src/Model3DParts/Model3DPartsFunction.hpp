@@ -15,33 +15,22 @@ namespace FBXL
 		const Connections& connections);
 
 
-
-
-	//Model3DPartsÇÃçáëÃ
-	template<typename Vector2D, typename Vector3D>
-	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b);
-
 	//GeometryMEshÇ…ModelMeshÇìKóp
 	template<typename Vector2D, typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScalinngVector3DPolicy>
 	GeometryMesh<Vector2D, Vector3D> TransformGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh, ModelMesh<Vector3D>&& modelMesh);
 
-	template<typename Vector2D, typename Vector3D>
-	using TrianglePolygon = std::array<Vertex<Vector2D, Vector3D>, 3>;
+	template<typename Vector2D,typename Vector3D,typename Func>
+	TrianglePolygon<Vector2D, Vector3D> TransformTrianglePolygon(Func&&, TrianglePolygon<Vector2D, Vector3D>&&, const Vector3D&);
 
 	template<typename Vector2D, typename Vector3D>
 	std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int64_t>> ToTrianglePolygonPairsFromModel3DParts(Model3DParts<Vector2D, Vector3D>&&);
 
-	template<typename Vector2D, typename Vector3D>
+	template<bool NormalFlag,typename Vector2D, typename Vector3D>
 	Model3DParts<Vector2D, Vector3D> ToModel3DPartsFromTrianglePolygonPairs(std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int64_t>>&&);
 
 	template<typename Vector2D, typename Vector3D>
 	std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int64_t>> AppendTrianglePolygonPairs(
 		std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int64_t>>&&, std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int64_t>>&&);
-
-	//Model3DPartsÇï™â
-	template<typename Vector2D, typename Vector3D>
-	std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> GetVertecesAndMaterialIndecsArray(Model3DParts<Vector2D, Vector3D>&& v);
-
 
 
 
@@ -102,7 +91,6 @@ namespace FBXL
 
 				auto g = TransformGeometryMesh<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
 					std::move(geometryMesh.value()), std::move(modelMesh.second));
-				//result = AppendModel3DParts<Vector2D, Vector3D>(std::move(result), std::make_pair(std::move(g), std::move(materialIndex)));
 				auto tmp = ToTrianglePolygonPairsFromModel3DParts(std::make_pair(std::move(g), std::move(materialIndex)));
 				trianglePolygonPairs = AppendTrianglePolygonPairs(std::move(trianglePolygonPairs), std::move(tmp));
 
@@ -110,84 +98,58 @@ namespace FBXL
 			}
 		}
 
-		i;
-
-		//return result;
 		return ToModel3DPartsFromTrianglePolygonPairs(std::move(trianglePolygonPairs));
 	}
 
 
-	template<typename Vector2D, typename Vector3D>
-	Model3DParts<Vector2D, Vector3D> AppendModel3DParts(Model3DParts<Vector2D, Vector3D>&& a, Model3DParts<Vector2D, Vector3D>&& b)
-	{
-		Model3DParts<Vector2D, Vector3D> result{};
-
-		auto vertex = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(a));
-
-		{
-			auto tmpV = GetVertecesAndMaterialIndecsArray<Vector2D, Vector3D>(std::move(b));
-			std::move(tmpV.begin(), tmpV.end(), std::back_inserter(vertex));
-		}
-
-		std::sort(vertex.begin(), vertex.end(), [](auto& a, auto& b) {
-			return a.second < b.second;
-			});
-
-
-		for (auto&& v : vertex)
-		{
-			if (result.second.size() == 0 || result.second.back() != v.second)
-			{
-				result.first.materialRange.push_back(v.first.size());
-				std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
-				result.second.push_back(v.second);
-			}
-			else //if (result.second.back() == v.second)
-			{
-				result.first.materialRange.back() += v.first.size();
-				std::move(v.first.begin(), v.first.end(), std::back_inserter(result.first.vertices));
-			}
-		}
-
-		return result;
-	}
-
 	template<typename Vector2D, typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScalinngVector3DPolicy>
 	GeometryMesh<Vector2D, Vector3D> TransformGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh, ModelMesh<Vector3D>&& modelMesh)
 	{
-		for (std::size_t i = 0; i < geometryMesh.vertices.size(); i++)
+		for (std::size_t i = 0; i < geometryMesh.trianglePolygons.size(); i++)
 		{
 			if (modelMesh.localScaling)
-				geometryMesh.vertices[i].position = ScalinngVector3DPolicy::Scalling(std::move(geometryMesh.vertices[i].position), modelMesh.localScaling.value());
-			if (modelMesh.localRotation) {
-				geometryMesh.vertices[i].position = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].position), modelMesh.localRotation.value());
-				geometryMesh.vertices[i].normal = RotationVector3DPolicy::Rotation(std::move(geometryMesh.vertices[i].normal), modelMesh.localRotation.value());
-			}
+				geometryMesh.trianglePolygons[i] = TransformTrianglePolygon<false>(ScalinngVector3DPolicy::Scalling, std::move(geometryMesh.trianglePolygons[i]), modelMesh.localScaling.value());
+			if (modelMesh.localRotation)
+				geometryMesh.trianglePolygons[i] = TransformTrianglePolygon<true>(RotationVector3DPolicy::Rotation, std::move(geometryMesh.trianglePolygons[i]), modelMesh.localRotation.value());
 			if (modelMesh.localTranslation)
-				geometryMesh.vertices[i].position = TranslationVector3DPolicy::Translation(std::move(geometryMesh.vertices[i].position), modelMesh.localTranslation.value());
+				geometryMesh.trianglePolygons[i] = TransformTrianglePolygon<false>(TranslationVector3DPolicy::Translation, std::move(geometryMesh.trianglePolygons[i]), modelMesh.localTranslation.value());
 
 		}
 
 		return geometryMesh;
 	}
 
+	template<bool NormalFlag,typename Vector2D, typename Vector3D, typename Func>
+	TrianglePolygon<Vector2D, Vector3D> TransformTrianglePolygon(Func&& func, TrianglePolygon<Vector2D, Vector3D>&& trianglePolygon, const Vector3D& vector3D)
+	{
+		TrianglePolygon<Vector2D, Vector3D> result{};
+		for (std::size_t i = 0; i < 3; i++)
+		{
+			result[i].position = func(std::move(trianglePolygon[i].position), vector3D);
+
+			if constexpr (NormalFlag)
+				result[i].normal = func(std::move(trianglePolygon[i].normal), vector3D);
+			else
+				result[i].normal = std::move(trianglePolygon[i].normal);
+
+			result[i].uv = std::move(trianglePolygon[i].uv);
+		}
+
+		return result;
+	}
+
 	template<typename Vector2D, typename Vector3D>
 	std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int64_t>> ToTrianglePolygonPairsFromModel3DParts(Model3DParts<Vector2D, Vector3D>&& model3Dparts)
 	{
 		std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int64_t>> result{};
-		result.reserve(model3Dparts.first.vertices.size() / 3);
-		TrianglePolygon<Vector2D, Vector3D> tmpTrianglePolygon{};
+		result.reserve(model3Dparts.first.trianglePolygons.size());
 
 		std::size_t vertexOffset = 0;
 		for (std::size_t i = 0; i < model3Dparts.first.materialRange.size(); i++)
 		{
-			for (std::size_t j = 0; j < model3Dparts.first.materialRange[i] / 3; j++)
+			for (std::size_t j = 0; j < model3Dparts.first.materialRange[i]; j++)
 			{
-				tmpTrianglePolygon[0] = std::move(model3Dparts.first.vertices[vertexOffset + j * 3]);
-				tmpTrianglePolygon[1] = std::move(model3Dparts.first.vertices[vertexOffset + j * 3 + 1]);
-				tmpTrianglePolygon[2] = std::move(model3Dparts.first.vertices[vertexOffset + j * 3 + 2]);
-
-				result.emplace_back(std::make_pair(std::move(tmpTrianglePolygon), model3Dparts.second[i]));
+				result.emplace_back(std::make_pair(std::move(model3Dparts.first.trianglePolygons[vertexOffset + j]), model3Dparts.second[i]));
 			}
 
 			vertexOffset += model3Dparts.first.materialRange[i];
@@ -204,7 +166,7 @@ namespace FBXL
 			});
 
 		Model3DParts<Vector2D, Vector3D> result{};
-		result.first.vertices.reserve(trianglePolygonPairs.size() * 3);
+		result.first.trianglePolygons.reserve(trianglePolygonPairs.size());
 		std::fill(result.second.begin(), result.second.end(), 0);
 
 		std::size_t materialOffset{};
@@ -217,11 +179,9 @@ namespace FBXL
 				materialOffset = result.second.size() - 1;
 			}
 
-			result.first.vertices.emplace_back(std::move(trianglePolygonPairs[i].first[0]));
-			result.first.vertices.emplace_back(std::move(trianglePolygonPairs[i].first[1]));
-			result.first.vertices.emplace_back(std::move(trianglePolygonPairs[i].first[2]));
+			result.first.trianglePolygons.emplace_back(std::move(trianglePolygonPairs[i].first));
 
-			result.first.materialRange[materialOffset] += 3;
+			result.first.materialRange[materialOffset]++;
 		}
 
 		return result;
@@ -240,23 +200,6 @@ namespace FBXL
 		return result;
 	}
 
-	template<typename Vector2D, typename Vector3D>
-	std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> GetVertecesAndMaterialIndecsArray(Model3DParts<Vector2D, Vector3D>&& v)
-	{
-		std::vector<std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::int64_t>> result{};
-
-		std::vector<Vertex<Vector2D, Vector3D>> tmpVertex{};
-		std::size_t vertexOffset{};
-
-		for (std::size_t i = 0; i < v.second.size(); i++)
-		{
-			std::move(v.first.vertices.begin() + vertexOffset, v.first.vertices.begin() + vertexOffset + v.first.materialRange[i], std::back_inserter(tmpVertex));
-			result.push_back(std::make_pair(std::move(tmpVertex), v.second[i]));
-			vertexOffset += v.first.materialRange[i];
-		}
-
-		return result;
-	}
 
 
 

@@ -58,8 +58,16 @@ namespace FBXL
 	Model3D<Vector2D, Vector3D> GetModel3D(Model3DParts<Vector2D, Vector3D>&& model3DPair, std::unordered_map<std::int64_t, Material<Vector3D>>&& materials)
 	{
 		Model3D<Vector2D, Vector3D> result{};
-		result.vertices = std::move(model3DPair.first.vertices);
+		result.vertices.reserve(model3DPair.first.trianglePolygons.size() * 3);
+		for (std::size_t i = 0; i < model3DPair.first.trianglePolygons.size(); i++)
+		{
+			result.vertices.emplace_back(std::move(model3DPair.first.trianglePolygons[i][0]));
+			result.vertices.emplace_back(std::move(model3DPair.first.trianglePolygons[i][1]));
+			result.vertices.emplace_back(std::move(model3DPair.first.trianglePolygons[i][2]));
+		}
 		result.materialRange = std::move(model3DPair.first.materialRange);
+		for (std::size_t i = 0; i < result.materialRange.size(); i++)
+			result.materialRange[i] *= 3;
 
 		result.material.resize(model3DPair.second.size());
 		for (std::size_t i = 0; i < model3DPair.second.size(); i++)
