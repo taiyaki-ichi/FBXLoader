@@ -28,7 +28,7 @@ namespace FBXL
 		auto prop70 = GetSingleChildrenNode(&modelMesh, "Properties70").value();
 
 		{
-			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Transration", 4, 5, 6);
+			auto vec = GetProperities70Vector3DData<Vector3D, CreateVector3DPolicy>(prop70, "Lcl Translation", 4, 5, 6);
 			if (vec)
 				result.localTranslation = vec.value();
 		}

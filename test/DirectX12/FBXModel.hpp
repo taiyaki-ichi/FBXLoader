@@ -34,7 +34,7 @@ namespace DX12
 		DirectX::XMMATRIX proj{};
 		DirectX::XMFLOAT3 eye{};
 	};
-	
+
 
 	class FBXModel
 	{
@@ -49,7 +49,7 @@ namespace DX12
 		WhiteTextureResource whiteTextureResource{};
 
 	public:
-		template<typename Vector2D,typename Vector3D>
+		template<typename Vector2D, typename Vector3D>
 		void Initialize(Device*, CommandList*, FBXL::Model3D<Vector2D, Vector3D>&&);
 
 		void Draw(CommandList*);
@@ -62,7 +62,7 @@ namespace DX12
 	//
 
 	template<typename Vector2D, typename Vector3D>
-	inline void FBXModel::Initialize(Device* device,CommandList* cl , FBXL::Model3D<Vector2D, Vector3D>&& model)
+	inline void FBXModel::Initialize(Device* device, CommandList* cl, FBXL::Model3D<Vector2D, Vector3D>&& model)
 	{
 		vertexBufferResource.Initialize(device, sizeof(model.vertices[0]) * model.vertices.size(), sizeof(model.vertices[0]));
 		vertexBufferResource.Map(std::move(model.vertices));
@@ -85,7 +85,7 @@ namespace DX12
 			materialTmp[0].ambientFactor = model.material[i].ambientFactor;
 			materialTmp[0].specularColor = model.material[i].specularColor;
 			materialTmp[0].specularFactor = model.material[i].specularFactor;
-	
+
 			ConstantBufferResource constantBufferTmp{};
 			constantBufferTmp.Initialize(device, sizeof(Material<Vector3D>));
 			constantBufferTmp.Map(materialTmp);
@@ -131,16 +131,12 @@ namespace DX12
 
 		for (std::size_t i = 0; i < materialRange.size(); i++)
 		{
+
 			cl->Get()->SetGraphicsRootDescriptorTable(1, descriptorHeap.GetGPUHandle(i * 2 + 1));
 			cl->Get()->DrawInstanced(materialRange[i], materialRange[i] / 3, vertexOffset, vertexOffset / 3);
-			//cl->Get()->DrawInstanced(3, 1, 0, 0);
-			//1,2‚ª‚¨‚È‚¶pos
-
 
 			vertexOffset += materialRange[i];
 		}
-
-		//cl->Get()->DrawInstanced(vertexOffset, 3, 0, 0);
 	}
 
 	inline void FBXModel::MapSceneData(SceneData&& sceneData)
