@@ -70,7 +70,6 @@ int main()
 
 	//auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
 	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_002.fbx");
-	//auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/test012.fbx");
 
 
 	DX12::FBXModel fbxModel{};
