@@ -11,14 +11,6 @@ namespace FBXL
 
 
 
-
-
-	//geometryMeshから取得したシンプルなデータを加工
-	template<typename Vector2D, typename Vector3D>
-	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>>
-		GetVerticesAndMaterialRange(std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>>&& pair);
-
-
 	//GeometyMeshNodeからマテリアルのインデックス配列を取得
 	inline std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh);
 
@@ -66,9 +58,6 @@ namespace FBXL
 	template<typename CreateVector3DPolicy>
 	auto GetVertexFromIndex(const std::vector<double>& verteces, const std::vector<std::int32_t>& indeces, std::size_t index);
 
-	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings);
-
 	template<typename Vector2D, typename CreateVector2DPolicy>
 	struct GetVector2DFromDoubleDataVariantVisitor {
 
@@ -90,8 +79,18 @@ namespace FBXL
 	};
 
 
+	//TrianglePolygonとおなじ
+	//後で直す
+	template<typename Vector2D,typename Vector3D>
+	using VertexArray3 = std::array<Vertex<Vector2D, Vector3D>, 3>;
 
+	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
+	std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>>
+		GetVertexAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings);
 
+	template<typename Vector2D, typename Vector3D>
+	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>>
+		GetVerticesAndMaterialRange(std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>>&& pair);
 
 	//
 	//以下、実装
@@ -112,6 +111,7 @@ namespace FBXL
 
 		auto index = GetProperty<std::int64_t>(&geormetryMesh, 0).value();
 
+		//
 		auto vertexAndMaterialNumPairs = GetVertexAndMaterialNumberPairs<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh, globalSettings);
 		auto [vertices, materialRange] = GetVerticesAndMaterialRange(std::move(vertexAndMaterialNumPairs));
 		result.vertices = std::move(vertices);
@@ -121,32 +121,6 @@ namespace FBXL
 	}
 
 
-
-
-	template<typename Vector2D, typename Vector3D>
-	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> GetVerticesAndMaterialRange(std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>>&& pair)
-	{
-		std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> result{};
-
-		if (pair.size() == 0)
-			return result;
-
-		std::sort(pair.begin(), pair.end(), [](auto& a, auto& b) {
-			return a.second < b.second;
-			});
-
-		result.first.resize(pair.size());
-		result.second.resize(pair[pair.size() - 1].second + 1);
-
-		std::fill(result.second.begin(), result.second.end(), 0);
-
-		for (std::size_t i = 0; i < pair.size(); i++) {
-			result.first[i] = std::move(pair[i].first);
-			result.second[pair[i].second]++;
-		}
-
-		return result;
-	}
 
 	inline std::optional<std::vector<std::int32_t>> GetMaterialIndeces(const Node* geometyMesh)
 	{
@@ -255,10 +229,53 @@ namespace FBXL
 		);
 	}
 
-	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> GetVertexAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings)
+
+	template<typename Vector2D, typename CreateVector2DPolicy>
+	inline Vector2D GetVector2DFromDoubleDataVariantVisitor<Vector2D, CreateVector2DPolicy>::operator()(const RawData& rawData)
 	{
-		std::vector<std::pair<Vertex<Vector2D, Vector3D>, std::int32_t>> result{};
+		auto i = (index < 0) ? -index - 1 : index;
+
+		return CreateVector2DPolicy::Create(rawData[i * 2], -rawData[i * 2 + 1]);
+	}
+
+	template<typename Vector2D, typename CreateVector2DPolicy>
+	inline Vector2D GetVector2DFromDoubleDataVariantVisitor<Vector2D, CreateVector2DPolicy>::operator()(const IndexAndRawDataPair& indexAndRawDataPair)
+	{
+		auto i = (index < 0) ? -index - 1 : index;
+
+		return CreateVector2DPolicy::Create(
+			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 2],
+			-indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 2 + 1]
+		);
+	}
+
+
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	inline Vector3D GetVector3DFromDoubleDataVariantVisitor<Vector3D, CreateVector3DPolicy>::operator()(const RawData& rawData)
+	{
+		auto i = (index < 0) ? -index - 1 : index;
+
+		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(rawData[i * 3], rawData[i * 3 + 1], rawData[i * 3 + 2], globalSettings);
+	}
+
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	inline Vector3D GetVector3DFromDoubleDataVariantVisitor<Vector3D, CreateVector3DPolicy>::operator()(const IndexAndRawDataPair& indexAndRawDataPair)
+	{
+		auto i = (index < 0) ? -index - 1 : index;
+
+		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
+			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3],
+			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3 + 1],
+			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3 + 2],
+			globalSettings
+		);
+	}
+
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>> 
+		GetVertexAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings)
+	{
+		std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>> result{};
 
 		auto verticesNode = GetSingleChildrenNode(geometryMesh, "Vertices");
 		auto vertices = GetProperty<std::vector<double>>(verticesNode.value(), 0).value();
@@ -293,6 +310,7 @@ namespace FBXL
 		std::size_t i = 0;
 		std::size_t j = 0;
 		std::size_t polygonIndex = 0;
+		VertexArray3<Vector2D,Vector3D> tmpVertexArray{};
 		while (i < indeces.size())
 		{
 			j = i + 1;
@@ -300,9 +318,11 @@ namespace FBXL
 
 				auto materialIndex = getMaterialIndex(polygonIndex);
 
-				result.emplace_back(std::make_pair(getVertex(i), materialIndex));
-				result.emplace_back(std::make_pair(getVertex(j), materialIndex));
-				result.emplace_back(std::make_pair(getVertex(j + 1), materialIndex));
+				tmpVertexArray[0] = getVertex(i);
+				tmpVertexArray[1] = getVertex(j);
+				tmpVertexArray[2] = getVertex(j + 1);
+
+				result.emplace_back(std::make_pair(std::move(tmpVertexArray), materialIndex));
 
 				j++;
 			} while (indeces[j] >= 0);
@@ -314,58 +334,34 @@ namespace FBXL
 	}
 
 
-	template<typename Vector2D, typename CreateVector2DPolicy>
-	inline Vector2D GetVector2DFromDoubleDataVariantVisitor<Vector2D, CreateVector2DPolicy>::operator()(const RawData& rawData)
+	template<typename Vector2D, typename Vector3D>
+	std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> 
+		GetVerticesAndMaterialRange(std::vector<std::pair<VertexArray3<Vector2D, Vector3D>, std::int32_t>>&& pair)
 	{
-		auto i = (index < 0) ? -index - 1 : index;
+		std::pair<std::vector<Vertex<Vector2D, Vector3D>>, std::vector<std::int32_t>> result{};
 
-		return CreateVector2DPolicy::Create(rawData[i * 2], -rawData[i * 2 + 1]);
+		if (pair.size() == 0)
+			return result;
+
+		std::sort(pair.begin(), pair.end(), [](auto& a, auto& b) {
+			return a.second < b.second;
+			});
+
+		result.first.resize(pair.size() * 3);
+		result.second.resize(pair[pair.size() - 1].second + 1);
+
+		std::fill(result.second.begin(), result.second.end(), 0);
+
+		for (std::size_t i = 0; i < pair.size(); i++) {
+			result.first[i * 3] = std::move(pair[i].first[0]);
+			result.first[i * 3 + 1] = std::move(pair[i].first[1]);
+			result.first[i * 3 + 2] = std::move(pair[i].first[2]);
+
+			result.second[pair[i].second] += 3;
+		}
+
+		return result;
 	}
-
-	template<typename Vector2D, typename CreateVector2DPolicy>
-	inline Vector2D GetVector2DFromDoubleDataVariantVisitor<Vector2D, CreateVector2DPolicy>::operator()(const IndexAndRawDataPair& indexAndRawDataPair)
-	{
-		auto i = (index < 0) ? -index - 1 : index;
-
-		return CreateVector2DPolicy::Create(
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 2],
-			-indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 2 + 1]
-		);
-	}
-
-
-	template<typename Vector3D, typename CreateVector3DPolicy>
-	inline Vector3D GetVector3DFromDoubleDataVariantVisitor<Vector3D, CreateVector3DPolicy>::operator()(const RawData& rawData)
-	{
-		auto i = (index < 0) ? -index - 1 : index;
-
-		//return CreateVector3DPolicy::Create(rawData[i * 3], rawData[i * 3 + 1], rawData[i * 3 + 2]);
-		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(rawData[i * 3], rawData[i * 3 + 1], rawData[i * 3 + 2], globalSettings);
-	}
-
-	template<typename Vector3D, typename CreateVector3DPolicy>
-	inline Vector3D GetVector3DFromDoubleDataVariantVisitor<Vector3D, CreateVector3DPolicy>::operator()(const IndexAndRawDataPair& indexAndRawDataPair)
-	{
-		auto i = (index < 0) ? -index - 1 : index;
-
-		/*
-		return CreateVector3DPolicy::Create(
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3],
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3 + 1],
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3 + 2]
-		);
-		*/
-
-		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3],
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3 + 1],
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3 + 2],
-			globalSettings
-		);
-	}
-
-
-
 
 
 }

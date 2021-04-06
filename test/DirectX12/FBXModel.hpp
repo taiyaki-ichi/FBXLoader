@@ -85,7 +85,7 @@ namespace DX12
 			materialTmp[0].ambientFactor = model.material[i].ambientFactor;
 			materialTmp[0].specularColor = model.material[i].specularColor;
 			materialTmp[0].specularFactor = model.material[i].specularFactor;
-
+	
 			ConstantBufferResource constantBufferTmp{};
 			constantBufferTmp.Initialize(device, sizeof(Material<Vector3D>));
 			constantBufferTmp.Map(materialTmp);
@@ -114,6 +114,7 @@ namespace DX12
 				descriptorHeap.PushBackView(device, &whiteTextureResource);
 		}
 
+
 		materialRange = std::move(model.materialRange);
 	}
 
@@ -131,7 +132,10 @@ namespace DX12
 		for (std::size_t i = 0; i < materialRange.size(); i++)
 		{
 			cl->Get()->SetGraphicsRootDescriptorTable(1, descriptorHeap.GetGPUHandle(i * 2 + 1));
-			cl->Get()->DrawInstanced(materialRange[i], materialRange[i] / 3, vertexOffset, 0);
+			cl->Get()->DrawInstanced(materialRange[i], materialRange[i] / 3, vertexOffset, vertexOffset / 3);
+			//cl->Get()->DrawInstanced(3, 1, 0, 0);
+			//1,2‚ª‚¨‚È‚¶pos
+
 
 			vertexOffset += materialRange[i];
 		}
