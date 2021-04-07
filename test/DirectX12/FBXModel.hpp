@@ -93,7 +93,9 @@ namespace DX12
 			materialConstantBufferResources[i] = std::move(constantBufferTmp);
 			descriptorHeap.PushBackView(device, &materialConstantBufferResources[i]);
 
+			
 			bool textureFlag = false;
+			
 			if (model.material[i].diffuseColorTexturePath)
 			{
 				auto result = GetTexture(model.material[i].diffuseColorTexturePath.value());
@@ -109,6 +111,7 @@ namespace DX12
 					textureResources.emplace_back(std::move(textureResourceTmp));
 				}
 			}
+			
 
 			if (!textureFlag)
 				descriptorHeap.PushBackView(device, &whiteTextureResource);

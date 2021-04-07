@@ -88,8 +88,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\zlib-1.2.11;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\zlib-1.2.11\contrib\vstudio\vc14\x64\ZlibStatDebug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\zlib-1.2.11;C:\Program Files\DirectXTex;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\zlib-1.2.11\contrib\vstudio\vc14\x64\ZlibStatDebug;C:\Program Files\DirectXTex\Bin\Desktop_2019_Win10\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

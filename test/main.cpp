@@ -98,7 +98,7 @@ int main()
 		DirectX::XM_PIDIV2,
 		static_cast<float>(windowWidth) / static_cast<float>(windowHeight),
 		1.f,
-		500.f
+		1000.f
 	);
 
 
@@ -113,6 +113,7 @@ int main()
 	auto cnt = 0;
 	while (Window::UpdateWindow())
 	{
+		
 		DirectX::XMFLOAT3 eye{ 300 * std::sin(cnt / 100.f),200,300 * std::cos(cnt / 100.f) };
 		view = DirectX::XMMatrixLookAtLH(
 			DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));

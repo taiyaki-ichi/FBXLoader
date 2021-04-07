@@ -47,7 +47,6 @@ namespace FBXL
 		const std::unordered_map<std::int64_t, Material<Vector3D>>& materials,
 		const Connections& connections)
 	{
-		//Model3DParts<Vector2D, Vector3D> result{};
 		std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int64_t>> trianglePolygonPairs{};
 
 		std::size_t i = 0;

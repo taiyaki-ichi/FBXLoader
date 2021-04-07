@@ -2,6 +2,7 @@
 #include"GeometryStruct.hpp"
 #include"../../GlobalSettings/GlobalSettingsStruct.hpp"
 #include<functional>
+#include<stdexcept>
 
 namespace FBXL
 {
@@ -111,8 +112,7 @@ namespace FBXL
 		auto gm = GetGeometryMeshFromTrianglePolygonAndMaterialNumberPairs(std::move(vertexAndMaterialNumPairs));
 
 		return std::make_pair(std::move(gm), index);
-		
-
+	
 	}
 
 
@@ -189,6 +189,11 @@ namespace FBXL
 		PrimitiveDoubleData result{};
 
 		auto layerElementNode = GetSingleChildrenNode(geometryMesh, DoubleDataInformation::layerElementName);
+		//複数のおなじNodeがある場合がある
+		if (!layerElementNode) {
+			auto tmp = GetChildrenNodes(geometryMesh, DoubleDataInformation::layerElementName);
+			layerElementNode = tmp[0];
+		}
 
 		auto doubleDataNode = GetSingleChildrenNode(layerElementNode.value(), DoubleDataInformation::rawDoubleDataName);
 		auto doubleData = GetProperty<std::vector<double>>(doubleDataNode.value(), 0).value();
@@ -215,12 +220,12 @@ namespace FBXL
 	template<typename CreateVector3DPolicy>
 	auto GetVertexFromIndex(const std::vector<double>& verteces, const std::vector<std::int32_t>& indeces, std::size_t index)
 	{
-		auto i = (indeces[index] < 0) ? -indeces[index] - 1 : indeces[index];
+		auto i = (indeces.at(index) < 0) ? -indeces.at(index) - 1 : indeces.at(index);
 
 		return CreateVector3DPolicy::Create(
-			verteces[i * 3],
-			verteces[i * 3 + 1],
-			verteces[i * 3 + 2]
+			verteces.at(i * 3),
+			verteces.at(i * 3 + 1),
+			verteces.at(i * 3 + 2)
 		);
 	}
 
@@ -230,7 +235,10 @@ namespace FBXL
 	{
 		auto i = (index < 0) ? -index - 1 : index;
 
-		return CreateVector2DPolicy::Create(rawData[i * 2], -rawData[i * 2 + 1]);
+		//
+		//マイナス？？？
+		//
+		return CreateVector2DPolicy::Create(rawData.at(i * 2), -rawData.at(i * 2 + 1));
 	}
 
 	template<typename Vector2D, typename CreateVector2DPolicy>
@@ -238,9 +246,12 @@ namespace FBXL
 	{
 		auto i = (index < 0) ? -index - 1 : index;
 
+		//
+		//マイナス？？？
+		//
 		return CreateVector2DPolicy::Create(
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 2],
-			-indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 2 + 1]
+			indexAndRawDataPair.second.at(indexAndRawDataPair.first.at(i) * 2),
+			-indexAndRawDataPair.second.at(indexAndRawDataPair.first.at(i) * 2 + 1)
 		);
 	}
 
@@ -250,7 +261,7 @@ namespace FBXL
 	{
 		auto i = (index < 0) ? -index - 1 : index;
 
-		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(rawData[i * 3], rawData[i * 3 + 1], rawData[i * 3 + 2], globalSettings);
+		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(rawData.at(i * 3), rawData.at(i * 3 + 1), rawData.at(i * 3 + 2), globalSettings);
 	}
 
 	template<typename Vector3D, typename CreateVector3DPolicy>
@@ -259,9 +270,9 @@ namespace FBXL
 		auto i = (index < 0) ? -index - 1 : index;
 
 		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3],
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3 + 1],
-			indexAndRawDataPair.second[indexAndRawDataPair.first[i] * 3 + 2],
+			indexAndRawDataPair.second.at(indexAndRawDataPair.first.at(i) * 3),
+			indexAndRawDataPair.second.at(indexAndRawDataPair.first.at(i) * 3 + 1),
+			indexAndRawDataPair.second.at(indexAndRawDataPair.first.at(i) * 3 + 2),
 			globalSettings
 		);
 	}
@@ -313,14 +324,18 @@ namespace FBXL
 
 				auto materialIndex = getMaterialIndex(polygonIndex);
 
-				tmpTrianglePolygon[0] = getVertex(i);
-				tmpTrianglePolygon[1] = getVertex(j);
-				tmpTrianglePolygon[2] = getVertex(j + 1);
+				try {
 
-				result.emplace_back(std::make_pair(std::move(tmpTrianglePolygon), materialIndex));
+					tmpTrianglePolygon[0] = getVertex(i);
+					tmpTrianglePolygon[1] = getVertex(j);
+					tmpTrianglePolygon[2] = getVertex(j + 1);
 
+					result.emplace_back(std::make_pair(std::move(tmpTrianglePolygon), materialIndex));
+				}
+				catch (std::out_of_range) {};
+				
 				j++;
-			} while (indeces[j] >= 0);
+			} while (j < indeces.size() && indeces[j] >= 0);
 			i = j + 1;
 			polygonIndex++;
 		}
