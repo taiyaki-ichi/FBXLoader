@@ -18,7 +18,7 @@ namespace FBXL
 		std::vector<std::int32_t>,
 		std::vector<bool>,
 		std::string,
-		std::vector<unsigned char>//バイナリデータ
+		std::vector<char>//バイナリデータ
 	>;
 
 

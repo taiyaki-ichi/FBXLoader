@@ -6,7 +6,7 @@ namespace FBXL
 
 	//マテリアエルにテクスチャの情報を加える
 	template<typename Vector3D>
-	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomarion(
+	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomation(
 		std::unordered_map<std::int64_t, Material<Vector3D>>&& materials,
 		std::unordered_map<std::int64_t, Texture>&& textures,
 		const Connections& connectios,
@@ -24,7 +24,7 @@ namespace FBXL
 
 
 	template<typename Vector3D>
-	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomarion(
+	std::unordered_map<std::int64_t, Material<Vector3D>> AddTextureInfomation(
 		std::unordered_map<std::int64_t, Material<Vector3D>>&& materials,
 		std::unordered_map<std::int64_t, Texture>&& textures,
 		const Connections& connectios,

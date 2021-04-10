@@ -68,8 +68,8 @@ int main()
 	DX12::PipelineState pipelineState{};
 	pipelineState.Initialize(&device, std::move(rootSignature), std::move(vertexShader), std::move(pixcelShader));
 
-	//auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
-	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_002.fbx");
+	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
+	//auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/test015.fbx");
 
 
 	DX12::FBXModel fbxModel{};
@@ -114,7 +114,7 @@ int main()
 	while (Window::UpdateWindow())
 	{
 		
-		DirectX::XMFLOAT3 eye{ 300 * std::sin(cnt / 100.f),200,300 * std::cos(cnt / 100.f) };
+		DirectX::XMFLOAT3 eye{ 400 * std::sin(cnt / 100.f),300,400 * std::cos(cnt / 100.f) };
 		view = DirectX::XMMatrixLookAtLH(
 			DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
 		cnt++;

@@ -37,7 +37,6 @@ namespace FBXL
 		if (upAxisSign)
 			result.upAxisSign = upAxisSign.value();
 
-
 		auto frontAxis = GetProperities70Data<std::int32_t>(globalSettingsProp70.value(), "FrontAxis", 4);
 		if (frontAxis)
 			result.frontAxis = frontAxis.value();

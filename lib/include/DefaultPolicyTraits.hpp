@@ -3,26 +3,7 @@
 
 namespace FBXL
 {
-	//‰¼
-	constexpr double PI = 3.1415;
-
-	template<typename VertexContainer>
-	struct DefaultVertexContainerPushBack
-	{
-		static void PushBack(VertexContainer& c,double x, double y, double z)
-		{
-			c.emplace_back(x, y, z);
-		}
-	};
-
-	template<typename IndexContainer>
-	struct DefaultIndexContainerPushBack
-	{
-		static void PushBack(IndexContainer& c, std::int32_t i)
-		{
-			c.push_back(i);
-		}
-	};
+	constexpr double PI = 3.141592653589;
 
 	template<typename Vector3D>
 	struct DefaultCreateVector3D
@@ -48,9 +29,9 @@ namespace FBXL
 	{
 		static Vector3D Rotation(Vector3D&& vec, const Vector3D& rotationVec)
 		{
-			auto rot = [](float& a, float& b, float rot) {
-				float memoA = a;
-				float memoB = b;
+			auto rot = [](auto& a, auto& b, auto rot) {
+				auto memoA = a;
+				auto memoB = b;
 				a = memoA * std::cos(rot) - memoB * std::sin(rot);
 				b = memoA * std::sin(rot) + memoB * std::cos(rot);
 			};

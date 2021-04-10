@@ -118,11 +118,11 @@ namespace FBXL
 		return result;
 	}
 
-	inline std::vector<unsigned char> ReadRawBinaryType(std::istream& is)
+	inline std::vector<char> ReadRawBinaryType(std::istream& is)
 	{
 		auto length = ReadPrimitiveType<std::uint32_t>(is);
 
-		std::vector<unsigned char> result(length);
+		std::vector<char> result(length);
 
 		is.read(reinterpret_cast<char*>(result.data()), length * sizeof(unsigned char));
 
@@ -131,11 +131,10 @@ namespace FBXL
 
 
 	template<typename UintType>
-	std::optional<Node> LoadNodeImpl(std::istream& is)
+	Node LoadNodeImpl(std::istream& is)
 	{
 		Node result{};
 
-		//
 		std::streampos endPos{ static_cast<long long>(ReadPrimitiveType<UintType>(is)) };
 
 		auto numProperties = ReadPrimitiveType<UintType>(is);
@@ -199,7 +198,7 @@ namespace FBXL
 				break;
 
 			case 'b':
-				result.properties[i] = ReadArrayType<unsigned char>(is);
+				result.properties[i] = ReadArrayType<char>(is);
 				break;
 
 			case 'S':
@@ -211,20 +210,15 @@ namespace FBXL
 				break;
 
 			default:
-				//std::cout << "\n default \n";
 				break;
 			}
 		}
 
 		if (is.tellg() < endPos)
 		{
-			std::optional<Node> nestedNode;
-
 			//子ノードを持つ時点で終端文字は省略されない
 			while (is.tellg() + std::streampos{ 13 } < endPos) {
-				nestedNode = LoadNodeImpl<UintType>(is);
-				if (nestedNode)
-					result.children.push_back(nestedNode.value());
+				result.children.push_back(LoadNodeImpl<UintType>(is));
 			}
 		}
 
@@ -251,18 +245,10 @@ namespace FBXL
 		std::optional<Node> tmp;
 
 		while (!CheckNullRecord<N>(is))
-		{
-			tmp = LoadNodeImpl<UintType>(is);
-			if (tmp)
-				result.push_back(tmp.value());
-		}
+			result.emplace_back(LoadNodeImpl<UintType>(is));
 
 		return result;
 	}
-
-
-
-
 
 
 

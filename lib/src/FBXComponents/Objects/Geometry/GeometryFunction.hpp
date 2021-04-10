@@ -123,9 +123,9 @@ namespace FBXL
 
 		if (layerElementMaterialNode)
 		{
-			auto materialNode = GetSingleChildrenNode(layerElementMaterialNode.value(), "Materials").value();
+			auto materialNode = GetSingleChildrenNode(layerElementMaterialNode.value(), "Materials");
 
-			return GetProperty<std::vector<std::int32_t>>(materialNode, 0).value();
+			return GetProperty<std::vector<std::int32_t>>(materialNode.value(), 0).value();
 		}
 		else
 			return std::nullopt;

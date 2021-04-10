@@ -10,7 +10,7 @@ namespace FBXL
 {
 	//Node‚©‚çObjects‚ÌŽæ“¾
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::optional<Objects<Vector2D, Vector3D>> GetObjects(Node&& objects);
+	Objects<Vector2D, Vector3D> GetObjects(Node&& objects);
 
 
 	//
@@ -19,7 +19,7 @@ namespace FBXL
 
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::optional<Objects<Vector2D, Vector3D>> GetObjects(Node&& objects, const GlobalSettings& globalSettings)
+	Objects<Vector2D, Vector3D> GetObjects(Node&& objects, const GlobalSettings& globalSettings)
 	{
 		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
 			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");

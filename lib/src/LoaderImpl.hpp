@@ -9,44 +9,42 @@ namespace FBXL
 {
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy,
 		typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScallingVector3DPolicy>
-	std::optional<Model3D<Vector2D, Vector3D>> LoadModel3D(const std::string& filePath)
+		std::optional<Model3D<Vector2D, Vector3D>> LoadModel3D(const std::string& filePath)
 	{
+
 		auto primitiveData = LoadPrimitiveData(filePath);
 
-		std::optional<Objects<Vector2D, Vector3D>> objects = std::nullopt;
-		std::optional<Connections> connections = std::nullopt;
 
 		auto globalSettingsNode = RemoveTopLevelNode(&primitiveData, "GlobalSettings");
-		GlobalSettings globalSettings{};
-		if (globalSettingsNode)
-			globalSettings = GetGlobalSettings(std::move(globalSettingsNode.value()));
+		if (!globalSettingsNode)
+			throw "global setting node is not found";
+		auto globalSettings = GetGlobalSettings(std::move(globalSettingsNode.value()));
 
 
-		//Sign
+		auto objectsNode = RemoveTopLevelNode(&primitiveData, "Objects");
+		if (!objectsNode)
+			throw "objects node is not found";
+		auto [modelMeshes, geometryMeshes, materials, textures] =
+			GetObjects<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(objectsNode.value()), globalSettings);
 
-		for (auto& node : primitiveData.nodes)
-		{
-			if (node.name == "Objects")
-				objects = GetObjects<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(node), globalSettings);
-			else if (node.name == "Connections")
-				connections = GetConnections(std::move(node));
-		}
 
-		if (objects && connections)
-		{
-			auto&& [modelMeshes, geometryMeshes, materials, textures] = std::move(objects.value());
+		auto connectionsNode = RemoveTopLevelNode(&primitiveData, "Connections");
+		if (!connectionsNode)
+			throw "connections node is not found";
+		auto connections = GetConnections(std::move(connectionsNode.value()));
 
-			auto model3DParts = GetModel3DParts<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
-				std::move(modelMeshes), std::move(geometryMeshes), materials, connections.value());
 
-			auto folderPath = std::string{ filePath.begin(),filePath.begin() + filePath.rfind('/') + 1 };
+		auto model3DParts = GetModel3DParts<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
+			std::move(modelMeshes), std::move(geometryMeshes), materials, connections);
 
-			auto m = AddTextureInfomarion<Vector3D>(std::move(materials), std::move(textures), connections.value(), std::move(folderPath));
 
-			return  GetModel3D<Vector2D, Vector3D>(std::move(model3DParts), std::move(m));
-		}
+		auto folderPath = std::string{ filePath.begin(),filePath.begin() + filePath.rfind('/') + 1 };
 
-		return std::nullopt;
+
+		auto materialWithTextureInfomation = AddTextureInfomation<Vector3D>(std::move(materials), std::move(textures), connections, std::move(folderPath));
+
+
+		return  GetModel3D<Vector2D, Vector3D>(std::move(model3DParts), std::move(materialWithTextureInfomation));
 	}
 
 }

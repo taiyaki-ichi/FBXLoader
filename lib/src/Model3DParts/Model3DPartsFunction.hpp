@@ -86,7 +86,7 @@ namespace FBXL
 
 			if (geometryMesh)
 			{
-				//assert(geometryMesh.value().materialRange.size() == materialIndex.size());
+				assert(geometryMesh.value().materialRange.size() == materialIndex.size());
 
 				auto g = TransformGeometryMesh<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
 					std::move(geometryMesh.value()), std::move(modelMesh.second));

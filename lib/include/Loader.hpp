@@ -11,6 +11,7 @@ namespace FBXL
 		typename RotationVector3DPolicy = DefaultRotationVector3DPolicy<Vector3D>,
 		typename ScallingVector3DPolicy = DefaultScallingVector3DPolicy<Vector3D>>
 	std::optional<Model3D<Vector2D, Vector3D>> LoadModel3D(const std::string& filePath);
+
 }
 
 

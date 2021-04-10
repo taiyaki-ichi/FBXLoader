@@ -21,13 +21,13 @@ namespace FBXL
 		auto index = GetProperty<std::int64_t>(&textureNode, 0).value();
 
 		{
-			auto node = GetSingleChildrenNode(&textureNode, "FileName").value();
-			result.fileName = GetProperty<std::string>(node, 0).value();
+			auto node = GetSingleChildrenNode(&textureNode, "FileName");
+			result.fileName = GetProperty<std::string>(node.value(), 0).value();
 		}
 
 		{
-			auto node = GetSingleChildrenNode(&textureNode, "RelativeFilename").value();
-			result.relativeFileName = GetProperty<std::string>(node, 0).value();
+			auto node = GetSingleChildrenNode(&textureNode, "RelativeFilename");
+			result.relativeFileName = GetProperty<std::string>(node.value(), 0).value();
 		}
 
 		return std::make_pair(std::move(result), index);
