@@ -41,6 +41,8 @@ namespace FBXL
 	template<typename Vector3D, typename CreateVector3DPolicy>
 	Vector3D GetVector3DFromPrimitiveData(const PrimitiveDoubleData&, const std::vector<std::int32_t>&, const GlobalSettings&, std::int32_t);
 
+	PrimitiveDoubleData GetVertecesPrimitiveDoubleData(const Node* geometryMesh);
+
 	struct NormalDoubleDataInformation {
 		constexpr static char layerElementName[] = "LayerElementNormal";
 		constexpr static char rawDoubleDataName[] = "Normals";
@@ -183,6 +185,18 @@ namespace FBXL
 	}
 
 
+	PrimitiveDoubleData GetVertecesPrimitiveDoubleData(const Node* geometryMesh)
+	{
+		PrimitiveDoubleData result{};
+
+		auto verticesNode = GetSingleChildrenNode(geometryMesh, "Vertices");
+		result.dataVarivant = GetProperty<std::vector<double>>(verticesNode.value(), 0).value();
+
+		result.isByPolygonVertex = false;
+
+		return result;
+	}
+
 	template<typename DoubleDataInformation>
 	PrimitiveDoubleData GetPrimitiveDoubleData(const Node* geometryMesh)
 	{
@@ -283,11 +297,10 @@ namespace FBXL
 	{
 		std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>> result{};
 
-		auto verticesNode = GetSingleChildrenNode(geometryMesh, "Vertices");
-		auto vertices = GetProperty<std::vector<double>>(verticesNode.value(), 0).value();
-
 		auto indexNode = GetSingleChildrenNode(geometryMesh, "PolygonVertexIndex");
 		auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode.value(), 0).value();
+
+		auto vertices = GetVertecesPrimitiveDoubleData(geometryMesh);
 
 		auto normals = GetPrimitiveDoubleData<NormalDoubleDataInformation>(geometryMesh);
 
@@ -295,7 +308,7 @@ namespace FBXL
 
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
 
-		auto getVertexVector3D = std::bind(GetVertexFromIndex<CreateVector3DPolicy>, vertices, indeces, std::placeholders::_1);
+		auto getVertexVector3D = std::bind(GetVector3DFromPrimitiveData<Vector3D, CreateVector3DPolicy>, vertices, indeces, globalSettings, std::placeholders::_1);
 		auto getNormalVector3D = std::bind(GetVector3DFromPrimitiveData<Vector3D, CreateVector3DPolicy>, normals, indeces, globalSettings, std::placeholders::_1);
 		auto getUVVector2D = std::bind(GetVector2DFromPrimitiveData<Vector2D, CreateVector2DPolicy>, uvs, indeces, globalSettings, std::placeholders::_1);
 
