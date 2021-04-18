@@ -90,6 +90,25 @@ namespace FBXL
 		std::size_t operator()(const IndexAndRawDataPair&);
 	};
 
+	template<typename Vector2D,typename CreateVector2DPolicy>
+	struct CreateVector2DFromIndexVisitor {
+		const GlobalSettings& globalSettings;
+		std::size_t index;
+
+		Vector2D operator()(const RawData&);
+		Vector2D operator()(const IndexAndRawDataPair&);
+	};
+
+	template<typename Vector3D,typename CreateVector3DPolicy>
+	struct CreateVector3DFromIndexVisitor {
+		const GlobalSettings& globalSettings;
+		std::size_t index;
+
+		Vector3D operator()(const RawData&);
+		Vector3D operator()(const IndexAndRawDataPair&);
+	};
+
+
 	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
 	std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>>
 		GetTrianglePolygonAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings);
@@ -104,9 +123,17 @@ namespace FBXL
 	//多分ボーンのインデックスの情報が追加されそう
 	using IndexTupleInfo = std::size_t;
 
-	std::pair<std::vector<IndexTuple>, std::vector<IndexTupleInfo>> GetIndexTuples(const std::vector<std::int32_t>& indeces,
+	std::pair<std::vector<IndexTuple>, std::vector<IndexTupleInfo>> GetIndexTuplesAndIndexTupleInfosPair(const std::vector<std::int32_t>& indeces,
 		const PrimitiveDoubleData& pos, const PrimitiveDoubleData& normal, const PrimitiveDoubleData& uv,
 		std::optional<std::vector<std::int32_t>>&& materialIndeces);
+
+	//頂点を参照する用のインデックスと取得重複のないIndexTupleのデータ
+	std::pair<std::vector<std::size_t>, std::vector<IndexTuple>> GetIndecesAndIndexTuplesPair(std::vector<IndexTuple>&&);
+
+	template<typename Vector2D,typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::vector<Vertex<Vector2D, Vector3D>> GetVertecesFromIndexTuples(std::vector<IndexTuple>&&,
+		PrimitiveDoubleData&& pos, PrimitiveDoubleData&& normal, PrimitiveDoubleData&& uv, const GlobalSettings& globalSettings);
+
 
 	//
 	//以下、実装
@@ -221,7 +248,7 @@ namespace FBXL
 		return result;
 	}
 
-	std::pair<std::vector<IndexTuple>, std::vector<IndexTupleInfo>> GetIndexTuples(const std::vector<std::int32_t>& indeces,
+	std::pair<std::vector<IndexTuple>, std::vector<IndexTupleInfo>> GetIndexTuplesAndIndexTupleInfosPair(const std::vector<std::int32_t>& indeces,
 		const PrimitiveDoubleData& pos, const PrimitiveDoubleData& normal, const PrimitiveDoubleData& uv, std::optional<std::vector<std::int32_t>>&& materialIndeces)
 	{
 		std::vector<IndexTuple> indexTuples{};
@@ -438,7 +465,11 @@ namespace FBXL
 			polygonIndex++;
 		}
 
-		auto hoge = GetIndexTuples(indeces, vertices, normals, uvs, std::move(materialIndeces));
+		auto [indexTuples, indexTupleInfos] = GetIndexTuplesAndIndexTupleInfosPair(indeces, vertices, normals, uvs, std::move(materialIndeces));
+		auto [indexTupleIndeces, indexTuples2] = GetIndecesAndIndexTuplesPair(std::move(indexTuples));
+
+		auto v = GetVertecesFromIndexTuples<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(
+			std::move(indexTuples2), std::move(vertices), std::move(normals), std::move(uvs), globalSettings);
 
 		return result;
 	}
@@ -465,6 +496,93 @@ namespace FBXL
 
 			result.materialRange[pair[i].second]++;
 		}
+
+		return result;
+	}
+
+	std::pair<std::vector<std::size_t>, std::vector<IndexTuple>> GetIndecesAndIndexTuplesPair(std::vector<IndexTuple>&& indexTuples)
+	{
+		auto indexTuplesResult = indexTuples;
+
+		{
+			std::sort(indexTuplesResult.begin(), indexTuplesResult.end());
+			auto iter = std::unique(indexTuplesResult.begin(), indexTuplesResult.end());
+			indexTuplesResult.erase(iter, indexTuplesResult.end());
+		}
+
+		std::vector<std::size_t> indeces(indexTuples.size());
+		for (std::size_t i = 0; i < indexTuples.size(); i++)
+		{
+			auto iter = std::lower_bound(indexTuplesResult.begin(), indexTuplesResult.end(), indexTuples[i]);
+			indeces[i] = iter - indexTuplesResult.begin();
+		}
+
+		return std::make_pair(std::move(indeces), std::move(indexTuplesResult));
+	}
+
+	template<typename Vector2D, typename CreateVector2DPolicy>
+	inline Vector2D CreateVector2DFromIndexVisitor<Vector2D, CreateVector2DPolicy>::operator()(const RawData& rawData)
+	{
+		//
+		//マイナス？？？
+		//今のところuvのしか使わない
+		//
+		return CreateVector2DPolicy::Create(rawData.at(index * 2), -rawData.at(index * 2 + 1));
+	}
+
+	template<typename Vector2D, typename CreateVector2DPolicy>
+	inline Vector2D CreateVector2DFromIndexVisitor<Vector2D, CreateVector2DPolicy>::operator()(const IndexAndRawDataPair& indexAndRawData)
+	{
+		//
+		//マイナス？？？
+		//今のところuvのしか使わない
+		//
+		return  CreateVector2DPolicy::Create(indexAndRawData.second.at(index * 2), -indexAndRawData.second.at(index * 2 + 1));
+	}
+
+
+
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	inline Vector3D CreateVector3DFromIndexVisitor<Vector3D, CreateVector3DPolicy>::operator()(const RawData& rawData)
+	{
+		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
+			rawData.at(index * 3), 
+			rawData.at(index * 3 + 1), 
+			rawData.at(index * 3 + 2), 
+			globalSettings
+		);
+	}
+
+	template<typename Vector3D, typename CreateVector3DPolicy>
+	inline Vector3D CreateVector3DFromIndexVisitor<Vector3D, CreateVector3DPolicy>::operator()(const IndexAndRawDataPair& indexAndRawDataPair)
+	{
+		return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
+			indexAndRawDataPair.second.at(index * 3),
+			indexAndRawDataPair.second.at(index * 3 + 1),
+			indexAndRawDataPair.second.at(index * 3 + 2),
+			globalSettings
+		);
+	}
+
+
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::vector<Vertex<Vector2D, Vector3D>> GetVertecesFromIndexTuples(std::vector<IndexTuple>&& indexTuples, PrimitiveDoubleData&& pos, PrimitiveDoubleData&& normal, PrimitiveDoubleData&& uv, const GlobalSettings& globalSettings)
+	{
+		std::vector<Vertex<Vector2D, Vector3D>> result{};
+		result.reserve(indexTuples.size());
+
+		auto getPosition = [&globalSettings, &pos](std::size_t i) {
+			return std::visit(CreateVector3DFromIndexVisitor<Vector3D, CreateVector3DPolicy>{ globalSettings, i }, pos.dataVarivant);
+		};
+		auto getNormal = [&globalSettings, &normal](std::size_t i) {
+			return std::visit(CreateVector3DFromIndexVisitor<Vector3D, CreateVector3DPolicy>{ globalSettings,i }, normal.dataVarivant);
+		};
+		auto getUV = [&globalSettings, &uv](std::size_t i) {
+			return std::visit(CreateVector2DFromIndexVisitor<Vector2D, CreateVector2DPolicy>{ globalSettings, i }, uv.dataVarivant);
+		};
+
+		for (auto&& it : indexTuples)
+			result.emplace_back(Vertex<Vector2D, Vector3D>{ getPosition(std::get<0>(it)), getNormal(std::get<1>(it)), getUV(std::get<2>(it)) });
 
 		return result;
 	}
