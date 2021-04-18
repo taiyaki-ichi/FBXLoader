@@ -3,6 +3,7 @@
 #include"../../GlobalSettings/GlobalSettingsStruct.hpp"
 #include<functional>
 #include<stdexcept>
+#include<tuple>
 
 namespace FBXL
 {
@@ -40,6 +41,8 @@ namespace FBXL
 
 	template<typename Vector3D, typename CreateVector3DPolicy>
 	Vector3D GetVector3DFromPrimitiveData(const PrimitiveDoubleData&, const std::vector<std::int32_t>&, const GlobalSettings&, std::int32_t);
+
+	std::size_t GetPrimitiveDoubleDataIndex(const PrimitiveDoubleData&, const std::vector<std::int32_t>& indeces, std::int32_t index);
 
 	PrimitiveDoubleData GetVertecesPrimitiveDoubleData(const Node* geometryMesh);
 
@@ -81,6 +84,11 @@ namespace FBXL
 		Vector3D operator()(const IndexAndRawDataPair&);
 	};
 
+	struct GetPrimitiveDoubleDataIndexVisitor {
+		std::int32_t index;
+		std::size_t operator()(const RawData&);
+		std::size_t operator()(const IndexAndRawDataPair&);
+	};
 
 	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
 	std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>>
@@ -90,6 +98,15 @@ namespace FBXL
 	template<typename Vector2D, typename Vector3D>
 	GeometryMesh<Vector2D,Vector3D> GetGeometryMeshFromTrianglePolygonAndMaterialNumberPairs(std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>>&& pair);
 
+	//pos,normal,uvの順
+	using IndexTuple = std::tuple<std::size_t, std::size_t, std::size_t>;
+	//とりあえずマテリアルのインデックスのみ
+	//多分ボーンのインデックスの情報が追加されそう
+	using IndexTupleInfo = std::size_t;
+
+	std::pair<std::vector<IndexTuple>, std::vector<IndexTupleInfo>> GetIndexTuples(const std::vector<std::int32_t>& indeces,
+		const PrimitiveDoubleData& pos, const PrimitiveDoubleData& normal, const PrimitiveDoubleData& uv,
+		std::optional<std::vector<std::int32_t>>&& materialIndeces);
 
 	//
 	//以下、実装
@@ -184,6 +201,13 @@ namespace FBXL
 		}
 	}
 
+	std::size_t FBXL::GetPrimitiveDoubleDataIndex(const PrimitiveDoubleData& primitiveDoubleData, const std::vector<std::int32_t>& indeces,std::int32_t index)
+	{
+		if (primitiveDoubleData.isByPolygonVertex)
+			return std::visit(GetPrimitiveDoubleDataIndexVisitor{ index }, primitiveDoubleData.dataVarivant);
+		else
+			return std::visit(GetPrimitiveDoubleDataIndexVisitor{ indeces[index] }, primitiveDoubleData.dataVarivant);
+	}
 
 	PrimitiveDoubleData GetVertecesPrimitiveDoubleData(const Node* geometryMesh)
 	{
@@ -195,6 +219,55 @@ namespace FBXL
 		result.isByPolygonVertex = false;
 
 		return result;
+	}
+
+	std::pair<std::vector<IndexTuple>, std::vector<IndexTupleInfo>> GetIndexTuples(const std::vector<std::int32_t>& indeces,
+		const PrimitiveDoubleData& pos, const PrimitiveDoubleData& normal, const PrimitiveDoubleData& uv, std::optional<std::vector<std::int32_t>>&& materialIndeces)
+	{
+		std::vector<IndexTuple> indexTuples{};
+		std::vector<IndexTupleInfo> indexTupleInfos{};
+
+		auto getPosIndex = std::bind(GetPrimitiveDoubleDataIndex, pos, indeces, std::placeholders::_1);
+		auto getNormalIndex = std::bind(GetPrimitiveDoubleDataIndex, normal, indeces, std::placeholders::_1);
+		auto getUVIndex = std::bind(GetPrimitiveDoubleDataIndex, uv, indeces, std::placeholders::_1);
+
+		auto pushBackIndexTuple = [&indexTuples, &getPosIndex, &getNormalIndex, &getUVIndex](std::size_t index) {
+			indexTuples.emplace_back(std::make_tuple(getPosIndex(index), getNormalIndex(index), getUVIndex(index)));
+		};
+
+		//マテリアルが単一の場合は常に0
+		auto getMaterialIndex = [&materialIndeces](std::size_t polygonIndex) {
+			return (materialIndeces && materialIndeces.value().size() > 1) ? materialIndeces.value()[polygonIndex] : 0;
+		};
+
+		std::size_t i = 0;
+		std::size_t j = 0;
+		std::size_t polygonIndex = 0;
+		while (i < indeces.size())
+		{
+			j = i + 1;
+			do {
+
+				auto indexTupleInfo = getMaterialIndex(polygonIndex);
+
+				try {
+
+					pushBackIndexTuple(i);
+					pushBackIndexTuple(j);
+					pushBackIndexTuple(j + 1);
+
+					indexTupleInfos.push_back(indexTupleInfo);
+
+				}
+				catch (std::out_of_range) {};
+
+				j++;
+			} while (j < indeces.size() && indeces[j] >= 0);
+			i = j + 1;
+			polygonIndex++;
+		}
+
+		return std::make_pair(std::move(indexTuples), std::move(indexTupleInfos));
 	}
 
 	template<typename DoubleDataInformation>
@@ -291,6 +364,18 @@ namespace FBXL
 		);
 	}
 
+	inline std::size_t FBXL::GetPrimitiveDoubleDataIndexVisitor::operator()(const RawData&)
+	{
+		auto i = (index < 0) ? -index - 1 : index;
+		return i;
+	}
+
+	inline std::size_t FBXL::GetPrimitiveDoubleDataIndexVisitor::operator()(const IndexAndRawDataPair& indexAndRawDataPair)
+	{
+		auto i = (index < 0) ? -index - 1 : index;
+		return indexAndRawDataPair.first.at(i);
+	}
+
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
 	std::vector<std::pair<TrianglePolygon<Vector2D, Vector3D>, std::int32_t>>
 		GetTrianglePolygonAndMaterialNumberPairs(const Node* geometryMesh, const GlobalSettings& globalSettings)
@@ -352,6 +437,8 @@ namespace FBXL
 			i = j + 1;
 			polygonIndex++;
 		}
+
+		auto hoge = GetIndexTuples(indeces, vertices, normals, uvs, std::move(materialIndeces));
 
 		return result;
 	}
