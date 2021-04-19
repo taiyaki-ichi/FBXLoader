@@ -24,6 +24,13 @@ namespace FBXL
 		auto objectsNode = RemoveTopLevelNode(&primitiveData, "Objects");
 		if (!objectsNode)
 			throw "objects node is not found";
+
+		
+		auto hoge = objectsNode.value();
+		auto [mm, gm, m, t] = GetObjects2<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(hoge), globalSettings);
+
+	
+
 		auto [modelMeshes, geometryMeshes, materials, textures] =
 			GetObjects<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(objectsNode.value()), globalSettings);
 
@@ -37,6 +44,10 @@ namespace FBXL
 		auto model3DParts = GetModel3DParts<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
 			std::move(modelMeshes), std::move(geometryMeshes), materials, connections);
 
+		
+		auto aaa = GetModel3DParts2<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
+			std::move(mm), std::move(gm), materials, connections);
+		
 
 		auto folderPath = std::string{ filePath.begin(),filePath.begin() + filePath.rfind('/') + 1 };
 

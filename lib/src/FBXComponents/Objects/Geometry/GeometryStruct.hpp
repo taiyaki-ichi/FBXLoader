@@ -18,17 +18,10 @@ namespace FBXL
 
 	using TrianglePolygonIndex = std::tuple<std::size_t, std::size_t, std::size_t>;
 
-	//とりあえずマテリアルのインデックスのみ
-	//多分ボーンのインデックスの情報が追加されそう
-	struct PolygonInformation {
-		std::int32_t materialIndex{};
-	};
-
 	template<typename Vector2D,typename Vector3D>
 	struct GeometryMesh2 {
-		std::vector<TrianglePolygonIndex> trianglePolygonIndeces{};
-		std::vector<Vertex<Vector2D, Vector3D>> verteces{};
-		std::vector<PolygonInformation> materialInformations{};
+		std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> trianglePolygonIndeces{};
+		std::vector<Vertex<Vector2D, Vector3D>> vertices{};
 	};
 
 }

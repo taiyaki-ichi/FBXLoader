@@ -62,7 +62,7 @@ namespace FBXL
 	PrimitiveDoubleData GetPrimitiveDoubleData(const Node* geometryMesh);
 
 	template<typename CreateVector3DPolicy>
-	auto GetVertexFromIndex(const std::vector<double>& verteces, const std::vector<std::int32_t>& indeces, std::size_t index);
+	auto GetVertexFromIndex(const std::vector<double>& vertices, const std::vector<std::int32_t>& indeces, std::size_t index);
 
 	template<typename Vector2D, typename CreateVector2DPolicy>
 	struct GetVector2DFromDoubleDataVariantVisitor {
@@ -120,7 +120,7 @@ namespace FBXL
 	//pos,normal,uvÇÃèá
 	using IndexTuple = std::tuple<std::size_t, std::size_t, std::size_t>;
 
-	std::pair<std::vector<IndexTuple>, std::vector<PolygonInformation>> GetIndexTuplesAndIndexPolygonInformationPair(const std::vector<std::int32_t>& indeces,
+	std::pair<std::vector<IndexTuple>, std::vector<std::int32_t>> GetIndexTuplesAndIndexPolygonInformationPair(const std::vector<std::int32_t>& indeces,
 		const PrimitiveDoubleData& pos, const PrimitiveDoubleData& normal, const PrimitiveDoubleData& uv,
 		std::optional<std::vector<std::int32_t>>&& materialIndeces);
 
@@ -134,7 +134,7 @@ namespace FBXL
 	inline std::vector<TrianglePolygonIndex> GetTrianglePolygonIndeces(std::vector<std::size_t>&&);
 
 	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
-	std::tuple<std::vector<TrianglePolygonIndex>, std::vector<Vertex<Vector2D, Vector3D>>, std::vector<PolygonInformation>>
+	std::tuple<std::vector<std::pair<TrianglePolygonIndex, std::int64_t>>, std::vector<Vertex<Vector2D, Vector3D>>>
 		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings);
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
@@ -254,11 +254,11 @@ namespace FBXL
 		return result;
 	}
 
-	std::pair<std::vector<IndexTuple>, std::vector<PolygonInformation>> GetIndexTuplesAndIndexPolygonInformationPair(const std::vector<std::int32_t>& indeces,
+	std::pair<std::vector<IndexTuple>, std::vector<std::int32_t>> GetIndexTuplesAndIndexPolygonInformationPair(const std::vector<std::int32_t>& indeces,
 		const PrimitiveDoubleData& pos, const PrimitiveDoubleData& normal, const PrimitiveDoubleData& uv, std::optional<std::vector<std::int32_t>>&& materialIndeces)
 	{
 		std::vector<IndexTuple> indexTuples{};
-		std::vector<PolygonInformation> indexTupleInfos{};
+		std::vector<std::int32_t> indexTupleInfos{};
 
 		auto getPosIndex = std::bind(GetPrimitiveDoubleDataIndex, pos, indeces, std::placeholders::_1);
 		auto getNormalIndex = std::bind(GetPrimitiveDoubleDataIndex, normal, indeces, std::placeholders::_1);
@@ -289,7 +289,7 @@ namespace FBXL
 					pushBackIndexTuple(j);
 					pushBackIndexTuple(j + 1);
 
-					indexTupleInfos.push_back({ materialIndex });
+					indexTupleInfos.push_back(materialIndex);
 
 				}
 				catch (std::out_of_range) {};
@@ -338,14 +338,14 @@ namespace FBXL
 	}
 
 	template<typename CreateVector3DPolicy>
-	auto GetVertexFromIndex(const std::vector<double>& verteces, const std::vector<std::int32_t>& indeces, std::size_t index)
+	auto GetVertexFromIndex(const std::vector<double>& vertices, const std::vector<std::int32_t>& indeces, std::size_t index)
 	{
 		auto i = (indeces.at(index) < 0) ? -indeces.at(index) - 1 : indeces.at(index);
 
 		return CreateVector3DPolicy::Create(
-			verteces.at(i * 3),
-			verteces.at(i * 3 + 1),
-			verteces.at(i * 3 + 2)
+			vertices.at(i * 3),
+			vertices.at(i * 3 + 1),
+			vertices.at(i * 3 + 2)
 		);
 	}
 
@@ -599,7 +599,7 @@ namespace FBXL
 
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::tuple<std::vector<TrianglePolygonIndex>, std::vector<Vertex<Vector2D, Vector3D>>, std::vector<PolygonInformation>> 
+	std::tuple<std::vector<std::pair<TrianglePolygonIndex,std::int64_t>>, std::vector<Vertex<Vector2D, Vector3D>>> 
 		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings)
 	{
 		auto indexNode = GetSingleChildrenNode(geometryMesh, "PolygonVertexIndex");
@@ -611,7 +611,7 @@ namespace FBXL
 		auto uvsPrimitveData = GetPrimitiveDoubleData<UVDoubleDataInformation>(geometryMesh);
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
 
-		auto [indexTuples, polygonInformations] = GetIndexTuplesAndIndexPolygonInformationPair(indeces, verticesPrimitiveData, normalsPrimitiveData, uvsPrimitveData, std::move(materialIndeces));
+		auto [indexTuples, polygonMaterialIndeces] = GetIndexTuplesAndIndexPolygonInformationPair(indeces, verticesPrimitiveData, normalsPrimitiveData, uvsPrimitveData, std::move(materialIndeces));
 		auto [indexTupleIndeces, indexTuples2] = GetIndecesAndIndexTuplesPair(std::move(indexTuples));
 
 		auto vertices = GetVertecesFromIndexTuples<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(
@@ -619,8 +619,11 @@ namespace FBXL
 
 		auto trianglePolygonIndeces = GetTrianglePolygonIndeces(std::move(indexTupleIndeces));
 
+		std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> indexAndMaterialIndexPairs(trianglePolygonIndeces.size());
+		for (std::size_t i = 0; i < indexAndMaterialIndexPairs.size(); i++)
+			indexAndMaterialIndexPairs[i] = std::make_pair(std::move(trianglePolygonIndeces[i]), polygonMaterialIndeces[i]);
 
-		return { std::move(trianglePolygonIndeces), std::move(vertices), std::move(polygonInformations) };
+		return { std::move(indexAndMaterialIndexPairs), std::move(vertices) };
 	}
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
@@ -636,12 +639,11 @@ namespace FBXL
 
 		auto index = GetProperty<std::int64_t>(&geormetryMesh, 0).value();
 
-		auto [indeces, vertices, polygonInfomationTuple] =
+		auto [indeces, vertices] =
 			GetIndecesAndVertecesAndPolygonInfomationTuple<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh, globalSettings);
 
 
-		//return std::make_pair(GeometryMesh2<Vector2D, Vector3D>{indeces, vertices, polygonInfomationTuple  }, index);
-		
-		return { {},{} };
+		return std::make_pair(GeometryMesh2<Vector2D, Vector3D>{indeces, vertices }, index);
+	
 	}
 }
