@@ -70,6 +70,7 @@ int main()
 
 	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
 
+	auto model2 = FBXL::LoadModel3D2<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
 
 	DX12::FBXModel fbxModel{};
 	fbxModel.Initialize(&device, &commandList, std::move(model.value()));

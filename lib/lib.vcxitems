@@ -16,7 +16,6 @@
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DataStruct.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\DefaultPolicyTraits.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)INCLUDE\HELPER.HPP" />
     <ClInclude Include="$(MSBuildThisFileDirectory)include\Loader.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Connections\ConnectionsFunction.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)src\FBXComponents\Connections\ConnectionsStruct.hpp" />

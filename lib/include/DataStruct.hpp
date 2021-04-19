@@ -55,14 +55,20 @@ namespace FBXL
 	struct Model3D
 	{
 		std::vector<Vertex<Vector2D, Vector3D>> vertices;
-		
-		//std::vector<std::size_t> indeces{};
 
 		std::vector<std::int32_t> materialRange{};
 
 		std::vector<Material<Vector3D>> material{};
 	};
 
+	template<typename Vector2D, typename Vector3D>
+	struct Model3D2
+	{
+		std::vector<std::size_t> indeces{};
+		std::vector<Vertex<Vector2D, Vector3D>> vertices;
+		std::vector<std::size_t> materialRange{};
 
+		std::vector<Material<Vector3D>> material{};
+	};
 
 }
