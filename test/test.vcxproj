@@ -167,6 +167,7 @@
     <ClCompile Include="DirectX12\Resource\ColorTextureResource.cpp" />
     <ClCompile Include="DirectX12\Resource\ConstantBufferResource.cpp" />
     <ClCompile Include="DirectX12\Resource\DepthStencilBufferResource.cpp" />
+    <ClCompile Include="DirectX12\Resource\IndexBufferResource.cpp" />
     <ClCompile Include="DirectX12\Resource\ResourceBase.cpp" />
     <ClCompile Include="DirectX12\Resource\TextureResource.cpp" />
     <ClCompile Include="DirectX12\Resource\UploadResource.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="DirectX12\Resource\ConstantBufferResource.hpp" />
     <ClInclude Include="DirectX12\Resource\DepthStencilBufferResource.hpp" />
     <ClInclude Include="DirectX12\Resource\DoubleBufferResource.hpp" />
+    <ClInclude Include="DirectX12\Resource\IndexBufferResource.hpp" />
     <ClInclude Include="DirectX12\Resource\ResourceBase.hpp" />
     <ClInclude Include="DirectX12\Resource\TextureResource.hpp" />
     <ClInclude Include="DirectX12\Resource\UploadResource.hpp" />

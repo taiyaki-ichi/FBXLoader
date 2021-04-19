@@ -15,6 +15,7 @@
     <ClCompile Include="DirectX12\Resource\DepthStencilBufferResource.cpp" />
     <ClCompile Include="DirectX12\Resource\ColorTextureResource.cpp" />
     <ClCompile Include="DirectX12\Resource\TextureResource.cpp" />
+    <ClCompile Include="DirectX12\Resource\IndexBufferResource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.hpp" />
@@ -38,6 +39,7 @@
     <ClInclude Include="DirectX12\Resource\DepthStencilBufferResource.hpp" />
     <ClInclude Include="DirectX12\Resource\ColorTextureResource.hpp" />
     <ClInclude Include="DirectX12\Resource\TextureResource.hpp" />
+    <ClInclude Include="DirectX12\Resource\IndexBufferResource.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderFile\VertexShader.hlsl" />
