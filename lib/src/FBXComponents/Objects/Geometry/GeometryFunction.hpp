@@ -119,11 +119,8 @@ namespace FBXL
 
 	//pos,normal,uvの順
 	using IndexTuple = std::tuple<std::size_t, std::size_t, std::size_t>;
-	//とりあえずマテリアルのインデックスのみ
-	//多分ボーンのインデックスの情報が追加されそう
-	using IndexTupleInfo = std::size_t;
 
-	std::pair<std::vector<IndexTuple>, std::vector<IndexTupleInfo>> GetIndexTuplesAndIndexTupleInfosPair(const std::vector<std::int32_t>& indeces,
+	std::pair<std::vector<IndexTuple>, std::vector<PolygonInformation>> GetIndexTuplesAndIndexPolygonInformationPair(const std::vector<std::int32_t>& indeces,
 		const PrimitiveDoubleData& pos, const PrimitiveDoubleData& normal, const PrimitiveDoubleData& uv,
 		std::optional<std::vector<std::int32_t>>&& materialIndeces);
 
@@ -133,6 +130,15 @@ namespace FBXL
 	template<typename Vector2D,typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
 	std::vector<Vertex<Vector2D, Vector3D>> GetVertecesFromIndexTuples(std::vector<IndexTuple>&&,
 		PrimitiveDoubleData&& pos, PrimitiveDoubleData&& normal, PrimitiveDoubleData&& uv, const GlobalSettings& globalSettings);
+
+	inline std::vector<TrianglePolygonIndex> GetTrianglePolygonIndeces(std::vector<std::size_t>&&);
+
+	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
+	std::tuple<std::vector<TrianglePolygonIndex>, std::vector<Vertex<Vector2D, Vector3D>>, std::vector<PolygonInformation>>
+		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings);
+
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::pair<GeometryMesh2<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh2(Node&& geormetryMesh, const GlobalSettings& globalSettings);
 
 
 	//
@@ -248,11 +254,11 @@ namespace FBXL
 		return result;
 	}
 
-	std::pair<std::vector<IndexTuple>, std::vector<IndexTupleInfo>> GetIndexTuplesAndIndexTupleInfosPair(const std::vector<std::int32_t>& indeces,
+	std::pair<std::vector<IndexTuple>, std::vector<PolygonInformation>> GetIndexTuplesAndIndexPolygonInformationPair(const std::vector<std::int32_t>& indeces,
 		const PrimitiveDoubleData& pos, const PrimitiveDoubleData& normal, const PrimitiveDoubleData& uv, std::optional<std::vector<std::int32_t>>&& materialIndeces)
 	{
 		std::vector<IndexTuple> indexTuples{};
-		std::vector<IndexTupleInfo> indexTupleInfos{};
+		std::vector<PolygonInformation> indexTupleInfos{};
 
 		auto getPosIndex = std::bind(GetPrimitiveDoubleDataIndex, pos, indeces, std::placeholders::_1);
 		auto getNormalIndex = std::bind(GetPrimitiveDoubleDataIndex, normal, indeces, std::placeholders::_1);
@@ -275,7 +281,7 @@ namespace FBXL
 			j = i + 1;
 			do {
 
-				auto indexTupleInfo = getMaterialIndex(polygonIndex);
+				auto materialIndex = getMaterialIndex(polygonIndex);
 
 				try {
 
@@ -283,7 +289,7 @@ namespace FBXL
 					pushBackIndexTuple(j);
 					pushBackIndexTuple(j + 1);
 
-					indexTupleInfos.push_back(indexTupleInfo);
+					indexTupleInfos.push_back({ materialIndex });
 
 				}
 				catch (std::out_of_range) {};
@@ -412,17 +418,17 @@ namespace FBXL
 		auto indexNode = GetSingleChildrenNode(geometryMesh, "PolygonVertexIndex");
 		auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode.value(), 0).value();
 
-		auto vertices = GetVertecesPrimitiveDoubleData(geometryMesh);
+		auto verticesPrimitiveData = GetVertecesPrimitiveDoubleData(geometryMesh);
 
-		auto normals = GetPrimitiveDoubleData<NormalDoubleDataInformation>(geometryMesh);
+		auto normalsPrimitiveData = GetPrimitiveDoubleData<NormalDoubleDataInformation>(geometryMesh);
 
-		auto uvs = GetPrimitiveDoubleData<UVDoubleDataInformation>(geometryMesh);
+		auto uvsPrimitveData = GetPrimitiveDoubleData<UVDoubleDataInformation>(geometryMesh);
 
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
 
-		auto getVertexVector3D = std::bind(GetVector3DFromPrimitiveData<Vector3D, CreateVector3DPolicy>, vertices, indeces, globalSettings, std::placeholders::_1);
-		auto getNormalVector3D = std::bind(GetVector3DFromPrimitiveData<Vector3D, CreateVector3DPolicy>, normals, indeces, globalSettings, std::placeholders::_1);
-		auto getUVVector2D = std::bind(GetVector2DFromPrimitiveData<Vector2D, CreateVector2DPolicy>, uvs, indeces, globalSettings, std::placeholders::_1);
+		auto getVertexVector3D = std::bind(GetVector3DFromPrimitiveData<Vector3D, CreateVector3DPolicy>, verticesPrimitiveData, indeces, globalSettings, std::placeholders::_1);
+		auto getNormalVector3D = std::bind(GetVector3DFromPrimitiveData<Vector3D, CreateVector3DPolicy>, normalsPrimitiveData, indeces, globalSettings, std::placeholders::_1);
+		auto getUVVector2D = std::bind(GetVector2DFromPrimitiveData<Vector2D, CreateVector2DPolicy>, uvsPrimitveData, indeces, globalSettings, std::placeholders::_1);
 
 		auto getMaterialIndex = [&materialIndeces](std::size_t polygonIndex) {
 			return (materialIndeces && materialIndeces.value().size() > 1) ? materialIndeces.value()[polygonIndex] : 0;
@@ -464,12 +470,6 @@ namespace FBXL
 			i = j + 1;
 			polygonIndex++;
 		}
-
-		auto [indexTuples, indexTupleInfos] = GetIndexTuplesAndIndexTupleInfosPair(indeces, vertices, normals, uvs, std::move(materialIndeces));
-		auto [indexTupleIndeces, indexTuples2] = GetIndecesAndIndexTuplesPair(std::move(indexTuples));
-
-		auto v = GetVertecesFromIndexTuples<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(
-			std::move(indexTuples2), std::move(vertices), std::move(normals), std::move(uvs), globalSettings);
 
 		return result;
 	}
@@ -587,4 +587,61 @@ namespace FBXL
 		return result;
 	}
 
+	inline std::vector<TrianglePolygonIndex> GetTrianglePolygonIndeces(std::vector<std::size_t>&& indeces)
+	{
+		std::vector<TrianglePolygonIndex> result(indeces.size() / 3);
+
+		for (std::size_t i = 0; i < result.size(); i++)
+			result[i] = std::make_tuple(indeces[i * 3], indeces[i * 3 + 1], indeces[i * 3 + 2]);
+		
+		return result;
+	}
+
+
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::tuple<std::vector<TrianglePolygonIndex>, std::vector<Vertex<Vector2D, Vector3D>>, std::vector<PolygonInformation>> 
+		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings)
+	{
+		auto indexNode = GetSingleChildrenNode(geometryMesh, "PolygonVertexIndex");
+		auto indeces = GetProperty<std::vector<std::int32_t>>(indexNode.value(), 0).value();
+
+	
+		auto verticesPrimitiveData = GetVertecesPrimitiveDoubleData(geometryMesh);
+		auto normalsPrimitiveData = GetPrimitiveDoubleData<NormalDoubleDataInformation>(geometryMesh);
+		auto uvsPrimitveData = GetPrimitiveDoubleData<UVDoubleDataInformation>(geometryMesh);
+		auto materialIndeces = GetMaterialIndeces(geometryMesh);
+
+		auto [indexTuples, polygonInformations] = GetIndexTuplesAndIndexPolygonInformationPair(indeces, verticesPrimitiveData, normalsPrimitiveData, uvsPrimitveData, std::move(materialIndeces));
+		auto [indexTupleIndeces, indexTuples2] = GetIndecesAndIndexTuplesPair(std::move(indexTuples));
+
+		auto vertices = GetVertecesFromIndexTuples<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(
+			std::move(indexTuples2), std::move(verticesPrimitiveData), std::move(normalsPrimitiveData), std::move(uvsPrimitveData), globalSettings);
+
+		auto trianglePolygonIndeces = GetTrianglePolygonIndeces(std::move(indexTupleIndeces));
+
+
+		return { std::move(trianglePolygonIndeces), std::move(vertices), std::move(polygonInformations) };
+	}
+
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::pair<GeometryMesh2<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh2(Node&& geormetryMesh, const GlobalSettings& globalSettings)
+	{
+		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
+			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");
+
+		static_assert(std::is_invocable_r_v<Vector3D, decltype(CreateVector3DPolicy::Create), double, double, double>,
+			"Vector3D CreateVector3DPolicy::Create(double,double,double) is not declared");
+
+		assert(geormetryMesh.name == "Geometry" && GetProperty<std::string>(&geormetryMesh, 2) == "Mesh");
+
+		auto index = GetProperty<std::int64_t>(&geormetryMesh, 0).value();
+
+		auto [indeces, vertices, polygonInfomationTuple] =
+			GetIndecesAndVertecesAndPolygonInfomationTuple<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh, globalSettings);
+
+
+		//return std::make_pair(GeometryMesh2<Vector2D, Vector3D>{indeces, vertices, polygonInfomationTuple  }, index);
+		
+		return { {},{} };
+	}
 }

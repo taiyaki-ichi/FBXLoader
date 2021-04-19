@@ -43,8 +43,11 @@ namespace FBXL
 			}
 			else if (node.name == "Geometry" && GetProperty<std::string>(&node, 2) == "Mesh")
 			{
+				auto tmp = node;
 				auto [geometryMesh, index] = GetGeometryMesh<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(node), globalSettings);
 				geometryMeshes.emplace(index, std::move(geometryMesh));
+
+				auto hoge = GetGeometryMesh2<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(tmp), globalSettings);
 			}
 			else if (node.name == "Material")
 			{
