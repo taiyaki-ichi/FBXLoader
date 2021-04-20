@@ -68,11 +68,6 @@ int main()
 	DX12::PipelineState pipelineState{};
 	pipelineState.Initialize(&device, std::move(rootSignature), std::move(vertexShader), std::move(pixcelShader));
 
-	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
-
-	DX12::FBXModel fbxModel{};
-	fbxModel.Initialize(&device, &commandList, std::move(model.value()));
-
 	auto model2 = FBXL::LoadModel3D2<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
 
 	DX12::FBXModel2 fbxModel2{};
@@ -122,7 +117,6 @@ int main()
 			DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
 		cnt++;
 
-		//
 		fbxModel2.MapSceneData({ view,proj ,eye });
 
 		doubleBuffer.BarriorToBackbuffer(&commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -138,7 +132,6 @@ int main()
 
 		pipelineState.PreparationForDrawing(&commandList);
 
-		//
 		fbxModel2.Draw(&commandList);
 
 		doubleBuffer.BarriorToBackbuffer(&commandList, D3D12_RESOURCE_STATE_PRESENT);
