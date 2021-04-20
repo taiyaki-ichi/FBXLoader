@@ -13,7 +13,7 @@ namespace FBXL
 		std::string&& folderPath);
 
 	template<typename Vector2D, typename Vector3D>
-	Model3D2<Vector2D, Vector3D> GetModel3D2(Model3DParts2<Vector2D, Vector3D>&& model3DParts, std::unordered_map<std::int64_t, Material<Vector3D>>&& materials);
+	Model3D<Vector2D, Vector3D> GetModel3D(Model3DParts<Vector2D, Vector3D>&& model3DParts, std::unordered_map<std::int64_t, Material<Vector3D>>&& materials);
 
 	//
 	//à»â∫ÅAé¿ëï
@@ -50,9 +50,9 @@ namespace FBXL
 	}
 
 	template<typename Vector2D, typename Vector3D>
-	Model3D2<Vector2D, Vector3D> GetModel3D2(Model3DParts2<Vector2D, Vector3D>&& model3DParts, std::unordered_map<std::int64_t, Material<Vector3D>>&& materials)
+	Model3D<Vector2D, Vector3D> GetModel3D(Model3DParts<Vector2D, Vector3D>&& model3DParts, std::unordered_map<std::int64_t, Material<Vector3D>>&& materials)
 	{
-		Model3D2<Vector2D, Vector3D> result{};
+		Model3D<Vector2D, Vector3D> result{};
 
 		result.indeces = std::move(model3DParts.indeces);
 		result.vertices = std::move(model3DParts.vertices);

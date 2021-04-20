@@ -8,9 +8,9 @@ namespace FBXL
 {
 
 	template<typename Vector2D,typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScallingVector3DPolicy>
-	Model3DParts2<Vector2D, Vector3D> GetModel3DParts2(
+	Model3DParts<Vector2D, Vector3D> GetModel3DParts(
 		std::unordered_map<std::int64_t, ModelMesh<Vector3D>>&& modelMeshes,
-		std::unordered_map<std::int64_t, GeometryMesh2<Vector2D, Vector3D>>&& geometryMeshes,
+		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>>&& geometryMeshes,
 		const std::unordered_map<std::int64_t, Material<Vector3D>>& materials,
 		const Connections& connections);
 
@@ -22,10 +22,10 @@ namespace FBXL
 	std::vector<Vertex<Vector2D, Vector3D>> TransformVertices(std::vector<Vertex<Vector2D, Vector3D>>&&, ModelMesh<Vector3D>&& modelMesh);
 
 	template<typename Vector2D,typename Vector3D>
-	GeometryMesh2<Vector2D, Vector3D> AppendGeometryMesh2(GeometryMesh2<Vector2D, Vector3D>&&, GeometryMesh2<Vector2D, Vector3D>&&);
+	GeometryMesh<Vector2D, Vector3D> AppendGeometryMesh(GeometryMesh<Vector2D, Vector3D>&&, GeometryMesh<Vector2D, Vector3D>&&);
 
 	template<typename Vector2D,typename Vector3D>
-	Model3DParts2<Vector2D, Vector3D> GetModel3DPartsFromGeometryMesh2(GeometryMesh2<Vector2D, Vector3D>&&);
+	Model3DParts<Vector2D, Vector3D> GetModel3DPartsFromGeometryMesh(GeometryMesh<Vector2D, Vector3D>&&);
 
 
 
@@ -35,20 +35,20 @@ namespace FBXL
 
 
 	template<typename Vector2D, typename Vector3D, typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScallingVector3DPolicy>
-	Model3DParts2<Vector2D, Vector3D> GetModel3DParts2(
+	Model3DParts<Vector2D, Vector3D> GetModel3DParts(
 		std::unordered_map<std::int64_t, ModelMesh<Vector3D>>&& modelMeshes,
-		std::unordered_map<std::int64_t, GeometryMesh2<Vector2D, Vector3D>>&& geometryMeshes,
+		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>>&& geometryMeshes,
 		const std::unordered_map<std::int64_t, Material<Vector3D>>& materials,
 		const Connections& connections)
 	{
-		GeometryMesh2<Vector2D, Vector3D> geometryMesh{};
+		GeometryMesh<Vector2D, Vector3D> geometryMesh{};
 
 		std::size_t i = 0;
 		for (auto&& modelMesh : modelMeshes)
 		{
 			auto cs = GetConnectionByDestination(connections, modelMesh.first);
 
-			std::optional<GeometryMesh2<Vector2D, Vector3D>> geometryMeshOptional = std::nullopt;
+			std::optional<GeometryMesh<Vector2D, Vector3D>> geometryMeshOptional = std::nullopt;
 			std::vector<std::int64_t> materialIndex{};
 
 			for (auto&& c : cs)
@@ -87,13 +87,13 @@ namespace FBXL
 					TransformVertices<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
 						std::move(geometryMeshOptional.value().vertices), std::move(modelMesh.second));
 
-				geometryMesh = AppendGeometryMesh2(std::move(geometryMesh), std::move(geometryMeshOptional.value()));
+				geometryMesh = AppendGeometryMesh(std::move(geometryMesh), std::move(geometryMeshOptional.value()));
 
 				i++;
 			}
 		}
 
-		return GetModel3DPartsFromGeometryMesh2(std::move(geometryMesh));
+		return GetModel3DPartsFromGeometryMesh(std::move(geometryMesh));
 	}
 
 
@@ -124,7 +124,7 @@ namespace FBXL
 	}
 
 	template<typename Vector2D, typename Vector3D>
-	GeometryMesh2<Vector2D, Vector3D> AppendGeometryMesh2(GeometryMesh2<Vector2D, Vector3D>&& a, GeometryMesh2<Vector2D, Vector3D>&& b)
+	GeometryMesh<Vector2D, Vector3D> AppendGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& a, GeometryMesh<Vector2D, Vector3D>&& b)
 	{
 		a.trianglePolygonIndeces.reserve(a.trianglePolygonIndeces.size() + b.trianglePolygonIndeces.size());
 		std::move(b.trianglePolygonIndeces.begin(), b.trianglePolygonIndeces.end(), std::back_inserter(a.trianglePolygonIndeces));
@@ -136,13 +136,13 @@ namespace FBXL
 	}
 
 	template<typename Vector2D, typename Vector3D>
-	Model3DParts2<Vector2D, Vector3D> GetModel3DPartsFromGeometryMesh2(GeometryMesh2<Vector2D, Vector3D>&& geometryMesh)
+	Model3DParts<Vector2D, Vector3D> GetModel3DPartsFromGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& geometryMesh)
 	{
 		std::sort(geometryMesh.trianglePolygonIndeces.begin(), geometryMesh.trianglePolygonIndeces.end(), [](auto& a, auto& b) {
 			return a.second < b.second;
 			});
 
-		Model3DParts2<Vector2D, Vector3D> result{};
+		Model3DParts<Vector2D, Vector3D> result{};
 		result.indeces.reserve(geometryMesh.trianglePolygonIndeces.size() * 3);
 		result.vertices = std::move(geometryMesh.vertices);
 

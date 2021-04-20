@@ -96,7 +96,7 @@ namespace FBXL
 		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings);
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::pair<GeometryMesh2<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh2(Node&& geormetryMesh, const GlobalSettings& globalSettings);
+	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh, const GlobalSettings& globalSettings);
 
 
 	//
@@ -387,7 +387,7 @@ namespace FBXL
 	}
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::pair<GeometryMesh2<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh2(Node&& geormetryMesh, const GlobalSettings& globalSettings)
+	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh, const GlobalSettings& globalSettings)
 	{
 		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
 			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");
@@ -403,7 +403,7 @@ namespace FBXL
 			GetIndecesAndVertecesAndPolygonInfomationTuple<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(&geormetryMesh, globalSettings);
 
 
-		return std::make_pair(GeometryMesh2<Vector2D, Vector3D>{indeces, vertices }, index);
+		return std::make_pair(GeometryMesh<Vector2D, Vector3D>{indeces, vertices }, index);
 	
 	}
 }

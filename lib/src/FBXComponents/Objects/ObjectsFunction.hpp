@@ -9,7 +9,7 @@
 namespace FBXL
 {
 	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
-	Objects2<Vector2D, Vector3D> GetObjects2(Node&& objects, const GlobalSettings& globalSettings);
+	Objects<Vector2D, Vector3D> GetObjects(Node&& objects, const GlobalSettings& globalSettings);
 
 
 	//
@@ -17,7 +17,7 @@ namespace FBXL
 	//
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	Objects2<Vector2D, Vector3D> GetObjects2(Node&& objects, const GlobalSettings& globalSettings)
+	Objects<Vector2D, Vector3D> GetObjects(Node&& objects, const GlobalSettings& globalSettings)
 	{
 		static_assert(std::is_invocable_r_v<Vector2D, decltype(CreateVector2DPolicy::Create), double, double>,
 			"Vecto2D CreateVector2DPolicy::Create(double,double) is not declared");
@@ -28,7 +28,7 @@ namespace FBXL
 		assert(objects.name == "Objects");
 
 		std::unordered_map<std::int64_t, ModelMesh<Vector3D>> modelMeshes{};
-		std::unordered_map<std::int64_t, GeometryMesh2<Vector2D, Vector3D>> geometryMeshes{};
+		std::unordered_map<std::int64_t, GeometryMesh<Vector2D, Vector3D>> geometryMeshes{};
 		std::unordered_map<std::int64_t, Material<Vector3D>> materials{};
 		std::unordered_map<std::int64_t, Texture> textures{};
 
@@ -41,7 +41,7 @@ namespace FBXL
 			}
 			else if (node.name == "Geometry" && GetProperty<std::string>(&node, 2) == "Mesh")
 			{
-				auto [geometryMesh, index] = GetGeometryMesh2<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(node), globalSettings);
+				auto [geometryMesh, index] = GetGeometryMesh<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(node), globalSettings);
 				geometryMeshes.emplace(index, std::move(geometryMesh));
 			}
 			else if (node.name == "Material")
@@ -56,7 +56,7 @@ namespace FBXL
 			}
 		}
 
-		return std::make_tuple(std::move(modelMeshes), std::move(geometryMeshes), std::move(materials), std::move(textures));
+		return { std::move(modelMeshes), std::move(geometryMeshes), std::move(materials), std::move(textures) };
 	}
 
 

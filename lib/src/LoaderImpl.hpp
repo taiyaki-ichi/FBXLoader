@@ -10,7 +10,7 @@ namespace FBXL
 
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy,
 		typename TranslationVector3DPolicy, typename RotationVector3DPolicy, typename ScallingVector3DPolicy>
-		std::optional<Model3D2<Vector2D, Vector3D>> LoadModel3D2(const std::string& filePath)
+		std::optional<Model3D<Vector2D, Vector3D>> LoadModel3D(const std::string& filePath)
 	{
 		auto primitiveData = LoadPrimitiveData(filePath);
 
@@ -25,9 +25,7 @@ namespace FBXL
 			throw "objects node is not found";
 
 
-		auto [modelMeshes, geometryMeshes, materials, textures] =
-			GetObjects2<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(objectsNode.value()), globalSettings);
-
+		auto objects = GetObjects<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(std::move(objectsNode.value()), globalSettings);
 
 		auto connectionsNode = RemoveTopLevelNode(&primitiveData, "Connections");
 		if (!connectionsNode)
@@ -35,13 +33,13 @@ namespace FBXL
 		auto connections = GetConnections(std::move(connectionsNode.value()));
 
 
-		auto model3DParts = GetModel3DParts2<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
-			std::move(modelMeshes), std::move(geometryMeshes), materials, connections);
+		auto model3DParts = GetModel3DParts<Vector2D, Vector3D, TranslationVector3DPolicy, RotationVector3DPolicy, ScallingVector3DPolicy>(
+			std::move(objects.modelMeshes), std::move(objects.geometryMeshes), objects.materials, connections);
 
 		auto folderPath = std::string{ filePath.begin(),filePath.begin() + filePath.rfind('/') + 1 };
-		auto materialWithTextureInfomation = AddTextureInfomation<Vector3D>(std::move(materials), std::move(textures), connections, std::move(folderPath));
+		auto materialWithTextureInfomation = AddTextureInfomation<Vector3D>(std::move(objects.materials), std::move(objects.textures), connections, std::move(folderPath));
 
-		return GetModel3D2<Vector2D, Vector3D>(std::move(model3DParts), std::move(materialWithTextureInfomation));
+		return GetModel3D<Vector2D, Vector3D>(std::move(model3DParts), std::move(materialWithTextureInfomation));
 	}
 
 }

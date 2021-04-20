@@ -54,7 +54,7 @@ namespace DX12
 
 	public:
 		template<typename Vector2D,typename Vector3D>
-		void Initialize(Device*, CommandList*, FBXL::Model3D2<Vector2D, Vector3D>&&);
+		void Initialize(Device*, CommandList*, FBXL::Model3D<Vector2D, Vector3D>&&);
 
 		void Draw(CommandList*);
 
@@ -67,7 +67,7 @@ namespace DX12
 
 
 	template<typename Vector2D, typename Vector3D>
-	inline void FBXModel2::Initialize(Device* device, CommandList* cl, FBXL::Model3D2<Vector2D, Vector3D>&& model)
+	inline void FBXModel2::Initialize(Device* device, CommandList* cl, FBXL::Model3D<Vector2D, Vector3D>&& model)
 	{
 
 		std::vector<std::uint16_t> tmp(model.indeces.size());

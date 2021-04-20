@@ -51,7 +51,7 @@ namespace FBXL
 	};
 
 	template<typename Vector2D, typename Vector3D>
-	struct Model3D2
+	struct Model3D
 	{
 		std::vector<std::size_t> indeces{};
 		std::vector<Vertex<Vector2D, Vector3D>> vertices;

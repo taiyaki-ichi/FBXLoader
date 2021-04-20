@@ -68,7 +68,7 @@ int main()
 	DX12::PipelineState pipelineState{};
 	pipelineState.Initialize(&device, std::move(rootSignature), std::move(vertexShader), std::move(pixcelShader));
 
-	auto model2 = FBXL::LoadModel3D2<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
+	auto model2 = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
 
 	DX12::FBXModel2 fbxModel2{};
 	fbxModel2.Initialize(&device, &commandList, std::move(model2.value()));
