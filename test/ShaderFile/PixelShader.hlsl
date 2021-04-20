@@ -1,6 +1,6 @@
 #include"Header.hlsli"
 
-cbuffer Material : register(b1) {
+cbuffer Material : register(b2) {
 	float4 diffuse;
 	float diffuseFactor;
 	float4 specular;

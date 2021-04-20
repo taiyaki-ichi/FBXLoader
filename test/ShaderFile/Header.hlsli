@@ -13,3 +13,7 @@ cbuffer SceneData : register(b0) {
 	matrix proj;
 	float3 eye;
 };
+
+cbuffer Transform : register(b1) {
+	matrix world;
+};

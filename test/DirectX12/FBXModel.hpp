@@ -52,6 +52,10 @@ namespace DX12
 		std::vector<TextureResource> textureResources{};
 		WhiteTextureResource whiteTextureResource{};
 
+		//とりあえずworldの行列のみ
+		//後からボーンの行列が入る予定
+		ConstantBufferResource transformConstantBufferResource{};
+
 	public:
 		template<typename Vector2D,typename Vector3D>
 		void Initialize(Device*, CommandList*, FBXL::Model3D<Vector2D, Vector3D>&&);
@@ -59,6 +63,8 @@ namespace DX12
 		void Draw(CommandList*);
 
 		void MapSceneData(SceneData&&);
+
+		void Update(const DirectX::XMMATRIX&);
 	};
 
 	//
@@ -82,11 +88,15 @@ namespace DX12
 
 		whiteTextureResource.Initialize(device);
 
-		//SceneDataとマテリアルの分
-		descriptorHeap.Initialize(device, 1 + model.material.size() * 2);
+		//SceneDataとtransformとマテリアルの分
+		descriptorHeap.Initialize(device, 1 + 1 + model.material.size() * 2);
 
 		sceneDataConstantBufferResource.Initialize(device, sizeof(SceneData));
 		descriptorHeap.PushBackView(device, &sceneDataConstantBufferResource);
+
+		//今のところはworldのみ
+		transformConstantBufferResource.Initialize(device, sizeof(DirectX::XMMATRIX));
+		descriptorHeap.PushBackView(device, &transformConstantBufferResource);
 
 		materialConstantBufferResources.resize(model.material.size());
 		for (std::size_t i = 0; i < model.material.size(); i++)
@@ -130,6 +140,8 @@ namespace DX12
 		}
 
 		materialRange = std::move(model.materialRange);
+
+
 	}
 
 
@@ -146,7 +158,7 @@ namespace DX12
 
 		for (std::size_t i = 0; i < materialRange.size(); i++)
 		{
-			cl->Get()->SetGraphicsRootDescriptorTable(1, descriptorHeap.GetGPUHandle(i * 2 + 1));
+			cl->Get()->SetGraphicsRootDescriptorTable(1, descriptorHeap.GetGPUHandle(i * 2 + 2));
 
 			cl->Get()->DrawIndexedInstanced(materialRange[i], 1, indexOffset, 0, 0);
 
@@ -164,5 +176,13 @@ namespace DX12
 		sceneDataConstantBufferResource.Get()->Unmap(0, nullptr);
 	}
 
+	inline void FBXModel2::Update(const DirectX::XMMATRIX& matrix)
+	{
+		DirectX::XMMATRIX* ptr = nullptr;
+		transformConstantBufferResource.Get()->Map(0, nullptr, (void**)&ptr);
 
+		*ptr = matrix;
+
+		transformConstantBufferResource.Get()->Unmap(0, nullptr);
+	}
 }

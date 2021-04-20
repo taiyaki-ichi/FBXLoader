@@ -60,7 +60,7 @@ int main()
 	DX12::RootSignature rootSignature{};
 	rootSignature.Initialize<
 		DX12::DescrriptorTableArray<
-		DX12::DescriptorTable<DX12::DescriptorRange::CBV>,//シーンデータ
+		DX12::DescriptorTable<DX12::DescriptorRange::CBV, DX12::DescriptorRange::CBV>,//シーンデータとtransform
 		DX12::DescriptorTable<DX12::DescriptorRange::CBV, DX12::DescriptorRange::SRV>//マテリアルとテクスチャ
 	>, DX12::StaticSamplers<DX12::StaticSampler::Normal>
 	>(&device);
@@ -68,7 +68,12 @@ int main()
 	DX12::PipelineState pipelineState{};
 	pipelineState.Initialize(&device, std::move(rootSignature), std::move(vertexShader), std::move(pixcelShader));
 
-	auto model2 = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
+	//auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
+	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/uv_cube.fbx");
+	auto model2 = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/smooth_uv_cube.fbx");
+
+	DX12::FBXModel2 fbxModel{};
+	fbxModel.Initialize(&device, &commandList, std::move(model.value()));
 
 	DX12::FBXModel2 fbxModel2{};
 	fbxModel2.Initialize(&device, &commandList, std::move(model2.value()));
@@ -108,6 +113,9 @@ int main()
 
 	depthStencilDescriptorHeap.PushBackView(&device, &depthStencilBufferResource);
 
+	DirectX::XMMATRIX modelWorldMatrix = XMMatrixTranslation(150.f,0.f,0.f);
+	DirectX::XMMATRIX modelWorldMatrix2 = XMMatrixTranslation(-150.f, 0.f, 0.f);
+
 	auto cnt = 0;
 	while (Window::UpdateWindow())
 	{
@@ -117,7 +125,11 @@ int main()
 			DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
 		cnt++;
 
+		fbxModel.MapSceneData({ view,proj ,eye });
+		fbxModel.Update(modelWorldMatrix);
+
 		fbxModel2.MapSceneData({ view,proj ,eye });
+		fbxModel2.Update(modelWorldMatrix2);
 
 		doubleBuffer.BarriorToBackbuffer(&commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		commandList.SetRenderTarget(doubleBuffer.GetBackbufferCpuHandle(), depthStencilDescriptorHeap.GetCPUHandle());
@@ -132,6 +144,7 @@ int main()
 
 		pipelineState.PreparationForDrawing(&commandList);
 
+		fbxModel.Draw(&commandList);
 		fbxModel2.Draw(&commandList);
 
 		doubleBuffer.BarriorToBackbuffer(&commandList, D3D12_RESOURCE_STATE_PRESENT);

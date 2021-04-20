@@ -184,7 +184,7 @@ namespace FBXL
 		if (primitiveDoubleData.isByPolygonVertex)
 			return std::visit(GetPrimitiveDoubleDataIndexVisitor{ index }, primitiveDoubleData.dataVarivant);
 		else
-			return std::visit(GetPrimitiveDoubleDataIndexVisitor{ indeces[index] }, primitiveDoubleData.dataVarivant);
+			return std::visit(GetPrimitiveDoubleDataIndexVisitor{ indeces.at(index) }, primitiveDoubleData.dataVarivant);
 	}
 
 	PrimitiveDoubleData GetVertecesPrimitiveDoubleData(const Node* geometryMesh)
