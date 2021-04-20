@@ -70,10 +70,13 @@ int main()
 
 	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
 
-	auto model2 = FBXL::LoadModel3D2<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
-
 	DX12::FBXModel fbxModel{};
 	fbxModel.Initialize(&device, &commandList, std::move(model.value()));
+
+	auto model2 = FBXL::LoadModel3D2<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
+
+	DX12::FBXModel2 fbxModel2{};
+	fbxModel2.Initialize(&device, &commandList, std::move(model2.value()));
 
 	D3D12_VIEWPORT viewport{};
 	viewport.Width = static_cast<float>(windowWidth);//出力先の幅(ピクセル数)
@@ -119,7 +122,8 @@ int main()
 			DirectX::XMLoadFloat3(&eye), DirectX::XMLoadFloat3(&target), DirectX::XMLoadFloat3(&up));
 		cnt++;
 
-		fbxModel.MapSceneData({ view,proj ,eye });
+		//
+		fbxModel2.MapSceneData({ view,proj ,eye });
 
 		doubleBuffer.BarriorToBackbuffer(&commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		commandList.SetRenderTarget(doubleBuffer.GetBackbufferCpuHandle(), depthStencilDescriptorHeap.GetCPUHandle());
@@ -133,7 +137,9 @@ int main()
 		commandList.SetScissorRect(scissorrect);
 
 		pipelineState.PreparationForDrawing(&commandList);
-		fbxModel.Draw(&commandList);
+
+		//
+		fbxModel2.Draw(&commandList);
 
 		doubleBuffer.BarriorToBackbuffer(&commandList, D3D12_RESOURCE_STATE_PRESENT);
 

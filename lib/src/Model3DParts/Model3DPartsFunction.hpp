@@ -312,9 +312,6 @@ namespace FBXL
 	template<typename Vector2D, typename Vector3D>
 	GeometryMesh2<Vector2D, Vector3D> AppendGeometryMesh2(GeometryMesh2<Vector2D, Vector3D>&& a, GeometryMesh2<Vector2D, Vector3D>&& b)
 	{
-		for (std::size_t i = 0; i < b.trianglePolygonIndeces.size(); i++)
-			b.trianglePolygonIndeces[i].second += b.trianglePolygonIndeces.size();
-
 		a.trianglePolygonIndeces.reserve(a.trianglePolygonIndeces.size() + b.trianglePolygonIndeces.size());
 		std::move(b.trianglePolygonIndeces.begin(), b.trianglePolygonIndeces.end(), std::back_inserter(a.trianglePolygonIndeces));
 

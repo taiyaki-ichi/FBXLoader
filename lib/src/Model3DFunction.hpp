@@ -95,7 +95,7 @@ namespace FBXL
 		result.material.resize(model3DParts.materialIndeces.size());
 		for (std::size_t i = 0; i < model3DParts.materialIndeces.size(); i++)
 			result.material[i] = std::move(materials[model3DParts.materialIndeces[i]]);
-
+		
 		return result;
 	}
 }
