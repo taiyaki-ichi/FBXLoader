@@ -33,19 +33,23 @@ namespace FBXL
 
 	PrimitiveDoubleData GetVertecesPrimitiveDoubleData(const Node* geometryMesh);
 
-	struct NormalDoubleDataInformation {
+	struct LayerElementNormalInformation {
 		constexpr static char layerElementName[] = "LayerElementNormal";
 		constexpr static char rawDoubleDataName[] = "Normals";
 		constexpr static char indexDataName[] = "NormalsIndex";
+
+		using DataType = std::tuple<double, double, double>;
 	};
 
-	struct UVDoubleDataInformation {
+	struct LayerElementUVInformation {
 		constexpr static char layerElementName[] = "LayerElementUV";
 		constexpr static char rawDoubleDataName[] = "UV";
 		constexpr static char indexDataName[] = "UVIndex";
+
+		using DataType = std::tuple<double, double>;
 	};
 
-	template<typename DoubleDataInformation>
+	template<typename LayerElementInformation>
 	PrimitiveDoubleData GetPrimitiveDoubleData(const Node* geometryMesh);
 
 	template<typename CreateVector3DPolicy>
@@ -98,6 +102,39 @@ namespace FBXL
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
 	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh, const GlobalSettings& globalSettings);
 
+
+	struct DoubleTuplesAndIndeces {
+		std::vector<std::tuple<double, double, double>> returnDoubleTuples{};
+		std::vector<std::int64_t> indeces{};
+	};
+
+	inline DoubleTuplesAndIndeces GetDoubleTuplesAndIndeces(std::vector<double>&&);
+
+
+
+	/*
+	template<typename DataType>
+	struct IndecedData {
+
+		//頂点のインデックス
+		std::optional<const std::vector<std::int64_t>*> vertexIndeces = std::nullopt;
+
+		//それ以下のインデックスたち
+		std::vector<std::vector<std::int64_t>> indeces{};
+
+		//実際のデータ
+		std::remove_reference_t<DataType> data{};
+	};
+
+	//DataTypeからIndeceｄDataの取得
+	//重複している要素は省かれる
+	template<typename DataType>
+	IndecedData<DataType> GetIndecedDataFromDataType(DataType&&);
+
+	template<typename LayerElementInformation>
+	IndecedData<typename LayerElementInformation::DataType> GetIndecedDataFromLayerElement(
+		const Node* geometryMesh, const std::vector<std::int32_t>& vertexIndeces);
+		*/
 
 	//
 	//以下、実装
@@ -200,20 +237,26 @@ namespace FBXL
 	}
 
 
-	template<typename DoubleDataInformation>
+	template<typename LayerElementInformation>
 	PrimitiveDoubleData GetPrimitiveDoubleData(const Node* geometryMesh)
 	{
 		PrimitiveDoubleData result{};
 
-		auto layerElementNode = GetSingleChildrenNode(geometryMesh, DoubleDataInformation::layerElementName);
+		auto layerElementNode = GetSingleChildrenNode(geometryMesh, LayerElementInformation::layerElementName);
 		//複数のおなじNodeがある場合がある
 		if (!layerElementNode) {
-			auto tmp = GetChildrenNodes(geometryMesh, DoubleDataInformation::layerElementName);
+			auto tmp = GetChildrenNodes(geometryMesh, LayerElementInformation::layerElementName);
 			layerElementNode = tmp[0];
 		}
 
-		auto doubleDataNode = GetSingleChildrenNode(layerElementNode.value(), DoubleDataInformation::rawDoubleDataName);
+		auto doubleDataNode = GetSingleChildrenNode(layerElementNode.value(), LayerElementInformation::rawDoubleDataName);
 		auto doubleData = GetProperty<std::vector<double>>(doubleDataNode.value(), 0).value();
+
+		//
+		//auto hoge = GetIndecedDataFromDataType(doubleData);
+		//DoubleTuple<3> a{};
+		//
+		
 
 		auto mappingInformationTypeNode = GetSingleChildrenNode(layerElementNode.value(), "MappingInformationType");
 		result.isByPolygonVertex = GetProperty<std::string>(mappingInformationTypeNode.value(), 0) == "ByPolygonVertex";
@@ -226,10 +269,11 @@ namespace FBXL
 		}
 		else if (referenceInformationTypeNode && GetProperty<std::string>(referenceInformationTypeNode.value(), 0) == "IndexToDirect")
 		{
-			auto indexNode = GetSingleChildrenNode(layerElementNode.value(), DoubleDataInformation::indexDataName);
+			auto indexNode = GetSingleChildrenNode(layerElementNode.value(), LayerElementInformation::indexDataName);
 			auto index = GetProperty<std::vector<std::int32_t>>(indexNode.value(), 0).value();
 			result.dataVarivant = std::make_pair(std::move(index), std::move(doubleData));
 		}
+
 
 		return result;
 	}
@@ -367,8 +411,8 @@ namespace FBXL
 
 	
 		auto verticesPrimitiveData = GetVertecesPrimitiveDoubleData(geometryMesh);
-		auto normalsPrimitiveData = GetPrimitiveDoubleData<NormalDoubleDataInformation>(geometryMesh);
-		auto uvsPrimitveData = GetPrimitiveDoubleData<UVDoubleDataInformation>(geometryMesh);
+		auto normalsPrimitiveData = GetPrimitiveDoubleData<LayerElementNormalInformation>(geometryMesh);
+		auto uvsPrimitveData = GetPrimitiveDoubleData<LayerElementUVInformation>(geometryMesh);
 		auto materialIndeces = GetMaterialIndeces(geometryMesh);
 
 		auto [indexTuples, polygonMaterialIndeces] = GetIndexTuplesAndIndexPolygonInformationPair(indeces, verticesPrimitiveData, normalsPrimitiveData, uvsPrimitveData, std::move(materialIndeces));
@@ -406,4 +450,60 @@ namespace FBXL
 		return std::make_pair(GeometryMesh<Vector2D, Vector3D>{indeces, vertices }, index);
 	
 	}
+
+	inline DoubleTuplesAndIndeces GetDoubleTuplesAndIndeces(std::vector<double>&& data)
+	{
+		std::vector<std::tuple<double, double, double>> returnDoubleTuples{};
+		returnDoubleTuples.reserve(data.size() / 3);
+		std::vector<std::int64_t> indeces(data.size() / 3);
+
+		for (std::size_t i = 0; i < data.size() / 3; i++)
+			returnDoubleTuples.emplace_back(std::make_tuple(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]));
+
+		std::vector<std::tuple<double, double, double>> doubleTuples{ returnDoubleTuples };
+		//並び変えて重複削除
+		{
+			std::sort(returnDoubleTuples.begin(), returnDoubleTuples.end());
+			auto iter = std::unique(returnDoubleTuples.begin(), returnDoubleTuples.end());
+			returnDoubleTuples.erase(iter, returnDoubleTuples.end());
+		}
+
+		for (std::size_t i = 0; i < indeces.size() / 3; i++)
+		{
+			auto iter = std::lower_bound(returnDoubleTuples.begin(), returnDoubleTuples.end(), doubleTuples[i]);
+			indeces[i] = iter - returnDoubleTuples.begin();
+		}
+
+		return { std::move(returnDoubleTuples),std::move(indeces) };
+	}
+
+	/*
+
+	template<typename DataType>
+	IndecedData<DataType> GetIndecedDataFromDataType(DataType&& data)
+	{
+		IndecedData<DataType> result{};
+
+		auto returnData = data;
+		std::vector<std::int64_t> indeces(data.size());
+
+		{
+			std::sort(returnData.begin(), returnData.end());
+			auto iter = std::unique(returnData.begin(), returnData.end());
+			returnData.erase(iter, returnData.end());
+		}
+
+		for (std::size_t i = 0; i < indeces.size(); i++)
+		{
+			auto iter = std::lower_bound(returnData.begin(), returnData.end(), data[i]);
+			indeces[i] = iter - returnData.begin();
+		}
+
+		result.indeces.emplace_back(std::move(indeces));
+		result.data = std::move(returnData);
+
+		return result;
+	}
+	*/
+	
 }
