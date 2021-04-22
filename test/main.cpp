@@ -32,6 +32,16 @@ struct Vector2
 
 int main()
 {
+	/*
+	auto hoge = FBXL::GetIndecedData(std::vector<double>{1.0,1.0,2.0,3.0,3.0});
+	hoge = FBXL::UpdateIndeces(std::move(hoge), std::vector<std::int32_t>{0, 2, 2, 1, 3, 4, 0, 1});
+
+	auto piyo = FBXL::DoubleTuple<2>{};
+
+	auto a = FBXL::GetDoubleTuples<2>(std::vector<double>{ 1,2,3,4,5,6,7,8 });
+	auto b = FBXL::GetDoubleTuples<3>(std::vector<double>{ 1,2,3,4,5,6,7,8,9 });
+	*/
+
 	using namespace DirectX;
 
 	constexpr auto windowWidth = 800;
@@ -68,8 +78,8 @@ int main()
 	DX12::PipelineState pipelineState{};
 	pipelineState.Initialize(&device, std::move(rootSignature), std::move(vertexShader), std::move(pixcelShader));
 
-	//auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
-	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/uv_cube.fbx");
+	auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/fbx_loader_test_001.fbx");
+	//auto model = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/uv_cube.fbx");
 	auto model2 = FBXL::LoadModel3D<Vector2, Vector3>("../../Assets/smooth_uv_cube.fbx");
 
 	DX12::FBXModel2 fbxModel{};
