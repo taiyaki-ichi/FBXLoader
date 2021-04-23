@@ -451,6 +451,8 @@ namespace FBXL
 	std::tuple<std::vector<std::pair<TrianglePolygonIndex, std::int64_t>>, std::vector<Vertex<Vector2D, Vector3D>>>
 		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings)
 	{
+		std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> tmpP{};
+		std::vector<Vertex<Vector2D, Vector3D>> tmpV{};
 		{
 			auto [indeces, indexIndeces, materialIndeces] = GetIndecesAndIndexIndecesAndMaterialIndeces(geometryMesh);
 			auto positionIndecedData = GetPositionIndecedData(geometryMesh, indeces, indexIndeces);
@@ -458,11 +460,13 @@ namespace FBXL
 			auto uvIndecedData = GetLayerElementIndecedData<LayerElementUVInformation>(geometryMesh, indeces, indexIndeces);
 
 			auto indexTuples = GetIndexTupleIndecedData(positionIndecedData, normalIndecedData, uvIndecedData);
-			auto verteces = GetVerteces<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(
+			auto vertices = GetVerteces<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(
 				std::move(indexTuples.data), std::move(positionIndecedData), std::move(normalIndecedData), std::move(uvIndecedData), globalSettings);
 			auto indexPairs = GetTrianglePolygonAndMaterialIndexPairs(std::move(indexTuples.primitiveIndeces), std::move(materialIndeces));
 
-			//‚½‚Ô‚ñ“®‚¢‚Ä‚¢‚é
+			return { std::move(indexPairs),std::move(vertices) };
+			tmpP = std::move(indexPairs);
+			tmpV = std::move(vertices);
 		}
 
 
@@ -486,6 +490,10 @@ namespace FBXL
 		std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> indexAndMaterialIndexPairs(trianglePolygonIndeces.size());
 		for (std::size_t i = 0; i < indexAndMaterialIndexPairs.size(); i++)
 			indexAndMaterialIndexPairs[i] = std::make_pair(std::move(trianglePolygonIndeces[i]), polygonMaterialIndeces[i]);
+
+		//
+		
+		//
 
 		return { std::move(indexAndMaterialIndexPairs), std::move(vertices) };
 	}
@@ -714,34 +722,30 @@ namespace FBXL
 		const GlobalSettings& globalSettings)
 	{
 		auto getPosition = [&positionIndecedData, &globalSettings](std::int32_t i) -> Vector3D {
-			auto j = positionIndecedData.primitiveIndeces[i];
 			return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
-				std::get<0>(positionIndecedData.data[j]), std::get<1>(positionIndecedData.data[j]), std::get<2>(positionIndecedData.data[j]), globalSettings);
+				std::get<0>(positionIndecedData.data[i]), std::get<1>(positionIndecedData.data[i]), std::get<2>(positionIndecedData.data[i]), globalSettings);
 		};
 
 		auto getNormal = [&normalIndecedData, &globalSettings](std::int32_t i)->Vector3D {
-			auto j = normalIndecedData.primitiveIndeces[i];
 			return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
-				std::get<0>(normalIndecedData.data[j]), std::get<1>(normalIndecedData.data[j]), std::get<2>(normalIndecedData.data[j]), globalSettings);
+				std::get<0>(normalIndecedData.data[i]), std::get<1>(normalIndecedData.data[i]), std::get<2>(normalIndecedData.data[i]), globalSettings);
 		};
 
 		auto getUV = [&uvIndecedData, &globalSettings](std::int32_t i)->Vector2D {
-			auto j = uvIndecedData.primitiveIndeces[i];
-			return CreateVector2DPolicy::Create(std::get<0>(uvIndecedData.data[j]), -std::get<1>(uvIndecedData.data[j]));
+			return CreateVector2DPolicy::Create(std::get<0>(uvIndecedData.data[i]), -std::get<1>(uvIndecedData.data[i]));
 		};
 
 		std::vector<Vertex<Vector2D, Vector3D>> result{};
 		result.reserve(indexTuples.size());
 
 		for (std::size_t i = 0; i < indexTuples.size(); i++)
-			result.emplace_back(Vertex<Vector2D, Vector3D>{ getPosition(i), getNormal(i), getUV(i) });
+			result.emplace_back(Vertex<Vector2D, Vector3D>{ getPosition(std::get<0>(indexTuples[i])), getNormal(std::get<1>(indexTuples[i])), getUV(std::get<2>(indexTuples[i])) });
 
 		return result;
 	}
 
 	std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> FBXL::GetTrianglePolygonAndMaterialIndexPairs(std::vector<std::int32_t>&& indeces, std::vector<std::int32_t>&& materialIndeces)
 	{
-
 		std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> result{};
 		result.reserve(indeces.size() / 3);
 
