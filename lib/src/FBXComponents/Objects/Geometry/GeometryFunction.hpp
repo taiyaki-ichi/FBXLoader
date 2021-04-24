@@ -7,15 +7,54 @@
 
 namespace FBXL
 {
+	//GeometryMeshの取得
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh, const GlobalSettings& globalSettings);
+
 	//GeometyMeshNodeからマテリアルのインデックス配列を取得
 	inline std::optional<std::vector<std::int32_t>> GetPrimitiveMaterialIndeces(const Node* geometyMesh);
 
-	//GlobalSettingを適用するためのインターフェース
-	template<typename CreateVector3DPolicy>
-	struct CreateVector3DInterfacePolicy
-	{
-		static auto Invoke(double a, double b, double c, const GlobalSettings& globalSettings);
+
+	//ポリゴンごとの頂点を参照するインデックスとマテリアルを参照するインデックスのペア
+	//と、頂点の配列を取得
+	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
+	std::pair<std::vector<std::pair<TrianglePolygonIndex, std::int64_t>>, std::vector<Vertex<Vector2D, Vector3D>>>
+		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings);
+
+
+	template<typename DataType>
+	std::pair<std::vector<std::int32_t>, DataType> GetIndecesAndData(DataType&&);
+
+	inline std::vector<std::int32_t> UpdateIndeces(std::vector<std::int32_t>&& prevIndeces, std::vector<std::int32_t>&& newIndeces);
+	inline std::vector<std::int32_t> UpdateIndeces(std::vector<std::int32_t>&& prevIndeces, const std::vector<std::int32_t>& newIndeces);
+
+
+	template<typename T,std::size_t N,typename... Args>
+	struct TupleNImpl {
+		using Type = typename TupleNImpl<T, N - 1, T, Args...>::Type;
 	};
+
+	template<typename T,typename... Args>
+	struct TupleNImpl<T,0,Args...> {
+		using Type = std::tuple<Args...>;
+	};
+
+	template<std::size_t N>
+	using DoubleTuple = typename TupleNImpl<double, N>::Type;
+
+	template<std::size_t N>
+	using Int32Tuple = typename TupleNImpl<std::int32_t, N>::Type;
+
+
+	template<std::size_t N>
+	std::vector<DoubleTuple<N>> GetDoubleTuples(std::vector<double>&&);
+
+	//vectorからindex番目のDoubleTupleの取得
+	template<std::size_t N>
+	DoubleTuple<N> GetDoubleTuplesHelper(std::vector<double>&, std::size_t index);
+
+	template<>
+	DoubleTuple<1> GetDoubleTuplesHelper<1>(std::vector<double>&, std::size_t index);
 
 
 	struct LayerElementNormalInformation {
@@ -34,66 +73,9 @@ namespace FBXL
 		constexpr static std::size_t dimension = 2;
 	};
 
-	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::tuple<std::vector<std::pair<TrianglePolygonIndex, std::int64_t>>, std::vector<Vertex<Vector2D, Vector3D>>>
-		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings);
-
-	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::pair<GeometryMesh<Vector2D, Vector3D>, std::int64_t> GetGeometryMesh(Node&& geormetryMesh, const GlobalSettings& globalSettings);
-
-	template<typename DataType>
-	struct IndecedData {
-		using DataValueType = typename DataType::value_type;
-
-		std::vector<std::int32_t> primitiveIndeces{};
-		DataType data{};
-	};
-
-	template<typename DataType>
-	IndecedData<DataType> GetIndecedData(DataType&& data);
-
-	template<typename DataType>
-	std::pair<std::vector<std::int32_t>, std::vector<DataType>> GetIndecesAndData(DataType&&);
-
-
-	template<typename DataType>
-	IndecedData<DataType> UpdateIndeces(IndecedData<DataType>&&, std::vector<std::int32_t>&& primitiveIndeces);
-
-	template<typename DataType>
-	IndecedData<DataType> UpdateIndeces(IndecedData<DataType>&&, const std::vector<std::int32_t>& primitiveIndeces);
-
-	inline std::vector<std::int32_t> UpdateIndeces(std::vector<std::int32_t>&& prevIndeces, std::vector<std::int32_t>&& newIndeces);
-	inline std::vector<std::int32_t> UpdateIndeces(std::vector<std::int32_t>&& prevIndeces, const std::vector<std::int32_t>& newIndeces);
-
-	template<typename T,std::size_t N,typename... Args>
-	struct TupleNImpl {
-		using Type = typename TupleNImpl<T, N - 1, T, Args...>::Type;
-	};
-
-	template<typename T,typename... Args>
-	struct TupleNImpl<T,0,Args...> {
-		using Type = std::tuple<Args...>;
-	};
-
-	template<std::size_t N>
-	using DoubleTuple = typename TupleNImpl<double, N>::Type;
-
-	template<std::size_t N>
-	using Int32Tuple = typename TupleNImpl<std::int32_t, N>::Type;
-
-	template<std::size_t N>
-	std::vector<DoubleTuple<N>> GetDoubleTuples(std::vector<double>&&);
-
-	//vecctorからindex番目のDoubleTupleの取得
-	template<std::size_t N>
-	DoubleTuple<N> GetDoubleTuplesHelper(std::vector<double>&, std::size_t index);
-
-	template<>
-	DoubleTuple<1> GetDoubleTuplesHelper<1>(std::vector<double>&, std::size_t index);
-
-	//指定した情報からIndecedDataの取得
-	template<typename LayerElementInformation,typename DataType= std::vector<DoubleTuple<LayerElementInformation::dimension>>>
-	IndecedData<DataType> GetLayerElementIndecedData(const Node* geometryMesh, const std::vector<std::int32_t>& indeces, const std::vector<std::int32_t>& indexIndeces);;
+	template<typename LayerElementInformation, typename DataType = std::vector<DoubleTuple<LayerElementInformation::dimension>>>
+	std::pair<std::vector<std::int32_t>,DataType> 
+		GetLayerElementIndecesAndData(const Node* geometryMesh, const std::vector<std::int32_t>& indeces, const std::vector<std::int32_t>& indexIndeces);
 
 
 	//全てが正のインデックスとそれを三角形のポリゴンとして解釈するためのインデックスインデックス
@@ -101,15 +83,10 @@ namespace FBXL
 	inline std::tuple<std::vector<std::int32_t>, std::vector<std::int32_t>, std::vector<std::int32_t>>
 		GetIndecesAndIndexIndecesAndMaterialIndeces(const Node* geometryMesh);
 
-	//Positionのインデクス化されたデータの取得
-	inline IndecedData<std::vector<DoubleTuple<3>>> GetPositionIndecedData(
+
+	inline std::pair<std::vector<std::int32_t>, std::vector<DoubleTuple<3>>> GetPositionIndecesAndData(
 		const Node* geometryMesh, std::vector<std::int32_t>& indeces, const std::vector<std::int32_t>& indexIndeces);
 
-	IndecedData<std::vector<Int32Tuple<3>>> GetIndexTupleIndecedData(
-		const IndecedData<std::vector<DoubleTuple<3>>>& positionIndecedData,
-		const IndecedData<std::vector<DoubleTuple<3>>>& normalIndecedData,
-		const IndecedData<std::vector<DoubleTuple<2>>>& uvIndecedData
-		);
 
 	template<typename IndecesHead,typename... IndecesTails>
 	auto GetIndexTuples(IndecesHead&& indecesHead, IndecesTails&&... indecesTails);
@@ -117,13 +94,6 @@ namespace FBXL
 	template<typename... Indeces>
 	auto GetIndexIndecesAndIndeces(Indeces&&... indecesArgs);
 
-	template<typename Vector2D,typename Vector3D,typename CreateVector2DPolicy,typename CreateVector3DPolicy>
-	std::vector<Vertex<Vector2D, Vector3D>> GetVerteces(std::vector<Int32Tuple<3>>&& indexTuples,
-		IndecedData<std::vector<DoubleTuple<3>>>&& positionIndecedData,
-		IndecedData<std::vector<DoubleTuple<3>>>&& normalIndecedData,
-		IndecedData<std::vector<DoubleTuple<2>>>&& uvIndecedData,
-		const GlobalSettings& globalSettings
-	);
 
 	std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> GetTrianglePolygonAndMaterialIndexPairs(
 		std::vector<std::int32_t>&& indeces, std::vector<std::int32_t>&& materialIndeces);
@@ -137,8 +107,14 @@ namespace FBXL
 	template<typename ResultType, typename IndexTuple, typename... DataArrays>
 	ResultType GetResultTypeFromIndexTuple(IndexTuple&& indexTuple, DataArrays&... dataArrays);
 
-	template<typename ResultType, typename IndexTuples, typename... Datas>
-	std::vector<ResultType> GetResultTypesFromIndexTuples(IndexTuples&& tuples, Datas&&... datas);
+	template<typename ResultType, typename IndexTuples, typename... DataArrays>
+	std::vector<ResultType> GetResultTypesFromIndexTuples(IndexTuples&& tuples, DataArrays&&... datas);
+
+	template<typename VectorND,typename CreateVectorNDPolicy,std::size_t N>
+	std::vector<VectorND> GetVectorNDs(std::vector<DoubleTuple<N>>&&, const GlobalSettings& globalSettings);
+
+	inline DoubleTuple<3> AxisConversionDoubleTuple3(DoubleTuple<3>&&, const GlobalSettings& globalSettings);
+
 
 	//
 	//以下、実装
@@ -159,29 +135,25 @@ namespace FBXL
 	}
 
 
-	template<typename CreateVector3DPolicy>
-	inline auto CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(double a, double b, double c, const GlobalSettings& globalSettings)
-	{
-		double nums[] = { a,b,c };
-		return CreateVector3DPolicy::Create(
-			nums[globalSettings.coordAxis] * globalSettings.coordAxisSign,
-			nums[globalSettings.upAxis] * globalSettings.upAxisSign,
-			nums[globalSettings.frontAxis] * globalSettings.coordAxisSign);
-	}
-
 	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::tuple<std::vector<std::pair<TrianglePolygonIndex, std::int64_t>>, std::vector<Vertex<Vector2D, Vector3D>>>
+	std::pair<std::vector<std::pair<TrianglePolygonIndex, std::int64_t>>, std::vector<Vertex<Vector2D, Vector3D>>>
 		GetIndecesAndVertecesAndPolygonInfomationTuple(const Node* geometryMesh, const GlobalSettings& globalSettings)
 	{
 		auto [indeces, indexIndeces, materialIndeces] = GetIndecesAndIndexIndecesAndMaterialIndeces(geometryMesh);
-		auto positionIndecedData = GetPositionIndecedData(geometryMesh, indeces, indexIndeces);
-		auto normalIndecedData = GetLayerElementIndecedData<LayerElementNormalInformation>(geometryMesh, indeces, indexIndeces);
-		auto uvIndecedData = GetLayerElementIndecedData<LayerElementUVInformation>(geometryMesh, indeces, indexIndeces);
+		auto [posIndeces,posData] = GetPositionIndecesAndData(geometryMesh, indeces, indexIndeces);
+		auto [normalIndeces,normalData] = GetLayerElementIndecesAndData<LayerElementNormalInformation>(geometryMesh, indeces, indexIndeces);
+		auto [uvIndeces,uvData] = GetLayerElementIndecesAndData<LayerElementUVInformation>(geometryMesh, indeces, indexIndeces);
 
-		auto indexTuples = GetIndexTupleIndecedData(positionIndecedData, normalIndecedData, uvIndecedData);
-		auto vertices = GetVerteces<Vector2D, Vector3D, CreateVector2DPolicy, CreateVector3DPolicy>(
-				std::move(indexTuples.data), std::move(positionIndecedData), std::move(normalIndecedData), std::move(uvIndecedData), globalSettings);
-		auto indexPairs = GetTrianglePolygonAndMaterialIndexPairs(std::move(indexTuples.primitiveIndeces), std::move(materialIndeces));
+		auto posVector3Ds = GetVectorNDs<Vector3D,CreateVector3DPolicy,3>(std::move(posData), globalSettings);
+		auto normalVector3Ds = GetVectorNDs<Vector3D, CreateVector3DPolicy,3>(std::move(normalData), globalSettings);
+		auto uvVector2Ds = GetVectorNDs<Vector2D, CreateVector2DPolicy,2>(std::move(uvData), globalSettings);
+
+		auto [indexTupleIndeces, indexTuples] = GetIndexIndecesAndIndeces(std::move(posIndeces), std::move(normalIndeces), std::move(uvIndeces));
+
+		auto vertices = GetResultTypesFromIndexTuples<Vertex<Vector2D, Vector3D>>(
+			std::move(indexTuples), std::move(posVector3Ds), std::move(normalVector3Ds), std::move(uvVector2Ds));
+
+		auto indexPairs = GetTrianglePolygonAndMaterialIndexPairs(std::move(indexTupleIndeces), std::move(materialIndeces));
 
 		return { std::move(indexPairs),std::move(vertices) };
 	}
@@ -209,28 +181,7 @@ namespace FBXL
 
 
 	template<typename DataType>
-	IndecedData<DataType> GetIndecedData(DataType&& data)
-	{
-		auto returnData = data;
-		std::vector<std::int32_t> primitiveIndeces(data.size());
-
-		{
-			std::sort(returnData.begin(), returnData.end());
-			auto iter = std::unique(returnData.begin(), returnData.end());
-			returnData.erase(iter, returnData.end());
-		}
-
-		for (std::size_t i = 0; i < primitiveIndeces.size(); i++)
-		{
-			auto iter = std::lower_bound(returnData.begin(), returnData.end(), data[i]);
-			primitiveIndeces[i] = iter - returnData.begin();
-		}
-
-		return { std::move(primitiveIndeces),std::move(returnData) };
-	}
-
-	template<typename DataType>
-	std::pair<std::vector<std::int32_t>, std::vector<DataType>> GetIndecesAndData(DataType&& data)
+	std::pair<std::vector<std::int32_t>, DataType> GetIndecesAndData(DataType&& data)
 	{
 		auto returnData = data;
 		std::vector<std::int32_t> indeces(data.size());
@@ -250,23 +201,6 @@ namespace FBXL
 		return { std::move(indeces),std::move(returnData) };
 	}
 
-	template<typename DataType>
-	IndecedData<DataType> UpdateIndeces(IndecedData<DataType>&& indecedData, std::vector<std::int32_t>&& primitiveIndeces)
-	{
-		for (std::size_t i = 0; i < primitiveIndeces.size(); i++)
-			primitiveIndeces[i] = indecedData.primitiveIndeces[primitiveIndeces[i]];
-
-		indecedData.primitiveIndeces = std::move(primitiveIndeces);
-
-		return indecedData;
-	}
-
-	template<typename DataType>
-	IndecedData<DataType> UpdateIndeces(IndecedData<DataType>&& indecedData, const std::vector<std::int32_t>& primitiveIndeces)
-	{
-		auto tmpIndeces = primitiveIndeces;
-		return UpdateIndeces(std::move(indecedData), std::move(tmpIndeces));
-	}
 
 	inline std::vector<std::int32_t> UpdateIndeces(std::vector<std::int32_t>&& prevIndeces, std::vector<std::int32_t>&& newIndeces)
 	{
@@ -305,11 +239,11 @@ namespace FBXL
 		return std::make_tuple(data[index]);
 	}
 
-	template<typename LayerElementInformation, typename DataType>
-	IndecedData<DataType> GetLayerElementIndecedData(const Node* geometryMesh, const std::vector<std::int32_t>& indeces, const std::vector<std::int32_t>& indexIndeces)
-	{
-		IndecedData<DataType> result{};
 
+
+	template<typename LayerElementInformation, typename DataType>
+	std::pair<std::vector<std::int32_t>, DataType> GetLayerElementIndecesAndData(const Node* geometryMesh, const std::vector<std::int32_t>& indeces, const std::vector<std::int32_t>& indexIndeces)
+	{
 		auto layerElementNode = GetSingleChildrenNode(geometryMesh, LayerElementInformation::layerElementName);
 
 		auto doubleDataNode = GetSingleChildrenNode(layerElementNode.value(), LayerElementInformation::rawDoubleDataName);
@@ -317,27 +251,26 @@ namespace FBXL
 
 		auto doubleTuples = GetDoubleTuples<LayerElementInformation::dimension>(std::move(doubleData));
 
-		auto indecedData = GetIndecedData(std::move(doubleTuples));
+		auto [resultIndeces, resultData] = GetIndecesAndData(std::move(doubleTuples));
 
 		auto referenceInformationTypeNode = GetSingleChildrenNode(layerElementNode.value(), "ReferenceInformationType");
 		if (referenceInformationTypeNode && GetProperty<std::string>(referenceInformationTypeNode.value(), 0) == "IndexToDirect")
 		{
 			auto indexNode = GetSingleChildrenNode(layerElementNode.value(), LayerElementInformation::indexDataName);
 			auto primitiveIndeces = GetProperty<std::vector<std::int32_t>>(indexNode.value(), 0).value();
-			indecedData = UpdateIndeces(std::move(indecedData), std::move(primitiveIndeces));
+			resultIndeces = UpdateIndeces(std::move(resultIndeces), std::move(primitiveIndeces));
 		}
 
 		auto mappingInformationTypeNode = GetSingleChildrenNode(layerElementNode.value(), "MappingInformationType");
 		if (mappingInformationTypeNode && GetProperty<std::string>(mappingInformationTypeNode.value(), 0) == "ByControlPoint")
 		{
-			indecedData = UpdateIndeces(std::move(indecedData), indeces);
+			resultIndeces = UpdateIndeces(std::move(resultIndeces), indeces);
 		}
 
-		indecedData = UpdateIndeces(std::move(indecedData), indexIndeces);
+		resultIndeces = UpdateIndeces(std::move(resultIndeces), indexIndeces);
 
-		return indecedData;
+		return { std::move(resultIndeces), std::move(resultData) };
 	}
-
 
 	inline std::tuple<std::vector<std::int32_t>, std::vector<std::int32_t>, std::vector<std::int32_t>>
 		GetIndecesAndIndexIndecesAndMaterialIndeces(const Node* geometryMesh)
@@ -385,7 +318,8 @@ namespace FBXL
 		return { std::move(indeces),std::move(indexIndeces),std::move(materialIndeces) };
 	}
 
-	inline IndecedData<std::vector<DoubleTuple<3>>> GetPositionIndecedData(
+
+	inline std::pair<std::vector<std::int32_t>, std::vector<DoubleTuple<3>>> GetPositionIndecesAndData(
 		const Node* geometryMesh, std::vector<std::int32_t>& indeces, const std::vector<std::int32_t>& indexIndeces)
 	{
 		auto verticesNode = GetSingleChildrenNode(geometryMesh, "Vertices");
@@ -393,24 +327,14 @@ namespace FBXL
 
 		auto doubleTuples = GetDoubleTuples<3>(std::move(doubleVector));
 
-		auto indecedData = GetIndecedData(std::move(doubleTuples));
+		auto [resultIndeces, resultDatas] = GetIndecesAndData(std::move(doubleTuples));
 
-		indecedData = UpdateIndeces(std::move(indecedData), indeces);
-		indecedData = UpdateIndeces(std::move(indecedData), indexIndeces);
+		resultIndeces = UpdateIndeces(std::move(resultIndeces), indeces);
+		resultIndeces = UpdateIndeces(std::move(resultIndeces), indexIndeces);
 
-		return indecedData;
+		return { std::move(resultIndeces),std::move(resultDatas) };
 	}
 
-	IndecedData<std::vector<Int32Tuple<3>>> GetIndexTupleIndecedData(const IndecedData<std::vector<DoubleTuple<3>>>& positionIndecedData, const IndecedData<std::vector<DoubleTuple<3>>>& normalIndecedData, const IndecedData<std::vector<DoubleTuple<2>>>& uvIndecedData)
-	{
-		std::vector<Int32Tuple<3>> int32Tuples{};
-		int32Tuples.reserve(positionIndecedData.primitiveIndeces.size());
-
-		for (std::size_t i = 0; i < positionIndecedData.primitiveIndeces.size(); i++)
-			int32Tuples.emplace_back(positionIndecedData.primitiveIndeces[i], normalIndecedData.primitiveIndeces[i], uvIndecedData.primitiveIndeces[i]);
-
-		return GetIndecedData(std::move(int32Tuples));
-	}
 
 	template<typename IndecesHead, typename... IndecesTails>
 	auto GetIndexTuples(IndecesHead&& indecesHead, IndecesTails&&... indecesTails)
@@ -452,7 +376,7 @@ namespace FBXL
 	template<typename... Indeces>
 	auto GetIndexIndecesAndIndeces(Indeces&&... indecesArgs)
 	{
-		static_assert(sizeof...(indecesArgs) > 0);
+		static_assert(sizeof...(Indeces) > 0);
 
 		auto indeces = GetIndexTuples(std::forward<Indeces>(indecesArgs)...);
 		auto indecesMemo = indeces;
@@ -463,50 +387,18 @@ namespace FBXL
 			indeces.erase(iter, indeces.end());
 		}
 
-		std::vector<std::int32_t> indexIndeces{};
-		indexIndeces.reserve(indecesMemo.size());
-		for (std::size_t i = 0; indecesMemo.size(); i++)
+		std::vector<std::int32_t> indexIndeces(indecesMemo.size());
+		for (std::size_t i = 0; i < indecesMemo.size(); i++)
 		{
 			auto iter = std::lower_bound(indeces.begin(), indeces.end(), indecesMemo[i]);
 			indexIndeces[i] = iter - indeces.begin();
 		}
 
-		return { std::move(indexIndeces),std::move(indeces) };
-	}
-
-	template<typename Vector2D, typename Vector3D, typename CreateVector2DPolicy, typename CreateVector3DPolicy>
-	std::vector<Vertex<Vector2D, Vector3D>> GetVerteces(std::vector<Int32Tuple<3>>&& indexTuples, 
-		IndecedData<std::vector<DoubleTuple<3>>>&& positionIndecedData, IndecedData<std::vector<DoubleTuple<3>>>&& normalIndecedData, IndecedData<std::vector<DoubleTuple<2>>>&& uvIndecedData,
-		const GlobalSettings& globalSettings)
-	{
-		auto getPosition = [&positionIndecedData, &globalSettings](std::int32_t i) -> Vector3D {
-			return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
-				std::get<0>(positionIndecedData.data[i]), std::get<1>(positionIndecedData.data[i]), std::get<2>(positionIndecedData.data[i]), globalSettings);
-		};
-
-		auto getNormal = [&normalIndecedData, &globalSettings](std::int32_t i)->Vector3D {
-			return CreateVector3DInterfacePolicy<CreateVector3DPolicy>::Invoke(
-				std::get<0>(normalIndecedData.data[i]), std::get<1>(normalIndecedData.data[i]), std::get<2>(normalIndecedData.data[i]), globalSettings);
-		};
-
-		auto getUV = [&uvIndecedData, &globalSettings](std::int32_t i)->Vector2D {
-			//
-			//uvの2つ目はマイナス
-			//
-			return CreateVector2DPolicy::Create(std::get<0>(uvIndecedData.data[i]), -std::get<1>(uvIndecedData.data[i]));
-		};
-
-		std::vector<Vertex<Vector2D, Vector3D>> result{};
-		result.reserve(indexTuples.size());
-
-		for (std::size_t i = 0; i < indexTuples.size(); i++)
-			result.emplace_back(Vertex<Vector2D, Vector3D>{ getPosition(std::get<0>(indexTuples[i])), getNormal(std::get<1>(indexTuples[i])), getUV(std::get<2>(indexTuples[i])) });
-
-		return result;
+		return std::make_pair(std::move(indexIndeces), std::move(indeces));
 	}
 
 
-	std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> FBXL::GetTrianglePolygonAndMaterialIndexPairs(std::vector<std::int32_t>&& indeces, std::vector<std::int32_t>&& materialIndeces)
+	std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> GetTrianglePolygonAndMaterialIndexPairs(std::vector<std::int32_t>&& indeces, std::vector<std::int32_t>&& materialIndeces)
 	{
 		std::vector<std::pair<TrianglePolygonIndex, std::int64_t>> result{};
 		result.reserve(indeces.size() / 3);
@@ -535,8 +427,8 @@ namespace FBXL
 		return GetResultTypeFromIndexTupleImpl<ResultType>(std::make_index_sequence<sizeof...(DataArrays)>{}, indexTuple, dataArrays...);
 	}
 
-	template<typename ResultType, typename IndexTuples, typename ...Datas>
-	std::vector<ResultType> GetResultTypesFromIndexTuples(IndexTuples&& tuples, Datas && ...datas)
+	template<typename ResultType, typename IndexTuples, typename ...DataArrays>
+	std::vector<ResultType> GetResultTypesFromIndexTuples(IndexTuples&& tuples, DataArrays && ...datas)
 	{
 		std::vector<ResultType> result{};
 		result.reserve(tuples.size());
@@ -544,5 +436,40 @@ namespace FBXL
 			result.emplace_back(GetResultTypeFromIndexTuple<ResultType>(std::move(tuples[i]), datas...));
 
 		return result;
+	}
+
+	template<typename VectorND, typename CreateVectorNDPolicy, std::size_t N>
+	std::vector<VectorND> GetVectorNDs(std::vector<DoubleTuple<N>>&& doubleTuples, const GlobalSettings& globalSettings)
+	{
+		static_assert(N == 2 || N == 3);
+
+		std::vector<VectorND> result{};
+		result.reserve(doubleTuples.size());
+
+		for (std::size_t i = 0; i < doubleTuples.size(); i++)
+		{
+			if constexpr (N == 2)
+				//
+				//N==2はuvしかないので2つ目はマイナス決め打ち
+				//
+				result.emplace_back(CreateVectorNDPolicy::Create(std::get<0>(doubleTuples[i]), -std::get<1>(doubleTuples[i])));
+			else if constexpr (N == 3)
+			{
+				auto [x, y, z] = AxisConversionDoubleTuple3(std::move(doubleTuples[i]), globalSettings);
+				result.emplace_back(CreateVectorNDPolicy::Create(x, y, z));
+			}
+		}
+
+		return result;
+	}
+
+	inline DoubleTuple<3> AxisConversionDoubleTuple3(DoubleTuple<3>&& doubleTuple, const GlobalSettings& globalSettings)
+	{
+		double nums[] = { std::get<0>(doubleTuple),std::get<1>(doubleTuple) ,std::get<2>(doubleTuple) };
+
+		return { nums[globalSettings.coordAxis] * globalSettings.coordAxisSign,
+			nums[globalSettings.upAxis] * globalSettings.upAxisSign,
+			nums[globalSettings.frontAxis] * globalSettings.coordAxisSign
+		};
 	}
 }

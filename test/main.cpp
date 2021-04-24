@@ -32,25 +32,6 @@ struct Vector2
 
 int main()
 {
-
-	{
-		auto v1 = std::vector<int>{ 1,2,3 };
-		auto v2 = std::vector<int>{ 4,5,6 };
-		auto v3 = std::vector<int>{ 7,8,9 };
-
-		auto ts = std::vector{
-			std::make_tuple(0,1,2),
-			std::make_tuple(2,0,1),
-			std::make_tuple(1,2,0)
-		};
-
-		struct Hoge {
-			int a, b, c;
-		};
-
-		auto huga = FBXL::GetResultTypesFromIndexTuples<Hoge>(std::move(ts), std::move(v1), std::move(v2), std::move(v3));
-	}
-
 	using namespace DirectX;
 
 	constexpr auto windowWidth = 800;
