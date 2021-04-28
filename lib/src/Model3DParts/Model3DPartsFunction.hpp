@@ -127,6 +127,11 @@ namespace FBXL
 	GeometryMesh<Vector2D, Vector3D> AppendGeometryMesh(GeometryMesh<Vector2D, Vector3D>&& a, GeometryMesh<Vector2D, Vector3D>&& b)
 	{
 		a.trianglePolygonIndeces.reserve(a.trianglePolygonIndeces.size() + b.trianglePolygonIndeces.size());
+		for (std::size_t i = 0; i < b.trianglePolygonIndeces.size(); i++) {
+			std::get<0>(b.trianglePolygonIndeces[i].first) += a.vertices.size();
+			std::get<1>(b.trianglePolygonIndeces[i].first) += a.vertices.size();
+			std::get<2>(b.trianglePolygonIndeces[i].first) += a.vertices.size();
+		}
 		std::move(b.trianglePolygonIndeces.begin(), b.trianglePolygonIndeces.end(), std::back_inserter(a.trianglePolygonIndeces));
 
 		a.vertices.reserve(a.vertices.size() + b.vertices.size());
